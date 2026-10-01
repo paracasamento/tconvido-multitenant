@@ -5,8 +5,13 @@ import {
   clearAdminSession,
   getOwnerSession,
 } from "@/lib/sessions";
+import { sameOriginStrict } from "@/lib/security";
 
 export async function POST(request: Request) {
+  if (!sameOriginStrict(request)) {
+    return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
+  }
+
   const store = await cookies();
   const hadAdminCookie = Boolean(store.get(ADMIN_COOKIE)?.value);
   const owner = await getOwnerSession();
