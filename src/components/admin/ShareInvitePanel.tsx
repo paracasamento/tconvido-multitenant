@@ -31,7 +31,7 @@ export function ShareInvitePanel({ coupleNames, slug, paused = false }: { couple
   }, []);
 
   const inviteUrl = useMemo(
-    () => origin ? `${inviteUrl}/e/${encodeURIComponent(slug)}` : "",
+    () => origin ? `${origin}/e/${encodeURIComponent(slug)}` : "",
     [origin, slug]
   );
 
