@@ -1,20 +1,22 @@
 import { NextResponse } from "next/server";
-import { getOwnerSession } from "@/lib/sessions";
+import { getOwnerSession, getPlatformSession } from "@/lib/sessions";
 
 export async function GET() {
-  const session = await getOwnerSession();
+  const platform = await getPlatformSession();
 
-  if (!session) {
+  if (!platform) {
     return NextResponse.json({ authenticated: false }, { status: 401 });
   }
+
+  const selected = await getOwnerSession();
 
   return NextResponse.json({
     authenticated: true,
     owner: {
-      id: session.admin_id,
-      name: session.admin_name,
-      event_id: session.event_id,
-      role: session.role
+      id: platform.admin_id,
+      name: platform.admin_name,
+      role: "platform_admin",
+      event_id: selected?.event_id || null
     }
   });
 }

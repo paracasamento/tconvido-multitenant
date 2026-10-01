@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, LogOut } from "lucide-react";
+import { LogOut, Plus } from "lucide-react";
 
 export function GestaoChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -19,9 +19,9 @@ export function GestaoChrome({ children }: { children: React.ReactNode }) {
         </Link>
 
         <div className="gestao-topbar-actions">
-          <Link href="/admin" className="gestao-topbar-link">
-            <ArrowLeft size={15} />
-            Painel dos noivos
+          <Link href="/gestao/eventos/novo" className="gestao-topbar-link">
+            <Plus size={15} />
+            Novo evento
           </Link>
 
           <form action="/api/owner/logout" method="post">
