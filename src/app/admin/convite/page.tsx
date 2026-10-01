@@ -18,7 +18,7 @@ export default async function AdminInvitationPage() {
         description={published ? "Link, mensagem e configurações em um só lugar." : "Conclua a configuração para liberar o link."}
       />
 
-      {published && <ShareInvitePanel coupleNames={setup.event.couple_names} paused={setup.event.status === "closed"} />}
+      {published && <ShareInvitePanel coupleNames={setup.event.couple_names} slug={setup.event.slug} paused={setup.event.status === "closed"} />}
 
       <section className="invitation-settings-section-v6">
         <div className="admin-list-toolbar-v6"><strong>Configurações</strong></div>

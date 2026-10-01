@@ -3,11 +3,11 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 
-export function CopyInviteLinkButton() {
+export function CopyInviteLinkButton({ slug }: { slug: string }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
-    await navigator.clipboard.writeText(window.location.origin);
+    await navigator.clipboard.writeText(`${window.location.origin}/e/${encodeURIComponent(slug)}`);
     setCopied(true);
     window.setTimeout(() => setCopied(false), 1800);
   }

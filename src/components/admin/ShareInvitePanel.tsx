@@ -12,7 +12,7 @@ type AccessData = {
   codes?: GuestCode[];
 };
 
-export function ShareInvitePanel({ coupleNames, paused = false }: { coupleNames: string; paused?: boolean }) {
+export function ShareInvitePanel({ coupleNames, slug, paused = false }: { coupleNames: string; slug: string; paused?: boolean }) {
   const [origin, setOrigin] = useState("");
   const [access, setAccess] = useState<AccessData | null>(null);
   const [selectedGuestId, setSelectedGuestId] = useState("");
@@ -30,21 +30,26 @@ export function ShareInvitePanel({ coupleNames, paused = false }: { coupleNames:
       .catch(() => setAccess(null));
   }, []);
 
+  const inviteUrl = useMemo(
+    () => origin ? `${inviteUrl}/e/${encodeURIComponent(slug)}` : "",
+    [origin, slug]
+  );
+
   const selectedGuest = useMemo(
     () => access?.codes?.find(row => row.id === selectedGuestId) || null,
     [access, selectedGuestId]
   );
 
   const message = useMemo(() => {
-    if (!origin || !access) return "";
+    if (!inviteUrl || !access) return "";
     if (access.mode === "event") {
-      return `Oi! 💙\n\nQueremos te convidar para o nosso Chá de Panela!\n\nAcesse o convite pelo link:\n${origin}${access.code ? `\n\nSenha: ${access.code}` : ""}\n\nEsperamos você!\n${coupleNames}`;
+      return `Oi! 💙\n\nQueremos te convidar para o nosso Chá de Panela!\n\nAcesse o convite pelo link:\n${inviteUrl}${access.code ? `\n\nSenha: ${access.code}` : ""}\n\nEsperamos você!\n${coupleNames}`;
     }
 
     if (!selectedGuest?.code) return "";
     const firstName = selectedGuest.name.split(" ")[0];
-    return `Oi, ${firstName}! 💙\n\nQueremos te convidar para o nosso Chá de Panela!\n\nAcesse o convite pelo link:\n${origin}\n\nSua senha: ${selectedGuest.code}\n\nEsperamos você!\n${coupleNames}`;
-  }, [origin, access, selectedGuest, coupleNames]);
+    return `Oi, ${firstName}! 💙\n\nQueremos te convidar para o nosso Chá de Panela!\n\nAcesse o convite pelo link:\n${inviteUrl}\n\nSua senha: ${selectedGuest.code}\n\nEsperamos você!\n${coupleNames}`;
+  }, [inviteUrl, access, selectedGuest, coupleNames]);
 
   async function copy(value: string, type: "link" | "message" | "password") {
     if (!value) return;
@@ -66,10 +71,10 @@ export function ShareInvitePanel({ coupleNames, paused = false }: { coupleNames:
       </div>
 
       <div className="share-link-box">
-        <div><span>Link do convite</span><strong>{origin || "Carregando link..."}</strong></div>
+        <div><span>Link do convite</span><strong>{inviteUrl || "Carregando link..."}</strong></div>
         <div className="share-link-actions">
-          <button type="button" className="icon-button" aria-label="Copiar link" title="Copiar link" onClick={() => copy(origin, "link")}>{copied === "link" ? <Check size={18} /> : <Copy size={18} />}</button>
-          {origin && <a className="icon-button" aria-label="Abrir convite" title="Abrir convite" href={origin} target="_blank" rel="noreferrer"><ExternalLink size={18} /></a>}
+          <button type="button" className="icon-button" aria-label="Copiar link" title="Copiar link" onClick={() => copy(inviteUrl, "link")}>{copied === "link" ? <Check size={18} /> : <Copy size={18} />}</button>
+          {inviteUrl && <a className="icon-button" aria-label="Abrir convite" title="Abrir convite" href={inviteUrl} target="_blank" rel="noreferrer"><ExternalLink size={18} /></a>}
         </div>
       </div>
 

@@ -17,7 +17,7 @@ export type EventRecord = {
   status: "draft" | "active" | "closed";
 };
 
-export async function getEvent(): Promise<EventRecord | null> {
+async function getEventByWhere(slug: string): Promise<EventRecord | null> {
   const sql = db();
   const rows = await sql`
     SELECT
@@ -35,10 +35,18 @@ export async function getEvent(): Promise<EventRecord | null> {
       COALESCE(gift_color_preferences, '[]'::jsonb) AS gift_color_preferences,
       status
     FROM events
-    WHERE slug = ${EVENT_SLUG}
+    WHERE slug = ${slug}
     LIMIT 1
   `;
   return (rows[0] as EventRecord | undefined) ?? null;
+}
+
+export async function getEvent(): Promise<EventRecord | null> {
+  return getEventByWhere(EVENT_SLUG);
+}
+
+export async function getEventBySlug(slug: string): Promise<EventRecord | null> {
+  return getEventByWhere(slug);
 }
 
 export function displayDate(date: string) {

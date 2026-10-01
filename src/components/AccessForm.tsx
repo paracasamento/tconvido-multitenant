@@ -9,9 +9,11 @@ import { AccessFormView } from "@/components/invite/functional/AccessFormView";
 export function AccessForm({
   parts = {},
   redirectTo = "/convite",
+  eventSlug,
 }: {
   parts?: Record<string, InvitePartStyle>;
   redirectTo?: string;
+  eventSlug?: string;
 }) {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -38,7 +40,11 @@ export function AccessForm({
       const response = await fetch("/api/guest/access", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), code: code.trim().toUpperCase() }),
+        body: JSON.stringify({
+          name: name.trim(),
+          code: code.trim().toUpperCase(),
+          event_slug: eventSlug,
+        }),
       });
       const data = await readJsonResponse<{ message?: string }>(response);
       if (!response.ok) {

@@ -15,7 +15,7 @@ export function ConfiguredHome({ state, adminName }: { state: AdminSetupState; a
           <p>{active ? "Tudo pronto. Acompanhe confirmações e mantenha suas listas atualizadas." : "O acesso dos convidados está pausado, mas suas informações continuam salvas."}</p>
         </div>
         <div className="configured-hero-v6__actions">
-          <CopyInviteLinkButton />
+          <CopyInviteLinkButton slug={state.event.slug} />
           <Link href="/admin/preview" className="button button--ghost"><MailOpen size={18} /> Ver convite</Link>
         </div>
       </section>

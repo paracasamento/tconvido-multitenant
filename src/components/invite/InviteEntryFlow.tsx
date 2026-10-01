@@ -10,9 +10,11 @@ const OPEN_THRESHOLD_PX = 74;
 export function InviteEntryFlow({
   coverScreen,
   accessScreen,
+  eventSlug,
 }: {
   coverScreen: InviteScreen;
   accessScreen: InviteScreen;
+  eventSlug?: string;
 }) {
   const [dragY, setDragY] = useState(0);
   const [opening, setOpening] = useState(false);
@@ -88,6 +90,7 @@ export function InviteEntryFlow({
                 key="access-form"
                 parts={accessSlot?.partStyles}
                 redirectTo="/convite"
+                eventSlug={eventSlug}
               />
             ),
           }}

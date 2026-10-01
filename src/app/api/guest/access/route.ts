@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { getEvent } from "@/lib/event";
+import { getEvent, getEventBySlug } from "@/lib/event";
 import { createInviteSession } from "@/lib/invite-session";
 import { isRateLimited, recordFailure } from "@/lib/rate-limit";
 import { normalizeName, sameOrigin, verifyGuestCode } from "@/lib/security";
@@ -9,7 +9,8 @@ import { clearRsvpSubmissionSession, createGuestSession } from "@/lib/sessions";
 
 const schema = z.object({
   name: z.string().trim().min(2).max(120),
-  code: z.string().trim().min(5).max(40)
+  code: z.string().trim().min(5).max(40),
+  event_slug: z.string().trim().min(1).max(160).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).optional()
 });
 
 export async function POST(request: Request) {
@@ -17,7 +18,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
   }
 
-  const event = await getEvent();
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json({ message: "Preencha seu nome e a senha do convite." }, { status: 400 });
+  }
+
+  const event = parsed.data.event_slug
+    ? await getEventBySlug(parsed.data.event_slug)
+    : await getEvent();
   if (!event) return NextResponse.json({ message: "Convite indisponível." }, { status: 404 });
 
   const allowDraft = process.env.ALLOW_DRAFT_GUEST_ACCESS === "true";
@@ -30,11 +38,6 @@ export async function POST(request: Request) {
 
   if (await isRateLimited(request, event.id, "guest_access_failed", 10, 10)) {
     return NextResponse.json({ message: "Muitas tentativas. Aguarde alguns minutos." }, { status: 429 });
-  }
-
-  const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ message: "Preencha seu nome e a senha do convite." }, { status: 400 });
   }
 
   const sql = db();
