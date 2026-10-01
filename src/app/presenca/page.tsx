@@ -44,7 +44,7 @@ export default async function RsvpPage() {
     guestSession.event_id === invite.event_id &&
     guestSession.rsvp_status === "confirmed"
   ) {
-    const snapshot = await getGuestRsvpSnapshot(guestSession.guest_id);
+    const snapshot = await getGuestRsvpSnapshot(guestSession.guest_id, invite.event_id);
     if (snapshot) {
       initialSubmission = {
         id: guestSession.guest_id,

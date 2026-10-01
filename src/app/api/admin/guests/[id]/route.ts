@@ -112,7 +112,9 @@ export async function DELETE(
     released AS (
       UPDATE reservations
       SET released_at = now(), release_reason = 'guest_deleted'
-      WHERE guest_id IN (SELECT id FROM target) AND released_at IS NULL
+      WHERE event_id = ${session.event_id}
+        AND guest_id IN (SELECT id FROM target)
+        AND released_at IS NULL
     ),
     codes AS (
       UPDATE guest_access_codes

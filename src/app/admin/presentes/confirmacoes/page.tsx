@@ -15,8 +15,8 @@ export default async function GiftConfirmationsPage() {
       g.name AS gift_name,
       gu.name AS guest_name
     FROM reservations r
-    JOIN gifts g ON g.id = r.gift_id
-    JOIN guests gu ON gu.id = r.guest_id
+    JOIN gifts g ON g.id = r.gift_id AND g.event_id = r.event_id
+    JOIN guests gu ON gu.id = r.guest_id AND gu.event_id = r.event_id
     WHERE r.event_id = ${session.event_id}
       AND r.released_at IS NULL
       AND g.deleted_at IS NULL

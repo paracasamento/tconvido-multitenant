@@ -45,7 +45,7 @@ export default async function AdminGuestsPage() {
         CASE WHEN g.source = 'admin' THEN s.guest_id ELSE NULL END AS suggested_guest_id,
         CASE WHEN g.source = 'admin' THEN g.name ELSE NULL END AS suggested_guest_name
       FROM rsvp_submissions s
-      LEFT JOIN guests g ON g.id = s.guest_id
+      LEFT JOIN guests g ON g.id = s.guest_id AND g.event_id = s.event_id
       WHERE s.event_id = ${session.event_id}
         AND s.needs_review = true
       ORDER BY s.confirmed_at DESC

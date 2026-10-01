@@ -184,7 +184,7 @@ export async function getGuestSession(): Promise<GuestSession | null> {
 }
 
 
-export async function getGuestRsvpSnapshot(guestId: string) {
+export async function getGuestRsvpSnapshot(guestId: string, eventId: string) {
   const sql = db();
   const rows = await sql`
     SELECT
@@ -197,6 +197,7 @@ export async function getGuestRsvpSnapshot(guestId: string) {
       confirmed_children
     FROM guests
     WHERE id = ${guestId}
+      AND event_id = ${eventId}
       AND deleted_at IS NULL
     LIMIT 1
   `;
@@ -208,7 +209,7 @@ export async function getGuestReservationSummary(guestId: string, eventId: strin
   const rows = await sql`
     SELECT r.gift_id, g.name
     FROM reservations r
-    JOIN gifts g ON g.id = r.gift_id
+    JOIN gifts g ON g.id = r.gift_id AND g.event_id = r.event_id
     WHERE r.guest_id = ${guestId}
       AND r.event_id = ${eventId}
       AND r.released_at IS NULL

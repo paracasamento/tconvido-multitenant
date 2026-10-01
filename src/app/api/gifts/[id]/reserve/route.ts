@@ -41,7 +41,7 @@ export async function POST(
   const exact = await sql`
     SELECT r.id, r.gift_id, g.name
     FROM reservations r
-    JOIN gifts g ON g.id = r.gift_id
+    JOIN gifts g ON g.id = r.gift_id AND g.event_id = r.event_id
     WHERE r.event_id = ${session.event_id}
       AND r.guest_id = ${session.guest_id}
       AND r.gift_id = ${id}
@@ -74,7 +74,8 @@ export async function POST(
     WHERE (
       SELECT COUNT(*)
       FROM reservations active
-      WHERE active.gift_id = lg.id
+      WHERE active.event_id = ${session.event_id}
+        AND active.gift_id = lg.id
         AND active.released_at IS NULL
     ) < lg.available_quantity
     ON CONFLICT (guest_id, gift_id) WHERE released_at IS NULL
@@ -93,7 +94,7 @@ export async function POST(
   const exactAfter = await sql`
     SELECT r.gift_id, g.name
     FROM reservations r
-    JOIN gifts g ON g.id = r.gift_id
+    JOIN gifts g ON g.id = r.gift_id AND g.event_id = r.event_id
     WHERE r.event_id = ${session.event_id}
       AND r.guest_id = ${session.guest_id}
       AND r.gift_id = ${id}

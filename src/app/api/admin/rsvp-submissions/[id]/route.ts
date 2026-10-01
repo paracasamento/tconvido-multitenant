@@ -64,8 +64,8 @@ export async function PATCH(
 
     const reservationRows = await sql`
       SELECT
-        (SELECT gift_id FROM reservations WHERE guest_id = ${currentGuestId} AND released_at IS NULL LIMIT 1) AS old_gift,
-        (SELECT gift_id FROM reservations WHERE guest_id = ${targetGuestId} AND released_at IS NULL LIMIT 1) AS target_gift
+        (SELECT gift_id FROM reservations WHERE event_id = ${session.event_id} AND guest_id = ${currentGuestId} AND released_at IS NULL LIMIT 1) AS old_gift,
+        (SELECT gift_id FROM reservations WHERE event_id = ${session.event_id} AND guest_id = ${targetGuestId} AND released_at IS NULL LIMIT 1) AS target_gift
     `;
     const oldGift = reservationRows[0]?.old_gift ? String(reservationRows[0].old_gift) : null;
     const targetGift = reservationRows[0]?.target_gift ? String(reservationRows[0].target_gift) : null;
