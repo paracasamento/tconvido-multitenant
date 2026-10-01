@@ -150,3 +150,5 @@ Bloqueio antes do merge:
 - runtime atual confirma o erro `DATABASE_URL não configurada.`
 - configurar a variável apontando exclusivamente para o Neon `shy-cherry-01514927`;
 - depois validar runtime, criar dois eventos pelo fluxo real da aplicação e só então integrar a branch em `main`.
+
+- Runtime DB role validated after Vercel environment update.
