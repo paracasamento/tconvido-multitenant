@@ -122,3 +122,31 @@ Só integrar `multitenant-foundation` em `main` quando:
 - build do Next.js passar;
 - preview/deployment da Vercel nova estiver saudável;
 - nenhum passo tiver tocado o repositório ou Neon antigos.
+
+
+## Status de execução — 2026-10-01
+
+Concluído:
+- branch isolada `multitenant-foundation`;
+- entrada pública por `/e/[slug]`;
+- remoção do fallback de evento único por `EVENT_SLUG`;
+- sessão de cliente vinculada explicitamente a `event_id`;
+- sessão de Gestão separada como conta de plataforma;
+- dashboard de eventos em `/gestao`;
+- criação de evento + dono + vínculo + design inicial;
+- template padrão sem identidade de Pedro & Letícia;
+- hardcodes antigos removidos das áreas públicas/cliente;
+- queries críticas reforçadas com escopo explícito por evento;
+- Neon `tconvido-multitenant` identificado como `shy-cherry-01514927`;
+- schema fresh criado no Neon novo;
+- `platform_admins` criado e conta mestre cadastrada;
+- teste de isolamento entre dois eventos aprovado;
+- teste de reserva cruzada bloqueado por FK;
+- Neon deixado limpo após os testes: 0 eventos, 0 convidados, 0 presentes e 0 reservas;
+- último preview da branch compilando em Vercel com estado READY.
+
+Bloqueio antes do merge:
+- o projeto Vercel `tconvido-multitenant` ainda não possui `DATABASE_URL`.
+- runtime atual confirma o erro `DATABASE_URL não configurada.`
+- configurar a variável apontando exclusivamente para o Neon `shy-cherry-01514927`;
+- depois validar runtime, criar dois eventos pelo fluxo real da aplicação e só então integrar a branch em `main`.
