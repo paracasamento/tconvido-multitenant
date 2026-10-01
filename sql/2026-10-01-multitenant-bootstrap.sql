@@ -1,6 +1,9 @@
 -- Fresh bootstrap for the tconvido-multitenant Neon project.
 -- Contains schema only. No event, guest, gift or RSVP data is copied from production.
 -- Platform admin seed is intentionally performed separately and is not stored here.
+-- After bootstrap, set a password manually for the restricted runtime role:
+-- ALTER ROLE app_runtime WITH PASSWORD '<strong-random-password>';
+-- Never store that password in this repository.
 
 BEGIN;
 
