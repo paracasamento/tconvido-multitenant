@@ -48,11 +48,21 @@ export async function POST(request: Request) {
     WHERE
       lower(a.email) = lower(${accountEmail})
       AND a.is_active = true
-    ORDER BY
-      CASE WHEN ea.role = 'owner' THEN 0 ELSE 1 END,
-      ea.created_at ASC
-    LIMIT 1
+    ORDER BY ea.created_at ASC
   `;
+
+  if (rows.length !== 1) {
+    await recordFailure(request, null, "admin_login_failed");
+    return NextResponse.json(
+      {
+        code: rows.length > 1 ? "ambiguous_event_access" : "invalid_credentials",
+        message: rows.length > 1
+          ? "Esta conta está vinculada a mais de um evento. Ajuste o acesso pela Gestão."
+          : "Login ou senha incorretos."
+      },
+      { status: rows.length > 1 ? 409 : 401 }
+    );
+  }
 
   const admin = rows[0] as any;
 
@@ -81,7 +91,7 @@ export async function POST(request: Request) {
     );
   }
 
-  await createAdminSession(admin.id);
+  await createAdminSession(admin.id, admin.event_id);
 
   return NextResponse.json({
     ok: true,

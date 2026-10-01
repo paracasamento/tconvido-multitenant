@@ -44,13 +44,12 @@ export async function POST(request: Request) {
   const accountEmail = isEditorLogin ? EDITOR_ACCOUNT_EMAIL : login;
 
   const rows = await sql`
-    SELECT a.id, a.password_hash, ea.event_id
+    SELECT a.id, a.password_hash
     FROM admins a
-    JOIN event_admins ea ON ea.admin_id = a.id
+    JOIN platform_admins pa ON pa.admin_id = a.id
     WHERE
       lower(a.email) = lower(${accountEmail})
       AND a.is_active = true
-      AND ea.role = 'owner'
     LIMIT 1
   `;
 
@@ -73,7 +72,6 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     ok: true,
-    role: "owner",
-    event_id: owner.event_id
+    role: "platform_admin"
   });
 }

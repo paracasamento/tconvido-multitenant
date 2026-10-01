@@ -3,7 +3,7 @@ import { AdminLoginForm } from "@/components/AdminLoginForm";
 import { FloralFrame } from "@/components/Florals";
 import { Monogram } from "@/components/Monogram";
 import { safeInternalPath } from "@/lib/access-routing";
-import { getOwnerSession } from "@/lib/sessions";
+import { getPlatformSession } from "@/lib/sessions";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +15,7 @@ export default async function GestaoLoginPage({
   const params = await searchParams;
   const next = safeInternalPath(params.next, "/gestao", ["/gestao"]);
 
-  const session = await getOwnerSession();
+  const session = await getPlatformSession();
   if (session) redirect(next);
 
   return (

@@ -5,6 +5,7 @@ export const GUEST_COOKIE = "pl_guest_session";
 export const INVITE_COOKIE = "pl_invite_session";
 export const ADMIN_COOKIE = "pl_admin_session";
 export const OWNER_COOKIE = "pl_owner_session";
+export const OWNER_EVENT_COOKIE = "pl_owner_event";
 export const GUEST_SESSION_DAYS = 30;
 export const INVITE_SESSION_DAYS = 30;
 export const ADMIN_SESSION_HOURS = 12;

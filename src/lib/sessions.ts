@@ -5,6 +5,7 @@ import {
   ADMIN_COOKIE,
   ADMIN_SESSION_HOURS,
   OWNER_COOKIE,
+  OWNER_EVENT_COOKIE,
   OWNER_SESSION_HOURS,
   GUEST_COOKIE,
   GUEST_SESSION_DAYS,
@@ -26,6 +27,11 @@ export type AdminSession = {
   admin_name: string;
   event_id: string;
   role: "owner" | "admin";
+};
+
+export type PlatformSession = {
+  admin_id: string;
+  admin_name: string;
 };
 
 
@@ -227,15 +233,38 @@ export async function requireGuest(returnTo = "/presentes") {
   redirect(loginRedirect("/acesso", returnTo, "/convite"));
 }
 
-export async function createAdminSession(adminId: string) {
+export async function createAdminSession(adminId: string, eventId: string) {
   const sql = db();
   const token = randomToken();
   const tokenHash = hashToken(token);
   const expires = new Date(Date.now() + ADMIN_SESSION_HOURS * 3600000);
 
+  const accessRows = await sql`
+    SELECT ea.role
+    FROM event_admins ea
+    JOIN admins a ON a.id = ea.admin_id
+    WHERE ea.admin_id = ${adminId}
+      AND ea.event_id = ${eventId}
+      AND a.is_active = true
+      AND ea.role IN ('owner', 'admin')
+    LIMIT 1
+  `;
+
+  if (!accessRows.length) {
+    throw new Error("Conta sem permissão para este evento.");
+  }
+
   await sql`
-    INSERT INTO admin_sessions (admin_id, token_hash, expires_at)
-    VALUES (${adminId}, ${tokenHash}, ${expires.toISOString()})
+    UPDATE admin_sessions
+    SET revoked_at = now()
+    WHERE admin_id = ${adminId}
+      AND event_id IS NOT NULL
+      AND revoked_at IS NULL
+  `;
+
+  await sql`
+    INSERT INTO admin_sessions (admin_id, event_id, token_hash, expires_at)
+    VALUES (${adminId}, ${eventId}, ${tokenHash}, ${expires.toISOString()})
   `;
 
   const store = await cookies();
@@ -248,23 +277,20 @@ export async function createAdminSession(adminId: string) {
   });
 }
 
-
 export async function createOwnerSession(adminId: string) {
   const sql = db();
 
   const roleRows = await sql`
-    SELECT ea.event_id, ea.role
-    FROM event_admins ea
-    JOIN admins a ON a.id = ea.admin_id
-    WHERE
-      ea.admin_id = ${adminId}
-      AND ea.role = 'owner'
+    SELECT a.id
+    FROM admins a
+    JOIN platform_admins pa ON pa.admin_id = a.id
+    WHERE a.id = ${adminId}
       AND a.is_active = true
     LIMIT 1
   `;
 
   if (!roleRows.length) {
-    throw new Error("Conta sem permissão de owner.");
+    throw new Error("Conta sem permissão de gestão.");
   }
 
   const token = randomToken();
@@ -272,8 +298,16 @@ export async function createOwnerSession(adminId: string) {
   const expires = new Date(Date.now() + OWNER_SESSION_HOURS * 3600000);
 
   await sql`
-    INSERT INTO admin_sessions (admin_id, token_hash, expires_at)
-    VALUES (${adminId}, ${tokenHash}, ${expires.toISOString()})
+    UPDATE admin_sessions
+    SET revoked_at = now()
+    WHERE admin_id = ${adminId}
+      AND event_id IS NULL
+      AND revoked_at IS NULL
+  `;
+
+  await sql`
+    INSERT INTO admin_sessions (admin_id, event_id, token_hash, expires_at)
+    VALUES (${adminId}, NULL, ${tokenHash}, ${expires.toISOString()})
   `;
 
   const store = await cookies();
@@ -284,9 +318,10 @@ export async function createOwnerSession(adminId: string) {
     path: "/",
     expires
   });
+  store.delete(OWNER_EVENT_COOKIE);
 }
 
-export async function getOwnerSession(): Promise<AdminSession | null> {
+export async function getPlatformSession(): Promise<PlatformSession | null> {
   const store = await cookies();
   const token = store.get(OWNER_COOKIE)?.value;
   if (!token) return null;
@@ -296,22 +331,68 @@ export async function getOwnerSession(): Promise<AdminSession | null> {
   const rows = await sql`
     SELECT
       s.admin_id,
-      a.name AS admin_name,
-      ea.event_id,
-      ea.role
+      a.name AS admin_name
     FROM admin_sessions s
     JOIN admins a ON a.id = s.admin_id
-    JOIN event_admins ea ON ea.admin_id = a.id
+    JOIN platform_admins pa ON pa.admin_id = a.id
     WHERE
       s.token_hash = ${tokenHash}
+      AND s.event_id IS NULL
       AND s.revoked_at IS NULL
       AND s.expires_at > now()
       AND a.is_active = true
-      AND ea.role = 'owner'
     LIMIT 1
   `;
 
-  return (rows[0] as AdminSession | undefined) ?? null;
+  return (rows[0] as PlatformSession | undefined) ?? null;
+}
+
+export async function selectOwnerEvent(eventId: string) {
+  const platform = await getPlatformSession();
+  if (!platform) throw new Error("Sessão de gestão expirada.");
+
+  const sql = db();
+  const rows = await sql`
+    SELECT id
+    FROM events
+    WHERE id = ${eventId}
+    LIMIT 1
+  `;
+  if (!rows.length) throw new Error("Evento não encontrado.");
+
+  const store = await cookies();
+  store.set(OWNER_EVENT_COOKIE, eventId, {
+    httpOnly: true,
+    sameSite: "strict",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: OWNER_SESSION_HOURS * 3600
+  });
+}
+
+export async function getOwnerSession(): Promise<AdminSession | null> {
+  const platform = await getPlatformSession();
+  if (!platform) return null;
+
+  const store = await cookies();
+  const eventId = store.get(OWNER_EVENT_COOKIE)?.value;
+  if (!eventId) return null;
+
+  const sql = db();
+  const rows = await sql`
+    SELECT id
+    FROM events
+    WHERE id = ${eventId}
+    LIMIT 1
+  `;
+  if (!rows.length) return null;
+
+  return {
+    admin_id: platform.admin_id,
+    admin_name: platform.admin_name,
+    event_id: eventId,
+    role: "owner"
+  };
 }
 
 export async function getAdminSession(): Promise<AdminSession | null> {
@@ -325,20 +406,20 @@ export async function getAdminSession(): Promise<AdminSession | null> {
       SELECT
         s.admin_id,
         a.name AS admin_name,
-        ea.event_id,
+        s.event_id,
         ea.role
       FROM admin_sessions s
       JOIN admins a ON a.id = s.admin_id
-      JOIN event_admins ea ON ea.admin_id = a.id
+      JOIN event_admins ea
+        ON ea.admin_id = a.id
+       AND ea.event_id = s.event_id
       WHERE
         s.token_hash = ${tokenHash}
+        AND s.event_id IS NOT NULL
         AND s.revoked_at IS NULL
         AND s.expires_at > now()
         AND a.is_active = true
         AND ea.role IN ('owner', 'admin')
-      ORDER BY
-        CASE WHEN ea.role = 'owner' THEN 0 ELSE 1 END,
-        ea.created_at ASC
       LIMIT 1
     `;
 
@@ -347,8 +428,7 @@ export async function getAdminSession(): Promise<AdminSession | null> {
     }
   }
 
-  // Owner sessions are intentionally valid for the bride/admin panel too.
-  // The reverse is NOT true: an admin session never grants /gestao access.
+  // A Gestão pode abrir o painel operacional do evento selecionado.
   return getOwnerSession();
 }
 
@@ -358,13 +438,20 @@ export async function requireAdmin(returnTo = "/admin") {
   return session;
 }
 
-
-export async function requireOwner(returnTo = "/gestao") {
-  const session = await getOwnerSession();
+export async function requirePlatformAdmin(returnTo = "/gestao") {
+  const session = await getPlatformSession();
   if (!session) redirect(loginRedirect("/gestao/login", returnTo, "/gestao"));
   return session;
 }
 
+export async function requireOwner(returnTo = "/gestao") {
+  const platform = await getPlatformSession();
+  if (!platform) redirect(loginRedirect("/gestao/login", returnTo, "/gestao"));
+
+  const session = await getOwnerSession();
+  if (!session) redirect("/gestao");
+  return session;
+}
 
 export async function clearOwnerSession() {
   const store = await cookies();
@@ -376,11 +463,13 @@ export async function clearOwnerSession() {
       UPDATE admin_sessions
       SET revoked_at = now()
       WHERE token_hash = ${hashToken(token)}
+        AND event_id IS NULL
         AND revoked_at IS NULL
     `;
   }
 
   store.delete(OWNER_COOKIE);
+  store.delete(OWNER_EVENT_COOKIE);
 }
 
 export async function clearGuestSession() {
