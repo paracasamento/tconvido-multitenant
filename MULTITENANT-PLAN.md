@@ -152,3 +152,24 @@ Bloqueio antes do merge:
 - depois validar runtime, criar dois eventos pelo fluxo real da aplicação e só então integrar a branch em `main`.
 
 - Runtime DB role validated after Vercel environment update.
+
+
+## Estado final da fundação
+
+Validado em 2026-10-01:
+
+- `main` contém a arquitetura multitenant.
+- Neon alvo: `tconvido-multitenant` / `shy-cherry-01514927`.
+- Runtime da aplicação: `app_runtime`, sem superuser e sem BYPASSRLS.
+- Role temporário `app_runtime_v2` removido.
+- Vercel: `tconvido-multitenant`.
+- Domínio principal: `https://tconvido-multitenant.vercel.app`.
+- Entrada pública por `/e/[slug]`.
+- `/gestao` é administração de plataforma e é o único local de criação de eventos.
+- Cada dono criado pela Gestão é vinculado ao seu próprio evento.
+- Sessões administrativas de cliente carregam `event_id` explicitamente.
+- Links de compartilhamento são específicos por evento.
+- Resquícios de evento único e branding Pedro/Letícia foram removidos das rotas multitenant.
+- Códigos novos usam prefixo `TC-`.
+- Teste de resolução pública por slug realizado com evento temporário e removido ao final.
+- Banco terminou sem eventos/convidados/presentes/RSVP de teste.
