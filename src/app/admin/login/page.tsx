@@ -25,7 +25,7 @@ export default async function AdminLoginPage({
         <Monogram size={96} priority />
         <p className="eyebrow">Área dos noivos</p>
         <h1>Bem-vindos</h1>
-        <p>Entre para gerenciar convidados, presentes e informações do chá.</p>
+        <p>Entre para gerenciar convidados, presentes e informações do evento.</p>
         <AdminLoginForm redirectTo={next} allowUsername />
       </section>
     </main>

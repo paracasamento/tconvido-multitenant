@@ -104,7 +104,9 @@ export async function DELETE(
   const active = await sql`
     SELECT EXISTS(
       SELECT 1 FROM reservations
-      WHERE gift_id = ${id} AND released_at IS NULL
+      WHERE gift_id = ${id}
+        AND event_id = ${session.event_id}
+        AND released_at IS NULL
     ) AS reserved
   `;
   if (active[0]?.reserved) {

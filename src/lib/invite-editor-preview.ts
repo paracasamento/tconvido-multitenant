@@ -69,6 +69,7 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
             SELECT COUNT(*)
             FROM reservations r
             WHERE r.gift_id = g.id
+              AND r.event_id = g.event_id
               AND r.released_at IS NULL
           ) >= g.available_quantity THEN 'reserved'
           ELSE 'available'

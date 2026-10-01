@@ -4,6 +4,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { hashPassword, sameOriginStrict } from "@/lib/security";
 import { getPlatformSession, selectOwnerEvent } from "@/lib/sessions";
+import { defaultInviteVisualConfig } from "@/lib/invite-builder";
 
 const schema = z.object({
   couple_names: z.string().trim().min(2).max(120),
@@ -65,6 +66,17 @@ export async function POST(request: Request) {
   const eventId = crypto.randomUUID();
   const adminId = crypto.randomUUID();
   const passwordHash = await hashPassword(value.owner_password);
+  const initialConfig = structuredClone(defaultInviteVisualConfig);
+  for (const screen of Object.values(initialConfig.screens)) {
+    screen.elements = screen.elements.filter(
+      element => element.src !== "/brand/monograma-pl.png"
+    );
+  }
+  const coverNames = initialConfig.screens.cover.elements.find(element => element.id === "cover-names");
+  if (coverNames) coverNames.text = value.couple_names.toUpperCase();
+  const coverTitle = initialConfig.screens.cover.elements.find(element => element.id === "cover-title");
+  if (coverTitle) coverTitle.text = value.title;
+  const serializedConfig = JSON.stringify(initialConfig);
 
   await sql`
     WITH new_event AS (
@@ -85,6 +97,10 @@ export async function POST(request: Request) {
     owner_link AS (
       INSERT INTO event_admins (event_id, admin_id, role)
       VALUES (${eventId}, ${adminId}, 'owner')
+    ),
+    initial_design AS (
+      INSERT INTO invite_visual_designs (event_id, config, updated_at)
+      VALUES (${eventId}, ${serializedConfig}::jsonb, now())
     )
     INSERT INTO audit_logs (
       event_id, admin_id, action, entity_type, entity_id, metadata

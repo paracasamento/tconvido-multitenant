@@ -43,12 +43,12 @@ export function ShareInvitePanel({ coupleNames, slug, paused = false }: { couple
   const message = useMemo(() => {
     if (!inviteUrl || !access) return "";
     if (access.mode === "event") {
-      return `Oi! 💙\n\nQueremos te convidar para o nosso Chá de Panela!\n\nAcesse o convite pelo link:\n${inviteUrl}${access.code ? `\n\nSenha: ${access.code}` : ""}\n\nEsperamos você!\n${coupleNames}`;
+      return `Oi! 💙\n\nQueremos compartilhar nosso convite com você!\n\nAcesse o convite pelo link:\n${inviteUrl}${access.code ? `\n\nSenha: ${access.code}` : ""}\n\nEsperamos você!\n${coupleNames}`;
     }
 
     if (!selectedGuest?.code) return "";
     const firstName = selectedGuest.name.split(" ")[0];
-    return `Oi, ${firstName}! 💙\n\nQueremos te convidar para o nosso Chá de Panela!\n\nAcesse o convite pelo link:\n${inviteUrl}\n\nSua senha: ${selectedGuest.code}\n\nEsperamos você!\n${coupleNames}`;
+    return `Oi, ${firstName}! 💙\n\nQueremos compartilhar nosso convite com você!\n\nAcesse o convite pelo link:\n${inviteUrl}\n\nSua senha: ${selectedGuest.code}\n\nEsperamos você!\n${coupleNames}`;
   }, [inviteUrl, access, selectedGuest, coupleNames]);
 
   async function copy(value: string, type: "link" | "message" | "password") {

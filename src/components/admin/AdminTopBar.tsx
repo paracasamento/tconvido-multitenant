@@ -7,7 +7,7 @@ export function AdminTopBar() {
       <Link href="/admin" className="admin-app-brand" aria-label="Ir para o início da área dos noivos">
         <Monogram size={44} />
         <span>
-          <strong>Pedro & Letícia</strong>
+          <strong>TConvido</strong>
           <small>Área dos noivos</small>
         </span>
       </Link>
