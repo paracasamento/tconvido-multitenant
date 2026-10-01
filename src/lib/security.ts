@@ -28,11 +28,11 @@ function randomCodeBody(length: number) {
 }
 
 export function createGuestCode() {
-  return `PL-${randomCodeBody(8)}`;
+  return `TC-${randomCodeBody(8)}`;
 }
 
 export function createEventCode() {
-  return `PL-${randomCodeBody(4)}-${randomCodeBody(4)}`;
+  return `TC-${randomCodeBody(4)}-${randomCodeBody(4)}`;
 }
 
 export async function hashPassword(value: string) {
