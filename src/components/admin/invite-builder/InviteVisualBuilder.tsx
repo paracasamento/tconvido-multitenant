@@ -111,7 +111,7 @@ const RSVP_SCENARIO_DEFAULT_PART: Record<RsvpPreviewState, string> = {
 
 const ASSETS = [
 
-  ["Monograma", "/brand/monograma-pl.png"], ["Floral esquerdo", "/florals/floral-top-left.webp"],
+  ["Floral esquerdo", "/florals/floral-top-left.webp"],
 
   ["Floral direito", "/florals/floral-top-right.webp"], ["Divisor floral", "/florals/floral-divider.webp"],
 

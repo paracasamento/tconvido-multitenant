@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { EVENT_SLUG } from "@/lib/constants";
 import {
   defaultInviteVisualConfig,
   normalizeInviteVisualConfig,
@@ -49,7 +48,7 @@ function rowToEvent(row: any): EventRecord {
 
 export async function getPublicInvitePageData(
   screenId: InviteScreenId,
-  eventId?: string
+  eventId: string
 ): Promise<{
   event: EventRecord;
   screen: InviteScreen;
@@ -61,59 +60,32 @@ export async function getPublicInvitePageData(
   // Keep one DB roundtrip. We intentionally fetch only the selected screen out
   // of the JSONB object below instead of transferring/normalizing the full
   // editor configuration on every public navigation.
-  const rows = eventId
-    ? await sql`
-        SELECT
-          e.id,
-          e.slug,
-          e.title,
-          e.couple_names,
-          e.public_intro,
-          e.message,
-          to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
-          to_char(e.event_time, 'HH24:MI') AS event_time,
-          e.venue,
-          e.city,
-          e.maps_url,
-          COALESCE(e.gift_color_preferences, '[]'::jsonb) AS gift_color_preferences,
-          e.status,
-          d.config->'screens'->${screenId} AS visual_screen,
-          d.config->'inviteFlow' AS invite_flow,
-          CASE WHEN ${screenId} = 'rsvp'
-            THEN d.config->'rsvpScenarios'
-            ELSE NULL
-          END AS rsvp_scenarios
-        FROM events e
-        LEFT JOIN invite_visual_designs d ON d.event_id = e.id
-        WHERE e.id = ${eventId}
-        LIMIT 1
-      `
-    : await sql`
-        SELECT
-          e.id,
-          e.slug,
-          e.title,
-          e.couple_names,
-          e.public_intro,
-          e.message,
-          to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
-          to_char(e.event_time, 'HH24:MI') AS event_time,
-          e.venue,
-          e.city,
-          e.maps_url,
-          COALESCE(e.gift_color_preferences, '[]'::jsonb) AS gift_color_preferences,
-          e.status,
-          d.config->'screens'->${screenId} AS visual_screen,
-          d.config->'inviteFlow' AS invite_flow,
-          CASE WHEN ${screenId} = 'rsvp'
-            THEN d.config->'rsvpScenarios'
-            ELSE NULL
-          END AS rsvp_scenarios
-        FROM events e
-        LEFT JOIN invite_visual_designs d ON d.event_id = e.id
-        WHERE e.slug = ${EVENT_SLUG}
-        LIMIT 1
-      `;
+  const rows = await sql`
+    SELECT
+      e.id,
+      e.slug,
+      e.title,
+      e.couple_names,
+      e.public_intro,
+      e.message,
+      to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
+      to_char(e.event_time, 'HH24:MI') AS event_time,
+      e.venue,
+      e.city,
+      e.maps_url,
+      COALESCE(e.gift_color_preferences, '[]'::jsonb) AS gift_color_preferences,
+      e.status,
+      d.config->'screens'->${screenId} AS visual_screen,
+      d.config->'inviteFlow' AS invite_flow,
+      CASE WHEN ${screenId} = 'rsvp'
+        THEN d.config->'rsvpScenarios'
+        ELSE NULL
+      END AS rsvp_scenarios
+    FROM events e
+    LEFT JOIN invite_visual_designs d ON d.event_id = e.id
+    WHERE e.id = ${eventId}
+    LIMIT 1
+  `;
 
   if (!rows.length) return null;
 

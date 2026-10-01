@@ -21,6 +21,10 @@ export default async function EventEntryPage({
       coverScreen={config.screens.cover}
       accessScreen={config.screens.access}
       eventSlug={event.slug}
+      vars={{
+        couple_names: event.couple_names,
+        title: event.title,
+      }}
     />
   );
 }

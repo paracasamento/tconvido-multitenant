@@ -67,11 +67,6 @@ export async function POST(request: Request) {
   const adminId = crypto.randomUUID();
   const passwordHash = await hashPassword(value.owner_password);
   const initialConfig = structuredClone(defaultInviteVisualConfig);
-  for (const screen of Object.values(initialConfig.screens)) {
-    screen.elements = screen.elements.filter(
-      element => element.src !== "/brand/monograma-pl.png"
-    );
-  }
   const coverNames = initialConfig.screens.cover.elements.find(element => element.id === "cover-names");
   if (coverNames) coverNames.text = value.couple_names.toUpperCase();
   const coverTitle = initialConfig.screens.cover.elements.find(element => element.id === "cover-title");

@@ -1257,17 +1257,16 @@ export const defaultInviteVisualConfig: InviteVisualConfig = {
   },
   screens: {
     cover: { id:"cover", name:"Capa", backgroundColor:"#fbfaf5", minHeight:844, paperOpacity:.5, elements:[
-      img("cover-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-8,-5,47,37,1), img("cover-floral-right","Floral superior direito","/florals/floral-top-right.webp",61,-5,47,37,1), img("cover-monogram","Monograma","/brand/monograma-pl.png",36,12,28,18,3), img("cover-divider","Divisor floral","/florals/floral-divider.webp",17,31,66,12,2), text("cover-names","Nomes","PEDRO & LETÍCIA",10,43,80,7,24), text("cover-title","Título","Chá de Panela",7,50,86,10,43), img("cover-kitchen","Arranjo de cozinha","/florals/kitchen-arrangement.webp",8,60,84,30,2), text("cover-open","Instrução","DESLIZE PARA ABRIR\n⌃",15,91,70,7,13,5)
+      img("cover-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-8,-5,47,37,1), img("cover-floral-right","Floral superior direito","/florals/floral-top-right.webp",61,-5,47,37,1), img("cover-divider","Divisor floral","/florals/floral-divider.webp",17,31,66,12,2), text("cover-names","Nomes","{{couple_names}}",10,43,80,7,24), text("cover-title","Título","{{title}}",7,50,86,10,43), img("cover-kitchen","Arranjo de cozinha","/florals/kitchen-arrangement.webp",8,60,84,30,2), text("cover-open","Instrução","DESLIZE PARA ABRIR\n⌃",15,91,70,7,13,5)
     ]},
     access: { id:"access", name:"Login", backgroundColor:"#fbfaf5", minHeight:844, paperOpacity:.5, elements:[
-      img("access-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-5,43,34,1), img("access-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-5,43,34,1), img("access-monogram","Monograma","/brand/monograma-pl.png",40,6,20,14,3), img("access-divider","Divisor floral","/florals/floral-divider.webp",24,21,52,9,2), text("access-heading","Título","Seu convite\nestá reservado",8,31,84,16,40), text("access-copy","Instrução","Informe seu nome e o código enviado pelos noivos para abrir seu convite.",12,49,76,8,17), accessSlot("access-form","Formulário de acesso",9,58,82,31,5), img("access-kitchen","Arranjo inferior","/florals/kitchen-arrangement.webp",53,82,53,23,2)
+      img("access-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-5,43,34,1), img("access-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-5,43,34,1), img("access-divider","Divisor floral","/florals/floral-divider.webp",24,21,52,9,2), text("access-heading","Título","Seu convite\nestá reservado",8,31,84,16,40), text("access-copy","Instrução","Informe seu nome e o código enviado pelos noivos para abrir seu convite.",12,49,76,8,17), accessSlot("access-form","Formulário de acesso",9,58,82,31,5), img("access-kitchen","Arranjo inferior","/florals/kitchen-arrangement.webp",53,82,53,23,2)
     ]},
     invite: { id:"invite", name:"Convite", backgroundColor:"#fbfaf5", minHeight:1080, paperOpacity:.46, layoutRevision:2, elements:[
       img("invite-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-4,43,28,1),
       img("invite-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-4,43,28,1),
 
       text("invite-names","Nomes","{{couple_names}}",16,4,68,4.5,18,4),
-      img("invite-monogram","Monograma","/brand/monograma-pl.png",39,9,22,12,3),
       img("invite-divider","Divisor floral","/florals/floral-divider.webp",25,21,50,6,2),
 
       text("invite-title","Título","{{title}}",8,28,84,7,43,4),
@@ -1296,7 +1295,6 @@ export const defaultInviteVisualConfig: InviteVisualConfig = {
     rsvp: { id:"rsvp", name:"Presença", backgroundColor:"#fbfaf5", minHeight:1100, paperOpacity:.5, layoutRevision:3, elements:[
       img("rsvp-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-5,43,32,1),
       img("rsvp-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-5,43,32,1),
-      img("rsvp-monogram","Monograma","/brand/monograma-pl.png",40,4,20,12,3),
       text("rsvp-title","Título","Confirmar presença",7,17,86,7,39),
       img("rsvp-divider","Divisor floral","/florals/floral-divider.webp",22,25,56,8,2),
       text("rsvp-greeting","Mensagem","Encontre seu nome na lista e confirme quem estará com você.",9,34,82,8,19),
@@ -1304,7 +1302,7 @@ export const defaultInviteVisualConfig: InviteVisualConfig = {
       img("rsvp-kitchen","Arranjo inferior","/florals/kitchen-arrangement.webp",14,92,72,22,2)
     ]},
     gifts: { id:"gifts", name:"Presentes", backgroundColor:"#fbfaf5", minHeight:1250, paperOpacity:.5, elements:[
-      img("gifts-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-9,-3,39,25,1), img("gifts-floral-right","Floral superior direito","/florals/floral-top-right.webp",70,-3,39,25,1), img("gifts-monogram","Monograma","/brand/monograma-pl.png",42,4,16,10,3), text("gifts-title","Título","Lista de presentes",8,14,84,8,39), img("gifts-divider","Divisor floral","/florals/floral-divider.webp",22,23,56,8,2), text("gifts-copy","Introdução","Sua presença já é muito especial.\nSe desejar, você pode nos presentear com carinho.",11,31,78,10,20), giftGridSlot("gift-grid","Grade de presentes",5,43,90,45,5), giftNoteSlot("gift-note","Aviso dos presentes",7,90,86,8,5)
+      img("gifts-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-9,-3,39,25,1), img("gifts-floral-right","Floral superior direito","/florals/floral-top-right.webp",70,-3,39,25,1), text("gifts-title","Título","Lista de presentes",8,14,84,8,39), img("gifts-divider","Divisor floral","/florals/floral-divider.webp",22,23,56,8,2), text("gifts-copy","Introdução","Sua presença já é muito especial.\nSe desejar, você pode nos presentear com carinho.",11,31,78,10,20), giftGridSlot("gift-grid","Grade de presentes",5,43,90,45,5), giftNoteSlot("gift-note","Aviso dos presentes",7,90,86,8,5)
     ]}
   }
 };

@@ -11,10 +11,6 @@ const schema = z.object({
   requiredRole: z.enum(["owner", "admin"]).optional()
 });
 
-const BRIDE_LOGIN = "casamentopl";
-const BRIDE_ACCOUNT_EMAIL = "leticia@casamentopl.com";
-const BRIDE_PASSWORD_HASH = "$2b$12$8tnlRISFOIzak0aR3j4oq.wPD8yXA/DVLx.19Mme6I2Lmgfdj2ZIu";
-
 export async function POST(request: Request) {
   if (!sameOrigin(request)) {
     return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
@@ -33,9 +29,7 @@ export async function POST(request: Request) {
   }
 
   const sql = db();
-  const login = parsed.data.email.trim();
-  const isBrideLogin = login.toLowerCase() === BRIDE_LOGIN;
-  const accountEmail = isBrideLogin ? BRIDE_ACCOUNT_EMAIL : login;
+  const accountEmail = parsed.data.email.trim();
 
   const rows = await sql`
     SELECT
@@ -66,9 +60,7 @@ export async function POST(request: Request) {
 
   const admin = rows[0] as any;
 
-  const passwordHash = isBrideLogin ? BRIDE_PASSWORD_HASH : admin?.password_hash;
-
-  if (!admin || !passwordHash || !(await verifyPassword(parsed.data.password, passwordHash))) {
+  if (!admin || !admin.password_hash || !(await verifyPassword(parsed.data.password, admin.password_hash))) {
     await recordFailure(request, null, "admin_login_failed");
     return NextResponse.json(
       { message: "Login ou senha incorretos." },

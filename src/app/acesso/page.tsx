@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { InviteAccessShell } from "@/components/invite/InviteAccessShell";
 import { getInviteSession } from "@/lib/invite-session";
 import { getGuestSession } from "@/lib/sessions";
@@ -19,13 +19,14 @@ export default async function AccessPage({
     ["/convite", "/presenca", "/presentes", "/meu-presente"]
   );
 
-  const pageData = await getPublicInvitePageData("access");
-  if (!pageData) return null;
+  const session = await getInviteSession();
+  if (!session) notFound();
 
-  const [session, guestSession] = await Promise.all([
-    getInviteSession(),
+  const [pageData, guestSession] = await Promise.all([
+    getPublicInvitePageData("access", session.event_id),
     getGuestSession(),
   ]);
+  if (!pageData) notFound();
   const allowDraft = process.env.ALLOW_DRAFT_GUEST_ACCESS === "true";
   const usableEvent =
     pageData.event.status === "active" ||

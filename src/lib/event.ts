@@ -1,5 +1,4 @@
 import { db } from "@/lib/db";
-import { EVENT_SLUG } from "@/lib/constants";
 
 export type EventRecord = {
   id: string;
@@ -39,10 +38,6 @@ async function getEventByWhere(slug: string): Promise<EventRecord | null> {
     LIMIT 1
   `;
   return (rows[0] as EventRecord | undefined) ?? null;
-}
-
-export async function getEvent(): Promise<EventRecord | null> {
-  return getEventByWhere(EVENT_SLUG);
 }
 
 export async function getEventBySlug(slug: string): Promise<EventRecord | null> {

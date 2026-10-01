@@ -49,7 +49,7 @@ export function AdminEventForm({ event, afterSaveHref, submitLabel = "Salvar alt
 
   return (
     <form className="form-card admin-form-wide admin-event-form-v6" onSubmit={submit}>
-      <label><span>Nomes do casal</span><input name="couple_names" defaultValue={event.couple_names} placeholder="Ex.: Pedro & Letícia" required /></label>
+      <label><span>Nomes do casal</span><input name="couple_names" defaultValue={event.couple_names} placeholder="Ex.: Ana & João" required /></label>
       <label><span>Nome do evento</span><input name="title" defaultValue={event.title} required /></label>
       <label><span>Mensagem</span><textarea name="message" defaultValue={event.message || ""} rows={3} /></label>
       <div className="form-grid">

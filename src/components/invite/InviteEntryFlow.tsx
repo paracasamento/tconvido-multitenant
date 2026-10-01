@@ -11,10 +11,12 @@ export function InviteEntryFlow({
   coverScreen,
   accessScreen,
   eventSlug,
+  vars = {},
 }: {
   coverScreen: InviteScreen;
   accessScreen: InviteScreen;
   eventSlug?: string;
+  vars?: Record<string, string | undefined>;
 }) {
   const [dragY, setDragY] = useState(0);
   const [opening, setOpening] = useState(false);
@@ -84,6 +86,7 @@ export function InviteEntryFlow({
       >
         <InviteCanvas
           screen={accessScreen}
+          vars={vars}
           slots={{
             "access-form": (
               <AccessForm
@@ -109,6 +112,7 @@ export function InviteEntryFlow({
         >
           <InviteCanvas
             screen={coverScreen}
+            vars={vars}
             className="visual-invite-cover"
           />
         </div>

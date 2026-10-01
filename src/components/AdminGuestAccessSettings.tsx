@@ -130,7 +130,7 @@ export function AdminGuestAccessSettings({ initialMode: _initialMode }: { initia
                 maxLength={40}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="Ex.: PEDROELETICIA"
+                placeholder="Ex.: ANAJOAO2026"
                 disabled={busy}
                 onChange={(event) => setPasswordDraft(event.target.value)}
               />

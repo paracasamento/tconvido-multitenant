@@ -15,8 +15,8 @@ const body = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Convite | Pedro & Letícia",
-  description: "Convite privado.",
+  title: "TConvido",
+  description: "Convites digitais para eventos.",
   robots: { index: false, follow: false, nocache: true }
 };
 
