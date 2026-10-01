@@ -1,0 +1,145 @@
+"use client";
+
+import Image from "next/image";
+import { Monogram } from "@/components/Monogram";
+import type { GiftUi } from "@/components/GiftCard";
+import type { InvitePartStyle } from "@/lib/invite-builder";
+import { partStyleFromConfig } from "@/components/invite/renderer/visual-style";
+
+function makeBind(
+  parts: Record<string, InvitePartStyle>,
+  preview: boolean,
+  selectedPart: string | null,
+  onSelectPart?: (id: string) => void
+) {
+  return (id: string) => ({
+    "data-part": id,
+    "data-editor-part-selected": preview && selectedPart === id ? "true" : undefined,
+    style: partStyleFromConfig(parts[id]),
+    onClick: preview
+      ? (event: React.MouseEvent) => {
+          event.stopPropagation();
+          onSelectPart?.(id);
+        }
+      : undefined,
+  });
+}
+
+export function GiftCardView({
+  gift,
+  parts = {},
+  preview = false,
+  selectedPart = null,
+  onSelectPart,
+  busy = false,
+  error = "",
+  onAction,
+}: {
+  gift: GiftUi;
+  parts?: Record<string, InvitePartStyle>;
+  preview?: boolean;
+  selectedPart?: string | null;
+  onSelectPart?: (id: string) => void;
+  busy?: boolean;
+  error?: string;
+  onAction?: () => void;
+}) {
+  const bind = makeBind(parts, preview, selectedPart, onSelectPart);
+  const interactive = !preview && gift.status !== "reserved" && Boolean(onAction);
+  const specialCardPart =
+    gift.status === "reserved_by_me"
+      ? "gift-card-mine"
+      : gift.status === "reserved"
+        ? "gift-card-reserved"
+        : null;
+
+  function activateCard() {
+    if (interactive && !busy) onAction?.();
+  }
+
+  function onKeyDown(event: React.KeyboardEvent<HTMLElement>) {
+    if (!interactive || busy) return;
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      activateCard();
+    }
+  }
+
+  const stateLabel =
+    gift.status === "reserved_by_me"
+      ? `Liberar minha escolha: ${gift.name}`
+      : gift.status === "reserved"
+        ? `${gift.name} indisponível`
+        : `Escolher ${gift.name}`;
+
+  return (
+    <article
+      {...bind("gift-card")}
+      data-gift-status={gift.status}
+      role={interactive ? "button" : undefined}
+      tabIndex={interactive ? 0 : undefined}
+      aria-label={stateLabel}
+      aria-disabled={busy || gift.status === "reserved" ? true : undefined}
+      onClick={preview ? bind("gift-card").onClick : activateCard}
+      onKeyDown={preview ? undefined : onKeyDown}
+      style={{
+        minWidth: 0,
+        overflow: "hidden",
+        cursor: interactive ? "pointer" : undefined,
+        ...partStyleFromConfig(parts["gift-card"]),
+        ...(specialCardPart ? partStyleFromConfig(parts[specialCardPart]) : {}),
+      }}
+    >
+      <div
+        {...bind("gift-media")}
+        style={{
+          position: "relative",
+          minWidth: 0,
+          overflow: "hidden",
+          flex: "0 0 auto",
+          ...partStyleFromConfig(parts["gift-media"]),
+        }}
+      >
+        {gift.image_url ? (
+          <Image
+            {...bind("gift-image")}
+            src={gift.image_url}
+            alt={gift.name}
+            fill
+            sizes="(max-width: 600px) 44vw, 220px"
+          />
+        ) : (
+          <div {...bind("gift-image")} aria-label="Presente sem foto cadastrada">
+            <Monogram size={46} />
+          </div>
+        )}
+      </div>
+
+      <div {...bind("gift-content")} style={{ minWidth: 0, ...partStyleFromConfig(parts["gift-content"]) }}>
+        <h3 {...bind("gift-title")}>{gift.name}</h3>
+
+        {!!gift.colors?.length && (
+          <div {...bind("gift-color-row")} className="gift-card-color-row">
+            <span {...bind("gift-color-label")}>Cor de preferência</span>
+            <span {...bind("gift-color-dots")} className="gift-card-color-dots" aria-label="Cores de preferência">
+              {gift.colors.map((color, index) => (
+                <i
+                  {...bind("gift-color-dot")}
+                  key={`${color.hex}-${index}`}
+                  title={color.name || color.hex}
+                  aria-label={color.name || color.hex}
+                  style={{
+                    ...partStyleFromConfig(parts["gift-color-dot"]),
+                    backgroundColor: color.hex,
+                  }}
+                />
+              ))}
+            </span>
+          </div>
+        )}
+
+        {error ? <p {...bind("gift-error")}>{error}</p> : null}
+      </div>
+    </article>
+  );
+}
