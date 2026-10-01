@@ -46,5 +46,15 @@ export default async function AccessPage({
     redirect(next);
   }
 
-  return <InviteAccessShell screen={pageData.screen} redirectTo={next} />;
+  return (
+    <InviteAccessShell
+      screen={pageData.screen}
+      redirectTo={next}
+      eventSlug={pageData.event.slug}
+      vars={{
+        couple_names: pageData.event.couple_names,
+        title: pageData.event.title,
+      }}
+    />
+  );
 }
