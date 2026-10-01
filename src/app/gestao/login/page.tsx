@@ -28,7 +28,6 @@ export default async function GestaoLoginPage({
         <p>Entre com seu login de gestão para acessar o editor e as ferramentas técnicas.</p>
         <AdminLoginForm
           redirectTo={next}
-          requiredRole="owner"
           endpoint="/api/owner/login"
           allowUsername
         />
