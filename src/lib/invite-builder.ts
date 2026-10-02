@@ -96,7 +96,8 @@ export type InviteElement = {
   href?: string;
   icon?: string;
   compositionId?: string;
-  slot?: "access-form" | "rsvp-controls" | "rsvp-status" | "rsvp-flow" | "gift-grid" | "gift-note" | "countdown";
+  slot?: "access-form" | "rsvp-controls" | "rsvp-status" | "rsvp-flow" | "gift-grid" | "gift-note" | "countdown" | "event-date" | "action-menu" | "event-location";
+  variant?: string;
   partStyles?: Record<string, InvitePartStyle>;
   /**
    * Per-scenario internal overrides. RSVP uses this so each step behaves like
@@ -344,6 +345,34 @@ export const SLOT_PARTS: Record<NonNullable<InviteElement["slot"]>, { id: string
     { id: "unit", name: "Bloco de tempo" },
     { id: "number", name: "Número" },
     { id: "label", name: "Legenda" }
+  ],
+  "event-date": [
+    { id: "container", name: "Bloco da data" },
+    { id: "weekday", name: "Dia da semana" },
+    { id: "date-row", name: "Linha da data" },
+    { id: "month", name: "Mês" },
+    { id: "day", name: "Dia" },
+    { id: "year", name: "Ano" },
+    { id: "time", name: "Horário" }
+  ],
+  "action-menu": [
+    { id: "container", name: "Grupo de ações" },
+    { id: "map-action", name: "Como chegar" },
+    { id: "map-icon", name: "Ícone localização" },
+    { id: "map-label", name: "Texto localização" },
+    { id: "rsvp-action", name: "Confirmar presença" },
+    { id: "rsvp-icon", name: "Ícone presença" },
+    { id: "rsvp-label", name: "Texto presença" },
+    { id: "gifts-action", name: "Presentes" },
+    { id: "gifts-icon", name: "Ícone presentes" },
+    { id: "gifts-label", name: "Texto presentes" }
+  ],
+  "event-location": [
+    { id: "container", name: "Bloco do local" },
+    { id: "icon", name: "Ícone" },
+    { id: "venue", name: "Nome do local" },
+    { id: "city", name: "Cidade" },
+    { id: "time", name: "Horário" }
   ]
 };
 
