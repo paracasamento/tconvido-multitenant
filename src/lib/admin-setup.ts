@@ -19,6 +19,7 @@ export type AdminSetupState = {
     couple_names: string;
     status: "draft" | "active" | "closed";
     production_status: string;
+    enabled_capabilities: string[];
     guest_access_mode: "event" | "individual";
     event_date: string | null;
     event_time: string | null;
@@ -51,6 +52,7 @@ export async function getAdminSetupState(eventId: string): Promise<AdminSetupSta
       e.couple_names,
       e.status,
       e.production_status,
+      COALESCE(e.enabled_capabilities,\'[]\'::jsonb) AS enabled_capabilities,
       e.guest_access_mode,
       e.event_access_code_hash,
       to_char(e.event_date, 'YYYY-MM-DD') AS event_date,
@@ -171,6 +173,7 @@ export async function getAdminSetupState(eventId: string): Promise<AdminSetupSta
       couple_names: row.couple_names,
       status: row.status,
       production_status: row.production_status || "draft",
+      enabled_capabilities: Array.isArray(row.enabled_capabilities) ? row.enabled_capabilities : [],
       guest_access_mode: row.guest_access_mode,
       event_date: row.event_date,
       event_time: row.event_time,
