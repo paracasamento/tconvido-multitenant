@@ -233,14 +233,6 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined" || window.innerWidth > 640) return;
-    if (selectedId) {
-      setInspectorMode("essential");
-      setMobilePanel("edit");
-    }
-  }, [selectedId, selectedPart]);
-
-  useEffect(() => {
     // Keep editor/public parity when the server sends a fresher saved design.
     // Do not mark dirty: this is canonicalization, not a user edit.
     const next=normalizeInviteVisualConfig(deep(initial));
@@ -3332,7 +3324,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
           <div><strong>Decorações</strong><small>Já entram com tamanho e posição sugeridos.</small></div>
           <div className={styles.mobileThemeAssets}>
             {activeTheme.assets.map(asset=>(
-              <button key={asset.id} type="button" onClick={()=>{addThemeAsset(asset);setMobilePanel("edit")}}>
+              <button key={asset.id} type="button" onClick={()=>{addThemeAsset(asset);setMobilePanel(null)}}>
                 <img src={asset.src} alt=""/>
                 <span>{asset.name}</span>
               </button>
@@ -3350,16 +3342,16 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
           <button type="button" onClick={()=>setMobilePanel(null)}>Fechar</button>
         </div>
         <div className={styles.mobileAddGrid}>
-          <button type="button" onClick={()=>{addElement("text");setMobilePanel("edit")}}><Type size={23}/><strong>Texto</strong><small>Título ou frase</small></button>
-          <button type="button" onClick={()=>{addElement("image");setMobilePanel("edit")}}><ImagePlus size={23}/><strong>Imagem</strong><small>Foto ou arte</small></button>
-          <button type="button" onClick={()=>{addElement("link");setMobilePanel("edit")}}><Link2 size={23}/><strong>Botão</strong><small>Link ou ação</small></button>
-          <button type="button" onClick={()=>{addElement("box");setMobilePanel("edit")}}><Box size={23}/><strong>Container</strong><small>Área visual</small></button>
+          <button type="button" onClick={()=>{addElement("text");setMobilePanel(null)}}><Type size={23}/><strong>Texto</strong><small>Título ou frase</small></button>
+          <button type="button" onClick={()=>{addElement("image");setMobilePanel(null)}}><ImagePlus size={23}/><strong>Imagem</strong><small>Foto ou arte</small></button>
+          <button type="button" onClick={()=>{addElement("link");setMobilePanel(null)}}><Link2 size={23}/><strong>Botão</strong><small>Link ou ação</small></button>
+          <button type="button" onClick={()=>{addElement("box");setMobilePanel(null)}}><Box size={23}/><strong>Container</strong><small>Área visual</small></button>
         </div>
         <div className={styles.mobileAddDecorations}>
           <div><strong>{activeTheme.name}</strong><small>Decorações do tema selecionado.</small></div>
           <div>
             {activeTheme.assets.map(asset=>(
-              <button key={asset.id} type="button" onClick={()=>{addThemeAsset(asset);setMobilePanel("edit")}}>
+              <button key={asset.id} type="button" onClick={()=>{addThemeAsset(asset);setMobilePanel(null)}}>
                 <img src={asset.src} alt=""/>
                 <span>{asset.name}</span>
               </button>
@@ -3379,10 +3371,10 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
       <button type="button" className={mobilePanel==="add"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="add"?null:"add")}>
         <Plus size={24}/><span>Elementos</span>
       </button>
-      <button type="button" onClick={()=>{addElement("text");setMobilePanel("edit")}}>
+      <button type="button" onClick={()=>{addElement("text");setMobilePanel(null)}}>
         <Type size={23}/><span>Texto</span>
       </button>
-      <button type="button" onClick={()=>{addElement("image");setMobilePanel("edit")}}>
+      <button type="button" onClick={()=>{addElement("image");setMobilePanel(null)}}>
         <ImagePlus size={23}/><span>Imagem</span>
       </button>
       <button type="button" className={mobilePanel==="layers"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="layers"?null:"layers")}>
