@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { eventHasCapability } from "@/lib/event-capabilities";
 import { adminLog } from "@/lib/admin-log";
 import { getAdminSession } from "@/lib/sessions";
 import { sameOrigin } from "@/lib/security";
@@ -12,6 +13,7 @@ export async function PATCH(
   if (!sameOrigin(request)) return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
+  if (!(await eventHasCapability(session.event_id,"gifts"))) return NextResponse.json({message:"Presentes não estão habilitados para este evento."},{status:403});
   const { id } = await context.params;
   const form = await request.formData();
   const name = String(form.get("name") || "").trim();
@@ -98,6 +100,7 @@ export async function DELETE(
   if (!sameOrigin(request)) return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
+  if (!(await eventHasCapability(session.event_id,"gifts"))) return NextResponse.json({message:"Presentes não estão habilitados para este evento."},{status:403});
   const { id } = await context.params;
   const sql = db();
 
