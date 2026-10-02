@@ -17,10 +17,12 @@ export function RsvpScenarioCanvas({
   config,
   initialSubmission,
   identityName,
+  vars = {},
 }: {
   config: InviteVisualConfig;
   initialSubmission: CurrentRsvpSubmission | null;
   identityName: string;
+  vars?: Record<string, string | undefined>;
 }) {
   const [state, setState] = useState<RsvpPreviewState>(
     initialSubmission ? "confirmed" : "children-question"
@@ -46,6 +48,7 @@ export function RsvpScenarioCanvas({
   return (
     <InviteCanvas
       screen={screen}
+      vars={vars}
       slots={{
         "rsvp-flow": (
           <RsvpFlowView
