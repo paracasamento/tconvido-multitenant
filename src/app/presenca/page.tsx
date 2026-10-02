@@ -61,7 +61,8 @@ export default async function RsvpPage() {
       config={pageData.config}
       initialSubmission={initialSubmission}
       identityName={guestSession.guest_name}
-      eventType={pageData.event.event_type}
+      allowChildren={guestSession.allowed_children > 0}
+      maxChildren={guestSession.allowed_children}
       vars={buildEventTemplateVars(pageData.event, {
         guest_name: guestSession.guest_name,
       })}
