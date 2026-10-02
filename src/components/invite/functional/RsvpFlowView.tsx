@@ -25,6 +25,7 @@ type Props = {
   scenarioParts?: Record<string, Record<string, InvitePartStyle>>;
   initialSubmission?: CurrentRsvpSubmission | null;
   identityName?: string;
+  allowChildren?: boolean;
   preview?: boolean;
   previewState?: RsvpPreviewState;
   selectedPart?: string | null;
@@ -38,6 +39,7 @@ export function RsvpFlowView({
   scenarioParts = {},
   initialSubmission = null,
   identityName = "",
+  allowChildren = true,
   preview = false,
   previewState = "children-question",
   selectedPart = null,
@@ -50,7 +52,7 @@ export function RsvpFlowView({
       ? previewState
       : initialSubmission
         ? "confirmed"
-        : "children-question"
+        : allowChildren ? "children-question" : "form-no-children"
   );
   const [name, setName] = useState(initialSubmission?.submitted_name || identityName || "");
   const [hasChildren, setHasChildren] = useState(initialSubmission?.has_children || false);
@@ -115,8 +117,8 @@ export function RsvpFlowView({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           submitted_name: name.trim(),
-          has_children: hasChildren,
-          children_count: hasChildren ? childrenCount : 0,
+          has_children: allowChildren ? hasChildren : false,
+          children_count: allowChildren && hasChildren ? childrenCount : 0,
         }),
       });
 
@@ -266,7 +268,7 @@ export function RsvpFlowView({
             {...bind("retry-button")}
             onClick={preview ? bind("retry-button").onClick : () => {
               setError("");
-              go(hasChildren ? "form-children" : "form-no-children");
+              go(allowChildren && hasChildren ? "form-children" : "form-no-children");
             }}
           >
             <span {...bind("retry-text")}>{t("retry-text", "TENTAR NOVAMENTE")}</span>
