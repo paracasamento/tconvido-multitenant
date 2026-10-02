@@ -4,6 +4,7 @@ import { CalendarDays, ExternalLink, LayoutDashboard, Palette, UserRound, Circle
 import { db } from "@/lib/db";
 import { requirePlatformAdmin } from "@/lib/sessions";
 import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
+import { ProductionControl } from "@/components/gestao/ProductionControl";
 
 export const dynamic = "force-dynamic";
 
@@ -65,7 +66,7 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
       <section className="settings-card"><h2>Pendências</h2>{pending.length?<div className="intake-feature-list">{pending.map(item=><span key={item}><CircleAlert size={14}/> {item}</span>)}</div>:<p>Nenhuma pendência estrutural básica.</p>}</section>
     </div>
 
-    <section className="settings-card"><h2>Ferramentas do evento</h2><div className="card-actions">
+    <section className="settings-card"><h2>Controle de produção</h2><ProductionControl eventId={event.id} initialStatus={event.production_status||"draft"} initialDeadline={event.delivery_deadline?new Date(event.delivery_deadline).toISOString().slice(0,10):""} initialNotes={event.internal_notes||""}/></section><section className="settings-card"><h2>Ferramentas do evento</h2><div className="card-actions">
       <form action={`/api/owner/events/${event.id}/select?next=%2Fgestao%2Feditor`} method="post"><button className="gestao-primary-action" type="submit"><Palette size={16}/> Editar convite</button></form>
       <form action={`/api/owner/events/${event.id}/select?next=%2Fadmin`} method="post"><button className="gestao-primary-action" type="submit"><LayoutDashboard size={16}/> Abrir painel do cliente</button></form>
     </div></section>
