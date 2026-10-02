@@ -13,6 +13,7 @@ export function PublicIntakeForm() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const [message, setMessage] = useState("");
+  const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
   const definition = useMemo(() => eventType ? EVENT_TYPE_DEFINITIONS[eventType] : null, [eventType]);
 
   function toggleStyle(value: string) {
@@ -56,6 +57,14 @@ export function PublicIntakeForm() {
       const response = await fetch("/api/public/intakes", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Não foi possível enviar sua ficha.");
+      if (referenceFiles.length) {
+        const media = new FormData();
+        media.set("access_token", data.access_token);
+        referenceFiles.forEach(file => media.append("files", file));
+        const mediaResponse = await fetch(`/api/public/intakes/${data.intake_id}/media`, { method: "POST", body: media });
+        const mediaData = await mediaResponse.json();
+        if (!mediaResponse.ok) throw new Error(`A ficha foi salva, mas houve um problema com as referências: ${mediaData.message || "tente novamente."}`);
+      }
       setDone(true);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível enviar sua ficha.");
@@ -106,7 +115,7 @@ export function PublicIntakeForm() {
           <div><span className="intake-label">Escolha até 3 estilos</span><div className="intake-tags">{styles.map(style => <button key={style} type="button" className={styleTags.includes(style) ? "is-selected" : ""} onClick={() => toggleStyle(style)}>{style}</button>)}</div></div>
           <label><span>Cores que gostaria que fossem consideradas</span><input name="color_notes" placeholder="Verde oliva, off-white, dourado..." /></label>
           <label><span>Mais alguma direção de estilo?</span><textarea name="style_notes" /></label>
-          <div className="intake-media-placeholder"><strong>Referências visuais</strong><p>O envio de fotos da decoração e referências será conectado aqui na próxima etapa da implantação.</p></div>
+          <label className="intake-media-placeholder"><strong>Referências visuais</strong><p>Envie até 8 fotos da decoração, paleta, papelaria ou outras referências. JPG, PNG ou WebP, até 12 MB cada.</p><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e => setReferenceFiles(Array.from(e.target.files || []).slice(0, 8))} /><small>{referenceFiles.length ? `${referenceFiles.length} imagem(ns) selecionada(s)` : "Nenhuma imagem selecionada"}</small></label>
         </section>
 
         <section className="intake-section">
