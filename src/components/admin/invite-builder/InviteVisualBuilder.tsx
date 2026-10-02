@@ -1950,11 +1950,11 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
       if(Array.isArray(d.groupMembers) && d.groupMembers.length>1){
         const deltaX=nextX-d.x;
         const deltaY=nextY-d.y;
-        const memberPositions=new Map(
+        const memberPositions=new Map<string,{x:number;y:number}>(
           d.groupMembers.map((member:any)=>[
-            member.id,
-            {x:member.x+deltaX,y:member.y+deltaY}
-          ])
+            String(member.id),
+            {x:Number(member.x)+deltaX,y:Number(member.y)+deltaY}
+          ] as [string,{x:number;y:number}])
         );
         const cur=screenId==="rsvp"
           ? resolveRsvpScenarioScreen(configRef.current,rsvpPreviewState as RsvpScenarioId)
