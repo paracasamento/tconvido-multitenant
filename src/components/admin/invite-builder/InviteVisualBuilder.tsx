@@ -36,7 +36,7 @@ import { GiftNoteView } from "@/components/invite/functional/GiftNoteView";
 import { CountdownView } from "@/components/invite/functional/CountdownView";
 import { INVITE_ICON_OPTIONS } from "@/components/invite/InvitePartIcon";
 import type { InviteEditorPreviewData } from "@/lib/invite-editor-preview";
-import { getThemeLibraryItem, THEME_LIBRARY, type ThemeLibraryAsset } from "@/lib/theme-library";
+import type { ThemeLibraryAsset, ThemeLibraryItem } from "@/lib/theme-library";
 import styles from "./InviteVisualBuilder.module.css";
 
 
@@ -144,7 +144,7 @@ function SlotPreview({ el }: { el: InviteElement }) {
 }
 
 
-export function InviteVisualBuilder({initial,defaults,previewData}:{initial:InviteVisualConfig;defaults:InviteVisualConfig;previewData:InviteEditorPreviewData}){
+export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:{initial:InviteVisualConfig;defaults:InviteVisualConfig;previewData:InviteEditorPreviewData;themeLibrary:ThemeLibraryItem[]}){
 
   // The public invitation always renders the normalized visual config. The editor
   // must start from the exact same normalized object, otherwise a newly-added
@@ -172,7 +172,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   const [mobilePanel,setMobilePanel]=useState<null|"themes"|"pages"|"add"|"layers"|"edit">(null);
   const [mobileTool,setMobileTool]=useState<null|"text"|"font"|"size"|"color"|"opacity"|"replace"|"adjust"|"link"|"border">(null);
   const [mobileCanvasMenu,setMobileCanvasMenu]=useState(false);
-  const [selectedThemeId,setSelectedThemeId]=useState(THEME_LIBRARY[0].id);
+  const [selectedThemeId,setSelectedThemeId]=useState(themeLibrary[0]?.id || "");
   const [zoom,setZoom]=useState(1);
   const [grid,setGrid]=useState(true);
   const [snap,setSnap]=useState(true);
@@ -202,7 +202,10 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   const [smartGuideLines,setSmartGuideLines]=useState<{x:number[];y:number[]}>({x:[],y:[]});
 
   const [history,setHistory]=useState<InviteVisualConfig[]>([]); const [future,setFuture]=useState<InviteVisualConfig[]>([]); const [styleClipboard,setStyleClipboard]=useState<any>(null);
-  const activeTheme=getThemeLibraryItem(selectedThemeId);
+  const activeTheme=useMemo(
+    ()=>themeLibrary.find(theme=>theme.id===selectedThemeId) || themeLibrary[0] || null,
+    [themeLibrary,selectedThemeId]
+  );
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<any>(null);
@@ -223,6 +226,13 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   useEffect(() => {
     configRef.current = config;
   }, [config]);
+
+  useEffect(() => {
+    if (!selectedThemeId && themeLibrary[0]?.id) setSelectedThemeId(themeLibrary[0].id);
+    if (selectedThemeId && !themeLibrary.some(theme => theme.id === selectedThemeId)) {
+      setSelectedThemeId(themeLibrary[0]?.id || "");
+    }
+  }, [themeLibrary, selectedThemeId]);
 
   useEffect(() => {
     if (typeof window === "undefined" || window.innerWidth > 640) return;
@@ -1047,10 +1057,12 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   }
 
   function addThemeAsset(asset:ThemeLibraryAsset){
+    if(!activeTheme)return;
     addElement("image",asset.src,`${activeTheme.name} · ${asset.name}`,asset.placement);
   }
 
   function applyThemeBackground(src:string){
+    if(!activeTheme)return;
     updateBackgroundStyle({
       backgroundImage:src,
       backgroundSize:"cover",
@@ -2163,8 +2175,15 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
               </div>}
           </section>
           <div className={styles.assetTitle}>Temas</div>
+          {!themeLibrary.length ? (
+            <div className={styles.themeEmptyState}>
+              <strong>Nenhum kit cadastrado</strong>
+              <span>Cadastre seus PNG/WebP finais na Gestão.</span>
+              <a href="/gestao/biblioteca">Abrir Biblioteca</a>
+            </div>
+          ) : null}
           <div className={styles.themeMiniPicker}>
-            {THEME_LIBRARY.map(theme=>(
+            {themeLibrary.map(theme=>(
               <button
                 key={theme.id}
                 type="button"
@@ -2176,18 +2195,18 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
               </button>
             ))}
           </div>
-          <div className={styles.assetTitle}>Fundos · {activeTheme.name}</div>
+          {activeTheme ? <div className={styles.assetTitle}>Fundos · {activeTheme.name}</div> : null}
           <div className={styles.themeBackgrounds}>
-            {activeTheme.backgrounds.map(bg=>(
+            {(activeTheme?.backgrounds || []).map(bg=>(
               <button key={bg.id} type="button" onClick={()=>applyThemeBackground(bg.src)}>
                 <img src={bg.src} alt=""/>
                 <span>{bg.name}</span>
               </button>
             ))}
           </div>
-          <div className={styles.assetTitle}>Decorações padronizadas</div>
+          {activeTheme ? <div className={styles.assetTitle}>Decorações padronizadas</div> : null}
           <div className={styles.assets}>
-            {activeTheme.assets.map(asset=>(
+            {(activeTheme?.assets || []).map(asset=>(
               <button key={asset.id} type="button" onClick={()=>addThemeAsset(asset)}>
                 <img src={asset.src} alt=""/>
                 <span>{asset.name}</span>
@@ -3373,8 +3392,17 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
           <button type="button" onClick={()=>setMobilePanel(null)}>Fechar</button>
         </div>
 
+        {!themeLibrary.length ? (
+          <div className={styles.mobileThemeEmpty}>
+            <ImagePlus size={26}/>
+            <strong>Nenhum kit cadastrado</strong>
+            <span>Adicione seus arquivos finais em Gestão → Biblioteca.</span>
+            <a href="/gestao/biblioteca">Cadastrar kits</a>
+          </div>
+        ) : null}
+
         <div className={styles.mobileThemeGrid}>
-          {THEME_LIBRARY.map(theme=>(
+          {themeLibrary.map(theme=>(
             <button
               key={theme.id}
               type="button"
@@ -3393,29 +3421,29 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
           ))}
         </div>
 
-        <div className={styles.mobileThemeSection}>
+        {activeTheme ? <div className={styles.mobileThemeSection}>
           <div><strong>Fundos</strong><small>Aplicados somente à seção que você está editando.</small></div>
           <div className={styles.mobileThemeBackgrounds}>
-            {activeTheme.backgrounds.map(bg=>(
+            {(activeTheme?.backgrounds || []).map(bg=>(
               <button key={bg.id} type="button" onClick={()=>{applyThemeBackground(bg.src);setMobilePanel(null)}}>
                 <img src={bg.src} alt=""/>
                 <span>{bg.name}</span>
               </button>
             ))}
           </div>
-        </div>
+        </div> : null}
 
-        <div className={styles.mobileThemeSection}>
+        {activeTheme ? <div className={styles.mobileThemeSection}>
           <div><strong>Decorações</strong><small>Já entram com tamanho e posição sugeridos.</small></div>
           <div className={styles.mobileThemeAssets}>
-            {activeTheme.assets.map(asset=>(
+            {(activeTheme?.assets || []).map(asset=>(
               <button key={asset.id} type="button" onClick={()=>{addThemeAsset(asset);setMobilePanel(null)}}>
                 <img src={asset.src} alt=""/>
                 <span>{asset.name}</span>
               </button>
             ))}
           </div>
-        </div>
+        </div> : null}
       </section>
     ) : null}
 
@@ -3432,17 +3460,21 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
           <button type="button" onClick={()=>{addElement("link");setMobilePanel(null)}}><Link2 size={23}/><strong>Botão</strong><small>Link ou ação</small></button>
           <button type="button" onClick={()=>{addElement("box");setMobilePanel(null)}}><Box size={23}/><strong>Container</strong><small>Área visual</small></button>
         </div>
-        <div className={styles.mobileAddDecorations}>
+        {activeTheme ? <div className={styles.mobileAddDecorations}>
           <div><strong>{activeTheme.name}</strong><small>Decorações do tema selecionado.</small></div>
           <div>
-            {activeTheme.assets.map(asset=>(
+            {(activeTheme?.assets || []).map(asset=>(
               <button key={asset.id} type="button" onClick={()=>{addThemeAsset(asset);setMobilePanel(null)}}>
                 <img src={asset.src} alt=""/>
                 <span>{asset.name}</span>
               </button>
             ))}
           </div>
-        </div>
+        </div> : (
+          <div className={styles.mobileAddDecorations}>
+            <div><strong>Sem kits cadastrados</strong><small>Cadastre suas decorações finais em Gestão → Biblioteca.</small></div>
+          </div>
+        )}
       </section>
     ) : null}
 
@@ -3534,7 +3566,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
               </label>
             ) : null}
             <div className={styles.mobilePaletteStrip}>
-              {activeTheme.palette.map(color=>(
+              {(activeTheme?.palette || []).map(color=>(
                 <button
                   key={color}
                   type="button"
@@ -3562,11 +3594,11 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
 
         {mobileTool==="replace" && selected.type==="image" ? (
           <div className={styles.mobileReplaceGrid}>
-            {activeTheme.assets.map(asset=>(
+            {(activeTheme?.assets || []).map(asset=>(
               <button
                 key={asset.id}
                 type="button"
-                onClick={()=>{mutateElement(selected.id,{src:asset.src,name:`${activeTheme.name} · ${asset.name}`});setMobileTool(null)}}
+                onClick={()=>{mutateElement(selected.id,{src:asset.src,name:`${activeTheme?.name || "Kit"} · ${asset.name}`});setMobileTool(null)}}
               >
                 <img src={asset.src} alt=""/>
                 <span>{asset.name}</span>

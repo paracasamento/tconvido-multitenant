@@ -99,3 +99,38 @@ export function giftImageUrl(path: string | null | undefined) {
   if (!path) return null;
   return `/api/gift-assets?path=${encodeURIComponent(path)}`;
 }
+
+
+export async function uploadThemeLibraryAsset(
+  kitId: string,
+  slot: string,
+  file: File
+) {
+  const allowed = new Set(["image/jpeg", "image/png", "image/webp"]);
+  if (!allowed.has(file.type)) throw new Error("Use PNG, WEBP ou JPG.");
+  if (file.size > 12 * 1024 * 1024) throw new Error("O arquivo final deve ter no máximo 12 MB.");
+
+  const safeSlot = slot.replace(/[^a-z0-9_-]/gi, "").toLowerCase();
+  if (!safeSlot) throw new Error("Slot inválido.");
+
+  const ext =
+    file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const path = `theme-kits/${kitId}/${safeSlot}/${crypto.randomUUID()}.${ext}`;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+
+  const client = storageClient();
+  const { error } = await client.storage.from(bucket).upload(path, bytes, {
+    contentType: file.type,
+    upsert: false,
+    cacheControl: "31536000"
+  });
+
+  if (error) throw error;
+  return path;
+}
+
+export async function deleteStoredImage(path: string | null | undefined) {
+  if (!path) return;
+  const client = storageClient();
+  await client.storage.from(bucket).remove([path]);
+}

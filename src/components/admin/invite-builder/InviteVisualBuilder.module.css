@@ -2859,3 +2859,31 @@
     background:#f1f2f5;
   }
 }
+
+
+/* Empty user-managed theme library -------------------------------------- */
+.themeEmptyState,
+.mobileThemeEmpty{
+  padding:16px;
+  border:1px dashed #d9dde6;
+  border-radius:13px;
+  background:#fafbfc;
+  color:#6f7684;
+  display:grid;
+  justify-items:start;
+  gap:6px;
+}
+.themeEmptyState strong,
+.mobileThemeEmpty strong{color:#303643;font-size:11px}
+.themeEmptyState span,
+.mobileThemeEmpty span{font-size:9px;line-height:1.4}
+.themeEmptyState a,
+.mobileThemeEmpty a{
+  min-height:34px;padding:0 10px;border-radius:9px;background:#12308e;color:#fff;
+  display:inline-flex;align-items:center;text-decoration:none;font-size:9px;font-weight:800
+}
+@media(max-width:640px){
+  .mobileThemeEmpty{margin-bottom:14px;padding:18px}
+  .mobileThemeEmpty strong{font-size:13px}
+  .mobileThemeEmpty span{font-size:10px}
+}
