@@ -170,14 +170,14 @@ export default async function InvitationPage() {
   const inviteVars = buildEventTemplateVars(event);
 
   const inviteSlots = {
-    countdown: (
-      {hasCapability("countdown") && target ? <CountdownView
+    countdown: hasCapability("countdown") && target ? (
+      <CountdownView
         key="invite-countdown-slot"
         target={target}
         initialNow={countdownInitialNow}
         parts={countdownElement?.partStyles}
-      /> : null}
-    ),
+      />
+    ) : null,
   };
 
   if (confirmed && giftsScreen && giftsSlots) {
