@@ -185,7 +185,7 @@ export function RsvpFlowView({
       {activeStep === "children-question" && (
         <div className={styles.stack}>
           <span {...bind("step-label")}>{t("step-label", "CONFIRMAR PRESENÇA")}</span>
-          <h2 {...bind("question-title")}>{t("question-title", "Possui filhos que irão junto?")}</h2>
+          <h2 {...bind("question-title")}>{t("question-title", "Alguma criança irá com você?")}</h2>
 
           <div className={styles.choiceGrid}>
             <button
