@@ -591,7 +591,7 @@ const rsvpFlowSlot = (id: string, name: string, x: number, y: number, width: num
       fontWeight: 500,
       lineHeight: 1.08,
       textAlign: "center",
-      text: "Possui filhos que irão junto?",
+      text: "Alguma criança irá com você?",
     },
     "yes-button": {
       minHeight: 52,
