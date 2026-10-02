@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { getDefaultCapabilities, isEventType } from "@/lib/event-types";
 
 export type SetupStepId = "party" | "access" | "guests" | "gifts" | "review";
 
@@ -52,6 +53,7 @@ export async function getAdminSetupState(eventId: string): Promise<AdminSetupSta
       e.couple_names,
       e.status,
       e.production_status,
+      e.event_type,
       COALESCE(e.enabled_capabilities,\'[]\'::jsonb) AS enabled_capabilities,
       e.guest_access_mode,
       e.event_access_code_hash,
@@ -90,6 +92,15 @@ export async function getAdminSetupState(eventId: string): Promise<AdminSetupSta
   if (!rows.length) throw new Error("Evento não encontrado.");
   const row = rows[0] as any;
 
+  const configuredCapabilities = Array.isArray(row.enabled_capabilities)
+    ? row.enabled_capabilities.filter((value: unknown): value is string => typeof value === "string")
+    : [];
+  const resolvedCapabilities =
+    configuredCapabilities.length === 0 && isEventType(String(row.event_type || ""))
+      ? getDefaultCapabilities(row.event_type)
+      : configuredCapabilities;
+  const giftsEnabled = resolvedCapabilities.includes("gifts");
+
   const guestCount = Number(row.guests_total || 0);
   const giftCount = Number(row.gifts_total || 0);
   const reservedCount = Number(row.gifts_reserved || 0);
@@ -114,7 +125,7 @@ export async function getAdminSetupState(eventId: string): Promise<AdminSetupSta
   );
 
   const guestsComplete = guestCount > 0;
-  const giftsComplete = giftCount > 0;
+  const giftsComplete = !giftsEnabled || giftCount > 0;
 
   const coreReady = partyComplete && accessComplete && guestsComplete && giftsComplete;
   const published = row.status === "active" || row.status === "closed";
@@ -143,27 +154,31 @@ export async function getAdminSetupState(eventId: string): Promise<AdminSetupSta
       description: "Adicione as pessoas que receberão o convite.",
       href: "/admin/preparar/convidados",
       complete: guestsComplete
-    },
-    {
+    }
+  ];
+
+  if (giftsEnabled) {
+    steps.push({
       id: "gifts",
-      number: 4,
+      number: steps.length + 1,
       title: "Presentes",
       description: "Monte a lista de presentes.",
       href: "/admin/preparar/presentes",
       complete: giftsComplete
-    },
-    {
-      id: "review",
-      number: 5,
-      title: published ? "Publicado" : "Publicar",
-      description: published ? "Seu convite já está disponível." : "Confira tudo e libere o convite.",
-      href: published ? "/admin/convite" : "/admin/preparar/revisao",
-      complete: published
-    }
-  ];
+    });
+  }
+
+  steps.push({
+    id: "review",
+    number: steps.length + 1,
+    title: published ? "Publicado" : "Publicar",
+    description: published ? "Seu convite já está disponível." : "Confira tudo e libere o convite.",
+    href: published ? "/admin/convite" : "/admin/preparar/revisao",
+    complete: published
+  });
 
   const completedSteps = steps.filter(step => step.complete).length;
-  const nextStep = steps.find(step => !step.complete) || steps[4];
+  const nextStep = steps.find(step => !step.complete) || steps[steps.length - 1];
 
   return {
     event: {
@@ -173,7 +188,7 @@ export async function getAdminSetupState(eventId: string): Promise<AdminSetupSta
       couple_names: row.couple_names,
       status: row.status,
       production_status: row.production_status || "draft",
-      enabled_capabilities: Array.isArray(row.enabled_capabilities) ? row.enabled_capabilities : [],
+      enabled_capabilities: resolvedCapabilities,
       guest_access_mode: row.guest_access_mode,
       event_date: row.event_date,
       event_time: row.event_time,
