@@ -125,7 +125,7 @@ function eventInitials(coupleNames: string, title: string) {
 export function buildEventTemplateVars(
   event: Pick<
     EventRecord,
-    "title" | "couple_names" | "public_intro" | "event_date" | "event_time" | "venue" | "city" | "maps_url"
+    "title" | "couple_names" | "public_intro" | "event_date" | "event_time" | "venue" | "city" | "maps_url" | "event_name" | "celebrant_name" | "baby_name" | "hosts_names"
   >,
   extras: Record<string, string | undefined> = {}
 ) {
@@ -136,6 +136,10 @@ export function buildEventTemplateVars(
 
   return {
     couple_names: String(event.couple_names || ""),
+    event_name: String(event.event_name || ""),
+    celebrant_name: String(event.celebrant_name || ""),
+    baby_name: String(event.baby_name || ""),
+    hosts_names: String(event.hosts_names || ""),
     title: String(event.title || ""),
     intro: String(event.public_intro || ""),
     date: displayDate(event.event_date),
