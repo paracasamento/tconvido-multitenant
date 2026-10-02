@@ -7,6 +7,7 @@ export type InviteEditorPreviewData = {
   vars: Record<string, string>;
   gifts: GiftUi[];
   giftColorPreferences: Array<{ name: string; hex: string }>;
+  guestAllowedAdults: number;
   guestAllowedChildren: number;
 };
 
@@ -35,7 +36,7 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
       LIMIT 1
     `,
     sql`
-      SELECT name, allowed_children
+      SELECT name, allowed_adults, allowed_children
       FROM guests
       WHERE event_id = ${eventId}
         AND deleted_at IS NULL
@@ -89,6 +90,7 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
       },
       gifts: [],
       giftColorPreferences: [],
+      guestAllowedAdults: 1,
       guestAllowedChildren: 0,
     };
   }
@@ -136,6 +138,7 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
     ),
     gifts,
     giftColorPreferences,
+    guestAllowedAdults: Math.max(1, Number(guestRows[0]?.allowed_adults || 1)),
     guestAllowedChildren: Math.max(0, Number(guestRows[0]?.allowed_children || 0)),
   };
 }
