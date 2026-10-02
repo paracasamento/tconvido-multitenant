@@ -180,8 +180,11 @@ export function buildEventTemplateVars(
     [event.venue, event.city].filter(Boolean).join(", ")
   )}`;
 
+  const eventIdentity = String(event.event_name || event.celebrant_name || event.baby_name || event.hosts_names || event.couple_names || event.title || "");
+
   return {
     couple_names: String(event.couple_names || ""),
+    event_identity: eventIdentity,
     event_name: String(event.event_name || ""),
     celebrant_name: String(event.celebrant_name || ""),
     baby_name: String(event.baby_name || ""),
