@@ -68,6 +68,6 @@ export function PublicIntakeForm({resume}:{resume?:{id:string;token:string}}){
   <input type="hidden" name="style_notes_guard" value=""/>
   </>}
   {message&&<p className="form-error intake-global-error">{message}</p>}
-  {!locked&&<div className="intake-nav">{step>1&&<button type="button" className="button button--ghost" onClick={()=>setStep(s=>Math.max(1,s-1))}>Voltar</button>}<button type="submit" className="button button--primary" disabled={busy}>{busy?"Salvando...":step===7?(resume?"Salvar alterações":"Enviar minha ficha"):"Continuar"}</button></div>}
+  {!locked&&<div className="intake-nav">{step>1&&<button type="button" className="button button--ghost" onClick={()=>setStep(s=>Math.max(1,s-1))}>Voltar</button>}{step<7?<button type="button" className="button button--primary" disabled={busy} onClick={e=>{const form=e.currentTarget.form;if(form)goNext(form)}}>Continuar</button>:<button type="submit" className="button button--primary" disabled={busy}>{busy?"Salvando...":resume?"Salvar alterações":"Enviar minha ficha"}</button>}</div>}
  </form></main>
 }
