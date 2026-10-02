@@ -50,6 +50,7 @@ function slotsFor(
         <RsvpFlowView
           key={element.id}
           parts={element.partStyles}
+          maxAdults={previewData.guestAllowedAdults}
           allowChildren={previewData.guestAllowedChildren > 0}
           maxChildren={previewData.guestAllowedChildren}
           preview
