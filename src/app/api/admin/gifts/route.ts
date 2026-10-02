@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { eventHasCapability } from "@/lib/event-capabilities";
 import { adminLog } from "@/lib/admin-log";
 import { getAdminSession } from "@/lib/sessions";
 import { sameOrigin } from "@/lib/security";
@@ -21,6 +22,7 @@ export async function POST(request: Request) {
   if (!sameOrigin(request)) return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
   const session = await getAdminSession();
   if (!session) return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
+  if (!(await eventHasCapability(session.event_id,"gifts"))) return NextResponse.json({message:"Presentes não estão habilitados para este evento."},{status:403});
 
   const contentType = request.headers.get("content-type") || "";
   const sql = db();
