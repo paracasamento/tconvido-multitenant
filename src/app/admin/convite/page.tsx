@@ -45,7 +45,7 @@ export default async function AdminInvitationPage() {
         </div>
       </section>
 
-      {published && <InvitationApproval status={(setup.event as any).production_status || "draft"} />}
+      {published && <InvitationApproval status={setup.event.production_status || "draft"} />}
 
       <section className="invitation-status-v6">
         <div>
