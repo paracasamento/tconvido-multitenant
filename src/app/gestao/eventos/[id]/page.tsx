@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requirePlatformAdmin } from "@/lib/sessions";
 import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
 import { ProductionControl } from "@/components/gestao/ProductionControl";
+import { validateEventReadiness } from "@/lib/event-readiness";
 
 export const dynamic = "force-dynamic";
 
@@ -26,11 +27,8 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
   const type=EVENT_TYPE_DEFINITIONS[event.event_type as EventType];
   const identity=event.event_name||event.couple_names||event.celebrant_name||event.baby_name||event.hosts_names||event.title;
   const caps=Array.isArray(event.enabled_capabilities)?event.enabled_capabilities:[];
-  const pending:string[]=[];
-  if(!event.event_date)pending.push("Data do evento");
-  if(!event.event_time)pending.push("Horário");
-  if(!event.venue&&!event.city)pending.push("Local");
-  if(!event.owner_name)pending.push("Acesso do cliente");
+  const readiness=validateEventReadiness(event);
+  const pending=[...readiness.map(issue=>issue.label),...(!event.owner_name?["Acesso do cliente"]:[])];
 
   return <main className="gestao-home">
     <Link href="/gestao" className="gestao-back-link">← Voltar aos eventos</Link>
