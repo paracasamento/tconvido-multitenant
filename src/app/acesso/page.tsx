@@ -4,6 +4,7 @@ import { getInviteSession } from "@/lib/invite-session";
 import { getGuestSession } from "@/lib/sessions";
 import { getPublicInvitePageData } from "@/lib/public-invite-data";
 import { safeInternalPath } from "@/lib/access-routing";
+import { buildEventTemplateVars } from "@/lib/event";
 
 export const dynamic = "force-dynamic";
 
@@ -51,10 +52,7 @@ export default async function AccessPage({
       screen={pageData.screen}
       redirectTo={next}
       eventSlug={pageData.event.slug}
-      vars={{
-        couple_names: pageData.event.couple_names,
-        title: pageData.event.title,
-      }}
+      vars={buildEventTemplateVars(pageData.event)}
     />
   );
 }
