@@ -3,7 +3,6 @@
 import Link from "next/link";
 import type { InviteElement, InviteScreen } from "@/lib/invite-builder";
 import { inviteScreenBackgroundStyle } from "@/lib/invite-background-style";
-import { InviteStructureBlock } from "@/components/invite/InviteStructureBlock";
 import { InvitePartIcon } from "@/components/invite/InvitePartIcon";
 import {
   buildScreenScopedCss,
