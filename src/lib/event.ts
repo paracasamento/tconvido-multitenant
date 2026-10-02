@@ -57,18 +57,64 @@ export async function getEventBySlug(slug: string): Promise<EventRecord | null> 
 }
 
 export function displayDate(date: string) {
-  const [year, month, day] = date.split("-").map(Number);
+  const match = String(date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return "";
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const value = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    value.getUTCFullYear() !== year ||
+    value.getUTCMonth() !== month - 1 ||
+    value.getUTCDate() !== day
+  ) {
+    return "";
+  }
+
   return new Intl.DateTimeFormat("pt-BR", {
     day: "numeric",
     month: "long",
     timeZone: "UTC"
-  }).format(new Date(Date.UTC(year, month - 1, day)));
+  }).format(value);
 }
 
 
 export function eventDateParts(date: string) {
-  const [year, month, day] = date.split("-").map(Number);
-  const value = new Date(Date.UTC(year, Math.max(0, (month || 1) - 1), day || 1));
+  const match = String(date || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) {
+    return {
+      day: "",
+      day_number: "",
+      month: "",
+      month_short: "",
+      weekday: "",
+      weekday_short: "",
+      year: "",
+    };
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const value = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    value.getUTCFullYear() !== year ||
+    value.getUTCMonth() !== month - 1 ||
+    value.getUTCDate() !== day
+  ) {
+    return {
+      day: "",
+      day_number: "",
+      month: "",
+      month_short: "",
+      weekday: "",
+      weekday_short: "",
+      year: "",
+    };
+  }
   const monthLong = new Intl.DateTimeFormat("pt-BR", {
     month: "long",
     timeZone: "UTC",
@@ -156,7 +202,7 @@ export function buildEventTemplateVars(
     month_short: parts.month_short,
     year: parts.year,
     initials: eventInitials(event.couple_names, event.title),
-    event_datetime: `${event.event_date}T${event.event_time}:00-03:00`,
+    event_datetime: event.event_date && event.event_time ? `${event.event_date}T${event.event_time}:00-03:00` : "",
     ...extras,
   };
 }
