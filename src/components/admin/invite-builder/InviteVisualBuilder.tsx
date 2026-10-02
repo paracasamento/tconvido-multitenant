@@ -60,9 +60,9 @@ const EDITOR_PAGES: Array<{ id: EditorPageId; label: string }> = [
 ];
 
 const RSVP_PREVIEW_STATES: { id: RsvpPreviewState; label: string; short: string }[] = [
-  { id:"children-question", label:"1. Pergunta sobre filhos", short:"Filhos?" },
-  { id:"form-no-children", label:"2. Formulário sem filhos", short:"Sem filhos" },
-  { id:"form-children", label:"3. Formulário com filhos", short:"Com filhos" },
+  { id:"children-question", label:"1. Pergunta sobre crianças", short:"Crianças?" },
+  { id:"form-no-children", label:"2. Formulário sem crianças", short:"Sem crianças" },
+  { id:"form-children", label:"3. Formulário com crianças", short:"Com crianças" },
   { id:"confirmed", label:"4. Presença confirmada", short:"Confirmado" },
   { id:"error", label:"5. Erro técnico", short:"Erro" },
 ];
@@ -76,6 +76,10 @@ const RSVP_PART_SCENARIO: Partial<Record<string, RsvpPreviewState>> = {
   "form-title": "form-no-children",
   "name-label": "form-no-children",
   "name-input": "form-no-children",
+  "adults-label": "form-no-children",
+  "adults-stepper": "form-no-children",
+  "adults-stepper-button": "form-no-children",
+  "adults-stepper-value": "form-no-children",
   "children-label": "form-children",
   "stepper": "form-children",
   "stepper-button": "form-children",
@@ -83,7 +87,7 @@ const RSVP_PART_SCENARIO: Partial<Record<string, RsvpPreviewState>> = {
   "success-icon": "confirmed",
   "success-title": "confirmed",
   "success-copy": "confirmed",
-  "success-copy-children": "confirmed",
+  "success-copy-group": "confirmed",
   "error-card": "error",
   "error-title": "error",
   "error-copy": "error",
@@ -96,14 +100,16 @@ const RSVP_SCENARIO_PART_IDS: Record<RsvpPreviewState, string[]> = {
     "flow", "step-label", "question-title", "yes-button", "yes-text", "no-button", "no-text"
   ],
   "form-no-children": [
-    "flow", "step-label", "form-title", "name-label", "name-input", "confirm-button", "confirm-text"
+    "flow", "step-label", "form-title", "name-label", "name-input", "adults-label",
+    "adults-stepper", "adults-stepper-button", "adults-stepper-value", "confirm-button", "confirm-text"
   ],
   "form-children": [
-    "flow", "step-label", "form-title", "name-label", "name-input", "children-label", "stepper",
+    "flow", "step-label", "form-title", "name-label", "name-input", "adults-label",
+    "adults-stepper", "adults-stepper-button", "adults-stepper-value", "children-label", "stepper",
     "stepper-button", "stepper-value", "confirm-button", "confirm-text"
   ],
   confirmed: [
-    "flow", "success-icon", "success-title", "success-copy", "success-copy-children"
+    "flow", "success-icon", "success-title", "success-copy", "success-copy-group"
   ],
   error: [
     "flow", "error-card", "error-title", "error-copy", "retry-button", "retry-text"
