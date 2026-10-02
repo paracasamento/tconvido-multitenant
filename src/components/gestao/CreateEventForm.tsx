@@ -70,9 +70,14 @@ export function CreateEventForm() {
           <span>Local</span>
           <input name="venue" required minLength={2} maxLength={180} />
         </label>
-        <label className="is-wide">
+        <label>
           <span>Cidade</span>
           <input name="city" required minLength={2} maxLength={180} />
+        </label>
+        <label>
+          <span>Link da localização</span>
+          <input name="maps_url" type="url" maxLength={1200} placeholder="https://maps.google.com/..." />
+          <small>Opcional. Se ficar vazio, o convite usa Local + Cidade para abrir o mapa.</small>
         </label>
         </div>
       </section>
