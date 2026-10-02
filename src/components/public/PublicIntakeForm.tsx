@@ -18,7 +18,7 @@ export function PublicIntakeForm({resume}:{resume?:{id:string;token?:string}}){
  const [resumeLoaded,setResumeLoaded]=useState(!resume),[resumeToken,setResumeToken]=useState(resume?.token||""),[locked,setLocked]=useState(false),[initial,setInitial]=useState<any>(null);
  const [weddingHosting,setWeddingHosting]=useState("couple"),[weddingVenues,setWeddingVenues]=useState("same"),[specialTextChoice,setSpecialTextChoice]=useState("later");
  const [featureDefaults,setFeatureDefaults]=useState({rsvp:true,gifts:false,dress_code:false,schedule:false});
- const formRef=useRef<HTMLFormElement>(null),draftTimerRef=useRef<ReturnType<typeof setTimeout>|null>(null),restoredDraftRef=useRef(false);
+ const formRef=useRef<HTMLFormElement>(null),draftTimerRef=useRef<number|null>(null),restoredDraftRef=useRef(false);
  const [draftToRestore,setDraftToRestore]=useState<any>(null);
  const definition=useMemo(()=>eventType?EVENT_TYPE_DEFINITIONS[eventType]:null,[eventType]);
 
