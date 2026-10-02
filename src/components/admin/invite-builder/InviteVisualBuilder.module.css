@@ -2793,3 +2793,69 @@
     color:#8f2e36!important;
   }
 }
+
+
+/* Canva-like selected element quick actions ----------------------------- */
+@media(max-width:640px){
+  .canvasQuickActions{
+    min-height:44px;
+    padding:5px 8px;
+    gap:3px;
+    border-color:rgba(26,30,40,.06);
+    box-shadow:0 8px 26px rgba(18,22,34,.18);
+  }
+
+  .canvasQuickActions button{
+    width:40px;
+    height:34px;
+    min-width:40px;
+    min-height:34px;
+    color:#15171c;
+  }
+
+  .canvasQuickDelete{
+    color:#15171c!important;
+  }
+
+  .canvasQuickMenu{
+    position:absolute;
+    top:calc(100% + 8px);
+    right:0;
+    z-index:1400;
+    width:196px;
+    padding:7px;
+    border:1px solid rgba(22,27,39,.08);
+    border-radius:14px;
+    background:rgba(255,255,255,.99);
+    box-shadow:0 14px 34px rgba(18,23,36,.20);
+    display:grid;
+    gap:2px;
+    backdrop-filter:blur(14px);
+  }
+
+  .canvasQuickMenu button{
+    width:100%;
+    min-width:0;
+    height:40px;
+    padding:0 10px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:9px;
+    color:#303540;
+    text-align:left;
+  }
+
+  .canvasQuickMenu button span{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:10px;
+    font-weight:700;
+  }
+
+  .canvasQuickMenu button:active{
+    background:#f1f2f5;
+  }
+}
