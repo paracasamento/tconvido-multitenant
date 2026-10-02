@@ -31,6 +31,8 @@ export default async function InvitationPage() {
   }
 
   const { event } = pageData;
+  const capabilities:string[]=Array.isArray((event as any).enabled_capabilities)?(event as any).enabled_capabilities:[];
+  const hasCapability=(cap:string)=>capabilities.length===0||capabilities.includes(cap);
   const confirmed =
     guestSession?.event_id === invite.event_id &&
     guestSession.rsvp_status === "confirmed";
@@ -45,6 +47,8 @@ export default async function InvitationPage() {
     elements: baseScreen.elements
       .filter(element => {
         if (element.id === "invite-gifts") return false;
+        if (element.id === "invite-rsvp" && !hasCapability("rsvp")) return false;
+        if (element.slot === "countdown" && !hasCapability("countdown")) return false;
         if (confirmed && element.id === "invite-rsvp") return false;
         return true;
       })
@@ -60,13 +64,13 @@ export default async function InvitationPage() {
     element => element.slot === "countdown"
   );
 
-  const target = `${event.event_date}T${event.event_time}:00-03:00`;
+  const target = event.event_date && event.event_time ? `${event.event_date}T${event.event_time}:00-03:00` : "";
   const countdownInitialNow = Date.now();
 
   let giftsScreen: InviteScreen | null = null;
   let giftsSlots: Record<string, React.ReactNode> | null = null;
 
-  if (confirmed && guestSession) {
+  if (confirmed && guestSession && hasCapability("gifts")) {
     const sql = db();
 
     const [rows, giftsPageData] = await Promise.all([
@@ -167,12 +171,12 @@ export default async function InvitationPage() {
 
   const inviteSlots = {
     countdown: (
-      <CountdownView
+      {hasCapability("countdown") && target ? <CountdownView
         key="invite-countdown-slot"
         target={target}
         initialNow={countdownInitialNow}
         parts={countdownElement?.partStyles}
-      />
+      /> : null}
     ),
   };
 
