@@ -42,6 +42,12 @@ function rowToEvent(row: any): EventRecord {
         }))
       : [],
     status: row.status,
+    event_type: row.event_type,
+    event_name: row.event_name,
+    celebrant_name: row.celebrant_name,
+    baby_name: row.baby_name,
+    hosts_names: row.hosts_names,
+    enabled_capabilities: Array.isArray(row.enabled_capabilities)?row.enabled_capabilities:[],
   };
 }
 
@@ -75,6 +81,12 @@ export async function getPublicInvitePageData(
       e.maps_url,
       COALESCE(e.gift_color_preferences, '[]'::jsonb) AS gift_color_preferences,
       e.status,
+      e.event_type,
+      e.event_name,
+      e.celebrant_name,
+      e.baby_name,
+      e.hosts_names,
+      COALESCE(e.enabled_capabilities,\'[]\'::jsonb) AS enabled_capabilities,
       d.config->'screens'->${screenId} AS visual_screen,
       d.config->'inviteFlow' AS invite_flow,
       CASE WHEN ${screenId} = 'rsvp'

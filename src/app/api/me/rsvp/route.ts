@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { eventHasCapability } from "@/lib/event-capabilities";
 import { getInviteSession } from "@/lib/invite-session";
 import { normalizeName, sameOrigin } from "@/lib/security";
 import {
@@ -42,6 +43,8 @@ export async function PUT(request: Request) {
     if (!invite) {
       return NextResponse.json({ message: "Sessão expirada." }, { status: 401 });
     }
+
+    if (!(await eventHasCapability(invite.event_id,"rsvp"))) return NextResponse.json({message:"Confirmação de presença não está habilitada para este evento."},{status:403});
 
     const sql = db();
     const eventRows = await sql`

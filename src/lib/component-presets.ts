@@ -14,6 +14,8 @@ export type InviteComponentPresetElement = Partial<InviteElement> & {
 
 export type InviteComponentPreset = {
   id: string;
+  capabilities?: string[];
+  eventTypes?: string[];
   name: string;
   category: InviteComponentPresetCategory;
   description: string;
@@ -282,6 +284,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
 
   {
     id: "button-solid",
+    capabilities: ["rsvp"],
     name: "Botão sólido",
     category: "button",
     description: "Cápsula forte com alto contraste.",
@@ -295,6 +298,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
   },
   {
     id: "button-outline",
+    capabilities: ["gifts"],
     name: "Botão contorno",
     category: "button",
     description: "Leve e elegante para ações secundárias.",
@@ -352,6 +356,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
 
   {
     id: "actions-three",
+    capabilities: ["rsvp","gifts"],
     name: "3 ações com ícones",
     category: "actions",
     description: "Local, confirmação e presentes em uma linha.",
@@ -388,6 +393,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
   },
   {
     id: "actions-circular",
+    capabilities: ["rsvp","gifts"],
     name: "Ações circulares",
     category: "actions",
     description: "Três atalhos circulares no estilo convite interativo.",
@@ -470,7 +476,45 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
   },
 
   {
+    id: "heading-celebrant",
+    name: "Nome do aniversariante",
+    category: "heading",
+    eventTypes: ["kids_birthday","quinceanera"],
+    description: "Destaque principal para aniversário e 15 anos.",
+    previewLabel: "NOME · CELEBRAÇÃO",
+    elements: [
+      text("Chamada", "VAMOS CELEBRAR", 18, 39, 64, 4, 10, {fontFamily:"Inter",fontWeight:700,letterSpacing:2.5}),
+      text("Nome", "{{celebrant_name}}", 8, 44, 84, 10, 42, {fontWeight:500,lineHeight:.95}),
+      line("Separador",30,56,40,"#b99d67"),
+    ],
+  },
+  {
+    id: "heading-baby",
+    name: "Nome do bebê",
+    category: "heading",
+    eventTypes: ["baby_shower"],
+    description: "Composição delicada para chá de bebê.",
+    previewLabel: "CHÁ DO BEBÊ · NOME",
+    elements: [
+      text("Chamada","CHÁ DO BEBÊ",18,40,64,4,10,{fontFamily:"Inter",fontWeight:700,letterSpacing:2.2}),
+      text("Nome do bebê","{{baby_name}}",8,45,84,10,42,{fontWeight:500,lineHeight:.95}),
+    ],
+  },
+  {
+    id: "heading-hosts",
+    name: "Anfitriões da casa",
+    category: "heading",
+    eventTypes: ["housewarming"],
+    description: "Destaque para quem está recebendo na casa nova.",
+    previewLabel: "CASA NOVA · ANFITRIÕES",
+    elements: [
+      text("Chamada","CASA NOVA",18,40,64,4,10,{fontFamily:"Inter",fontWeight:700,letterSpacing:2.2}),
+      text("Anfitriões","{{hosts_names}}",8,45,84,10,38,{fontWeight:500,lineHeight:.95}),
+    ],
+  },
+  {
     id: "heading-elegant",
+    eventTypes: ["wedding"],
     name: "Nomes elegantes",
     category: "heading",
     description: "Nomes em destaque com título acima.",
@@ -509,4 +553,12 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
 
 export function presetsByCategory(category: InviteComponentPresetCategory) {
   return INVITE_COMPONENT_PRESETS.filter(preset => preset.category === category);
+}
+
+export function presetsForEvent(eventType:string,capabilities:string[]){
+  return INVITE_COMPONENT_PRESETS.filter(preset=>{
+    const typeOk=!preset.eventTypes?.length||preset.eventTypes.includes(eventType);
+    const capabilityOk=!preset.capabilities?.length||preset.capabilities.every(cap=>capabilities.includes(cap));
+    return typeOk&&capabilityOk;
+  });
 }

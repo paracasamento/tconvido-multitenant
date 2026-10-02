@@ -7,9 +7,12 @@ import { GiftColorPreferencesForm } from "@/components/admin/gifts/GiftColorPref
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/sessions";
 import { signGiftImages } from "@/lib/storage";
+import { eventHasCapability } from "@/lib/event-capabilities";
+import { redirect } from "next/navigation";
 
 export default async function AdminGiftsPage() {
   const session = await requireAdmin("/admin/presentes");
+  if (!(await eventHasCapability(session.event_id,"gifts"))) redirect("/admin");
   const sql = db();
 
   const [giftsResult, eventRows] = await Promise.all([

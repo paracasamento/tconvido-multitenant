@@ -40,6 +40,7 @@ import type { ThemeLibraryAsset, ThemeLibraryItem } from "@/lib/theme-library";
 import {
   INVITE_COMPONENT_PRESETS,
   INVITE_COMPONENT_PRESET_CATEGORIES,
+  presetsForEvent,
   type InviteComponentPreset,
   type InviteComponentPresetCategory,
   type InviteComponentPresetElement,
@@ -151,13 +152,15 @@ function SlotPreview({ el }: { el: InviteElement }) {
 }
 
 
-export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:{initial:InviteVisualConfig;defaults:InviteVisualConfig;previewData:InviteEditorPreviewData;themeLibrary:ThemeLibraryItem[]}){
+export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,eventContext}:{initial:InviteVisualConfig;defaults:InviteVisualConfig;previewData:InviteEditorPreviewData;themeLibrary:ThemeLibraryItem[];eventContext?:{type:string;name:string;capabilities:string[]}}){
 
   // The public invitation always renders the normalized visual config. The editor
   // must start from the exact same normalized object, otherwise a newly-added
   // default part (for example retry-button/error-card) can look like a raw browser
   // button in the editor while the public page receives the default visual style.
   const normalizedInitial=useMemo(()=>normalizeInviteVisualConfig(deep(initial)),[initial]);
+  const availableEditorPages=useMemo(()=>EDITOR_PAGES.filter(page=>page.id!=="rsvp"||eventContext?.capabilities.includes("rsvp")!==false),[eventContext]);
+  const availableComponentPresets=useMemo(()=>eventContext?presetsForEvent(eventContext.type,eventContext.capabilities):INVITE_COMPONENT_PRESETS,[eventContext]);
 
   const [config,setConfig]=useState(()=>deep(normalizedInitial));
   const [screenId,setScreenId]=useState<InviteScreenId>("cover");
@@ -2323,7 +2326,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
         </div>
         <div className={styles.leftHeading}>Páginas</div>
         <div className={styles.screenTabs}>
-          {EDITOR_PAGES.map(page=><button key={page.id} className={editorPage===page.id?styles.active:""} onClick={()=>switchEditorPage(page.id)}>{page.label}</button>)}
+          {availableEditorPages.map(page=><button key={page.id} className={editorPage===page.id?styles.active:""} onClick={()=>switchEditorPage(page.id)}>{page.label}</button>)}
         </div>
 
         {editorPage==="invite-flow"&&(
@@ -2448,7 +2451,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
               ))}
             </div>
             <div className={styles.componentPresetGrid}>
-              {INVITE_COMPONENT_PRESETS.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
+              {availableComponentPresets.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
                 <button key={preset.id} type="button" onClick={()=>addComponentPreset(preset)}>
                   <span className={styles.componentPresetPreview}>{preset.previewLabel}</span>
                   <strong>{preset.name}</strong>
@@ -3714,7 +3717,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
         </div>
 
         <div className={styles.mobileComponentGrid}>
-          {INVITE_COMPONENT_PRESETS.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
+          {availableComponentPresets.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
             <button key={preset.id} type="button" onClick={()=>addComponentPreset(preset)}>
               <span className={styles.mobileComponentPreview}>{preset.previewLabel}</span>
               <div>

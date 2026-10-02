@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { eventHasCapability } from "@/lib/event-capabilities";
 import { getGuestSession } from "@/lib/sessions";
 import { sameOrigin } from "@/lib/security";
 
@@ -15,6 +16,8 @@ export async function POST(
   if (!session) {
     return NextResponse.json({ message: "Sessão expirada." }, { status: 401 });
   }
+
+  if (!(await eventHasCapability(session.event_id,"gifts"))) return NextResponse.json({message:"A lista de presentes não está habilitada para este evento."},{status:403});
 
   if (session.rsvp_status !== "confirmed") {
     return NextResponse.json(

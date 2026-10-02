@@ -1,0 +1,4 @@
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+export function ConvertIntakeButton({id,disabled=false}:{id:string;disabled?:boolean}){const [busy,setBusy]=useState(false);const [error,setError]=useState("");const router=useRouter();async function run(){if(!confirm("Criar um evento de produção a partir desta ficha? A ficha original será preservada."))return;setBusy(true);setError("");try{const r=await fetch(`/api/gestao/intakes/${id}/convert`,{method:"POST"});const d=await r.json();if(!r.ok)throw new Error(d.message||"Não foi possível converter.");router.push(`/gestao/eventos/${d.event_id}`);router.refresh();}catch(e){setError(e instanceof Error?e.message:"Erro ao converter.");setBusy(false)}}return <div><button className="gestao-primary-action" type="button" onClick={run} disabled={disabled||busy}>{busy?"Criando evento...":"Criar evento desta ficha"}</button>{error&&<p className="form-error">{error}</p>}</div>}

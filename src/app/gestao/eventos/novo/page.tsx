@@ -8,11 +8,11 @@ export default async function NewEventPage() {
 
   return (
     <main className="gestao-home">
-      <Link href="/gestao" className="gestao-back-link"><ArrowLeft size={15} /> Voltar para eventos</Link>
+      <Link href="/gestao/eventos" className="gestao-back-link"><ArrowLeft size={15} /> Voltar para eventos</Link>
       <section className="gestao-hero">
         <p className="gestao-kicker">Novo convite</p>
         <h1>Criar evento</h1>
-        <p>O evento nasce em rascunho e já recebe uma conta exclusiva para o dono.</p>
+        <p>Crie um rascunho de produção. O acesso do cliente só será criado quando o convite estiver pronto para entrega.</p>
       </section>
       <CreateEventForm />
     </main>

@@ -1,0 +1,2 @@
+import { PublicIntakeForm } from "@/components/public/PublicIntakeForm";
+export default async function ResumeIntakePage({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{token?:string}>}){const {id}=await params;const {token=""}=await searchParams;return <PublicIntakeForm resume={{id,token}}/>;}

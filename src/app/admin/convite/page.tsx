@@ -5,6 +5,7 @@ import { EventStatusControl } from "@/components/EventStatusControl";
 import { ShareInvitePanel } from "@/components/admin/ShareInvitePanel";
 import { getAdminSetupState } from "@/lib/admin-setup";
 import { requireAdmin } from "@/lib/sessions";
+import { InvitationApproval } from "@/components/admin/InvitationApproval";
 
 export default async function AdminInvitationPage() {
   const session = await requireAdmin("/admin/convite");
@@ -43,6 +44,8 @@ export default async function AdminInvitationPage() {
           )}
         </div>
       </section>
+
+      {published && <InvitationApproval status={setup.event.production_status || "draft"} />}
 
       <section className="invitation-status-v6">
         <div>
