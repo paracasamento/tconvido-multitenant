@@ -16,13 +16,16 @@ import {
 } from "@/lib/invite-builder";
 import { getInviteVisualConfig } from "@/lib/invite-builder-server";
 import { getInviteEditorPreviewData } from "@/lib/invite-editor-preview";
+import { getEventCapabilities } from "@/lib/event-capabilities";
 import { requireOwner } from "@/lib/sessions";
 
 function slotsFor(
   screen: InviteScreen,
   previewData: Awaited<ReturnType<typeof getInviteEditorPreviewData>>,
   rsvpState: RsvpPreviewState,
-  giftState: "available" | "reserved" | "reserved_by_me"
+  giftState: "available" | "reserved" | "reserved_by_me",
+  giftsEnabled: boolean,
+  countdownEnabled: boolean
 ) {
   const slots: Record<string, ReactNode> = {};
 
@@ -47,6 +50,8 @@ function slotsFor(
         <RsvpFlowView
           key={element.id}
           parts={element.partStyles}
+          allowChildren={previewData.guestAllowedChildren > 0}
+          maxChildren={previewData.guestAllowedChildren}
           preview
           previewState={rsvpState}
         />
@@ -54,7 +59,7 @@ function slotsFor(
       continue;
     }
 
-    if (element.slot === "gift-grid") {
+    if (element.slot === "gift-grid" && giftsEnabled) {
       slots[element.slot] = previewData.gifts.length ? (
         <GiftGridView key={element.id} parts={element.partStyles} preview>
           {previewData.gifts.map(gift => (
@@ -76,7 +81,7 @@ function slotsFor(
       continue;
     }
 
-    if (element.slot === "gift-note") {
+    if (element.slot === "gift-note" && giftsEnabled) {
       slots[element.slot] = (
         <GiftNoteView
           key={element.id}
@@ -87,11 +92,11 @@ function slotsFor(
       continue;
     }
 
-    if (element.slot === "countdown") {
+    if (element.slot === "countdown" && countdownEnabled && previewData.vars.event_datetime) {
       slots[element.slot] = (
         <CountdownView
           key={element.id}
-          target={previewData.vars.event_datetime || "2026-11-22T16:00:00-03:00"}
+          target={previewData.vars.event_datetime}
           parts={element.partStyles}
         />
       );
@@ -116,19 +121,24 @@ export default async function GestaoEditorPreviewPage({
   const session = await requireOwner("/gestao/editor/preview");
   const params = await searchParams;
 
-  const [config, previewData] = await Promise.all([
+  const [config, previewData, capabilities] = await Promise.all([
     getInviteVisualConfig(session.event_id),
     getInviteEditorPreviewData(session.event_id),
+    getEventCapabilities(session.event_id),
   ]);
+  const rsvpEnabled = capabilities.includes("rsvp");
+  const giftsEnabled = capabilities.includes("gifts");
+  const countdownEnabled = capabilities.includes("countdown");
 
-  const page =
+  const requestedPage =
     params.page === "access" ||
     params.page === "rsvp" ||
     params.page === "invite-flow"
       ? params.page
       : "cover";
+  const page = requestedPage === "rsvp" && !rsvpEnabled ? "invite-flow" : requestedPage;
 
-  const state = params.state === "after" ? "after" : "before";
+  const state = params.state === "after" && giftsEnabled ? "after" : "before";
 
   const allowedRsvp: RsvpPreviewState[] = [
     "children-question",
@@ -137,9 +147,12 @@ export default async function GestaoEditorPreviewPage({
     "confirmed",
     "error",
   ];
-  const rsvpState = allowedRsvp.includes(params.rsvp as RsvpPreviewState)
+  const requestedRsvpState = allowedRsvp.includes(params.rsvp as RsvpPreviewState)
     ? (params.rsvp as RsvpPreviewState)
-    : "children-question";
+    : previewData.guestAllowedChildren > 0 ? "children-question" : "form-no-children";
+  const rsvpState = previewData.guestAllowedChildren > 0
+    ? requestedRsvpState
+    : (["children-question","form-children"].includes(requestedRsvpState) ? "form-no-children" : requestedRsvpState);
 
   const giftState =
     params.gift === "reserved"
@@ -169,6 +182,8 @@ export default async function GestaoEditorPreviewPage({
       elements: inviteBase.elements
         .filter(element => {
           if (element.id === "invite-gifts") return false;
+          if (element.id === "invite-rsvp" && !rsvpEnabled) return false;
+          if (element.slot === "countdown" && !countdownEnabled) return false;
           if (state === "after" && element.id === "invite-rsvp") return false;
           return true;
         })
@@ -181,7 +196,7 @@ export default async function GestaoEditorPreviewPage({
     };
 
     screens =
-      state === "after"
+      state === "after" && giftsEnabled
         ? [invite, config.screens.gifts]
         : [invite];
   }
@@ -257,7 +272,7 @@ export default async function GestaoEditorPreviewPage({
               key: `${screen.id}-${index}`,
               screen,
               vars: previewData.vars,
-              slots: slotsFor(screen, previewData, rsvpState, giftState),
+              slots: slotsFor(screen, previewData, rsvpState, giftState, giftsEnabled, countdownEnabled),
             }))}
           />
         ) : (
@@ -266,7 +281,7 @@ export default async function GestaoEditorPreviewPage({
               key={`${screen.id}-${index}`}
               screen={screen}
               vars={previewData.vars}
-              slots={slotsFor(screen, previewData, rsvpState, giftState)}
+              slots={slotsFor(screen, previewData, rsvpState, giftState, giftsEnabled, countdownEnabled)}
             />
           ))
         )}
