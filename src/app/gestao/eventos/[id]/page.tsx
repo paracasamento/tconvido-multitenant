@@ -7,6 +7,7 @@ import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
 import { ProductionControl } from "@/components/gestao/ProductionControl";
 import { validateEventReadiness } from "@/lib/event-readiness";
 import { ChangeRequestManager } from "@/components/gestao/ChangeRequestManager";
+import { ClientAccessControl } from "@/components/gestao/ClientAccessControl";
 
 export const dynamic = "force-dynamic";
 
@@ -54,11 +55,20 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
         <div><dt>Prazo de entrega</dt><dd>{event.delivery_deadline?new Date(event.delivery_deadline).toLocaleDateString("pt-BR"):"Não definido"}</dd></div>
       </dl></section>
 
-      <section className="settings-card"><h2>Cliente</h2><dl className="intake-detail-list">
-        <div><dt>Responsável</dt><dd>{event.owner_name||"Conta ainda não criada"}</dd></div>
-        <div><dt>E-mail</dt><dd>{event.owner_email||"—"}</dd></div>
-        <div><dt>URL pública</dt><dd>/e/{event.slug}</dd></div>
-      </dl></section>
+      <section className="settings-card"><h2>Cliente</h2>
+        {event.owner_name ? (
+          <dl className="intake-detail-list">
+            <div><dt>Responsável</dt><dd>{event.owner_name}</dd></div>
+            <div><dt>E-mail</dt><dd>{event.owner_email||"—"}</dd></div>
+            <div><dt>URL pública</dt><dd>/e/{event.slug}</dd></div>
+          </dl>
+        ) : (
+          <>
+            <p className="muted">Crie o acesso somente quando este evento estiver pronto para ser entregue ao cliente.</p>
+            <ClientAccessControl eventId={event.id} />
+          </>
+        )}
+      </section>
 
       <section className="settings-card"><h2>Recursos do convite</h2><div className="intake-feature-list">
         {["rsvp","gifts","dress_code","schedule"].map(cap=><span key={cap} className={caps.includes(cap)?"is-on":""}>{caps.includes(cap)?"✓":"—"} {cap==="rsvp"?"RSVP":cap==="gifts"?"Presentes":cap==="dress_code"?"Traje":"Programação"}</span>)}
