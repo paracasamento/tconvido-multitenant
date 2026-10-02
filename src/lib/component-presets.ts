@@ -476,6 +476,43 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
   },
 
   {
+    id: "heading-celebrant",
+    name: "Nome do aniversariante",
+    category: "heading",
+    eventTypes: ["kids_birthday","quinceanera"],
+    description: "Destaque principal para aniversário e 15 anos.",
+    previewLabel: "NOME · CELEBRAÇÃO",
+    elements: [
+      text("Chamada", "VAMOS CELEBRAR", 18, 39, 64, 4, 10, {fontFamily:"Inter",fontWeight:700,letterSpacing:2.5}),
+      text("Nome", "{{celebrant_name}}", 8, 44, 84, 10, 42, {fontWeight:500,lineHeight:.95}),
+      line("Separador",30,56,40,"#b99d67"),
+    ],
+  },
+  {
+    id: "heading-baby",
+    name: "Nome do bebê",
+    category: "heading",
+    eventTypes: ["baby_shower"],
+    description: "Composição delicada para chá de bebê.",
+    previewLabel: "CHÁ DO BEBÊ · NOME",
+    elements: [
+      text("Chamada","CHÁ DO BEBÊ",18,40,64,4,10,{fontFamily:"Inter",fontWeight:700,letterSpacing:2.2}),
+      text("Nome do bebê","{{baby_name}}",8,45,84,10,42,{fontWeight:500,lineHeight:.95}),
+    ],
+  },
+  {
+    id: "heading-hosts",
+    name: "Anfitriões da casa",
+    category: "heading",
+    eventTypes: ["housewarming"],
+    description: "Destaque para quem está recebendo na casa nova.",
+    previewLabel: "CASA NOVA · ANFITRIÕES",
+    elements: [
+      text("Chamada","CASA NOVA",18,40,64,4,10,{fontFamily:"Inter",fontWeight:700,letterSpacing:2.2}),
+      text("Anfitriões","{{hosts_names}}",8,45,84,10,38,{fontWeight:500,lineHeight:.95}),
+    ],
+  },
+  {
     id: "heading-elegant",
     eventTypes: ["wedding"],
     name: "Nomes elegantes",
