@@ -170,6 +170,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   const [inspectorMode,setInspectorMode]=useState<"essential"|"pro"|"screen">("essential");
   const [status,setStatus]=useState("");
   const [mobilePanel,setMobilePanel]=useState<null|"themes"|"pages"|"add"|"layers"|"edit">(null);
+  const [mobileTool,setMobileTool]=useState<null|"text"|"font"|"size"|"color"|"opacity"|"replace"|"adjust"|"link"|"border">(null);
   const [selectedThemeId,setSelectedThemeId]=useState(THEME_LIBRARY[0].id);
   const [zoom,setZoom]=useState(1);
   const [grid,setGrid]=useState(true);
@@ -338,6 +339,13 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   const layerElements = screenId === "invite" ? displayScreen.elements : screen.elements;
 
   const selected=useMemo(()=>screen.elements.find(e=>e.id===selectedId)||null,[screen,selectedId]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || window.innerWidth > 640) return;
+    setMobileTool(null);
+    setMobilePanel(null);
+  }, [selectedId]);
+
   const activePart:InvitePartStyle=selectedPart
     ? (selected?.partStyles?.[selectedPart]||{})
     : {};
@@ -767,6 +775,22 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   }
 
   function mutateElement(id:string,patch:Partial<InviteElement>){updateElement(id,patch,true)}
+
+  function openMobileTool(tool:NonNullable<typeof mobileTool>){
+    setMobilePanel(null);
+    setMobileTool(tool);
+  }
+
+  function openMobileLayers(){
+    setMobileTool(null);
+    setMobilePanel("layers");
+  }
+
+  function openMobileInspector(){
+    setMobileTool(null);
+    setInspectorMode("essential");
+    setMobilePanel("edit");
+  }
 
   function mutatePart(partId:string,patch:Partial<InvitePartStyle>){
     if(!selected)return;
@@ -3361,31 +3385,255 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
       </section>
     ) : null}
 
+    {selected && mobileTool ? (
+      <section className={styles.mobileQuickTool} aria-label="Ferramenta rápida">
+        <div className={styles.mobileQuickToolHeader}>
+          <strong>
+            {mobileTool==="text" ? "Editar texto" :
+             mobileTool==="font" ? "Fonte" :
+             mobileTool==="size" ? "Tamanho" :
+             mobileTool==="color" ? "Cor" :
+             mobileTool==="opacity" ? "Transparência" :
+             mobileTool==="replace" ? "Substituir imagem" :
+             mobileTool==="adjust" ? "Ajustar imagem" :
+             mobileTool==="link" ? "Link" :
+             "Borda"}
+          </strong>
+          <button type="button" onClick={()=>setMobileTool(null)}>Fechar</button>
+        </div>
+
+        {mobileTool==="text" ? (
+          <label className={styles.mobileQuickField}>
+            <span>Texto</span>
+            <textarea
+              rows={3}
+              value={selected.text||""}
+              onChange={e=>mutateElement(selected.id,{text:e.target.value})}
+              autoFocus
+            />
+          </label>
+        ) : null}
+
+        {mobileTool==="font" ? (
+          <div className={styles.mobileFontStrip}>
+            {FONTS.map(font=>(
+              <button
+                key={font}
+                type="button"
+                className={selected.fontFamily===font?styles.mobileQuickActive:""}
+                style={{fontFamily:font}}
+                onClick={()=>mutateElement(selected.id,{fontFamily:font})}
+              >
+                {font}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {mobileTool==="size" ? (
+          <div className={styles.mobileSizeTool}>
+            <button type="button" onClick={()=>mutateElement(selected.id,{fontSize:Math.max(8,(selected.fontSize||26)-1)})}>−</button>
+            <input
+              type="number"
+              min={8}
+              max={120}
+              value={selected.fontSize||26}
+              onChange={e=>mutateElement(selected.id,{fontSize:clamp(Number(e.target.value)||8,8,120)})}
+            />
+            <button type="button" onClick={()=>mutateElement(selected.id,{fontSize:Math.min(120,(selected.fontSize||26)+1)})}>+</button>
+            <input
+              className={styles.mobileQuickRange}
+              type="range"
+              min={8}
+              max={120}
+              value={selected.fontSize||26}
+              onChange={e=>mutateElement(selected.id,{fontSize:Number(e.target.value)})}
+            />
+          </div>
+        ) : null}
+
+        {mobileTool==="color" ? (
+          <div className={styles.mobileColorTool}>
+            <label>
+              <span>{selected.type==="text" ? "Texto" : selected.type==="box" ? "Preenchimento" : "Texto"}</span>
+              <input
+                type="color"
+                value={(selected.type==="box" ? selected.backgroundColor : selected.color)||"#12308e"}
+                onChange={e=>mutateElement(selected.id,selected.type==="box"?{backgroundColor:e.target.value}:{color:e.target.value})}
+              />
+            </label>
+            {selected.type==="link" ? (
+              <label>
+                <span>Botão</span>
+                <input
+                  type="color"
+                  value={selected.backgroundColor||"#12308e"}
+                  onChange={e=>mutateElement(selected.id,{backgroundColor:e.target.value})}
+                />
+              </label>
+            ) : null}
+            <div className={styles.mobilePaletteStrip}>
+              {activeTheme.palette.map(color=>(
+                <button
+                  key={color}
+                  type="button"
+                  style={{backgroundColor:color}}
+                  aria-label={color}
+                  onClick={()=>mutateElement(selected.id,selected.type==="box"?{backgroundColor:color}:{color})}
+                />
+              ))}
+            </div>
+          </div>
+        ) : null}
+
+        {mobileTool==="opacity" ? (
+          <div className={styles.mobileSliderTool}>
+            <div><span>Transparência</span><strong>{Math.round((selected.opacity??1)*100)}%</strong></div>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round((selected.opacity??1)*100)}
+              onChange={e=>mutateElement(selected.id,{opacity:Number(e.target.value)/100})}
+            />
+          </div>
+        ) : null}
+
+        {mobileTool==="replace" && selected.type==="image" ? (
+          <div className={styles.mobileReplaceGrid}>
+            {activeTheme.assets.map(asset=>(
+              <button
+                key={asset.id}
+                type="button"
+                onClick={()=>{mutateElement(selected.id,{src:asset.src,name:`${activeTheme.name} · ${asset.name}`});setMobileTool(null)}}
+              >
+                <img src={asset.src} alt=""/>
+                <span>{asset.name}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
+
+        {mobileTool==="adjust" && selected.type==="image" ? (
+          <div className={styles.mobileAdjustGrid}>
+            {([
+              ["Brilho","brightness",selected.brightness??100,0,200],
+              ["Contraste","contrast",selected.contrast??100,0,200],
+              ["Saturação","saturate",selected.saturate??100,0,200],
+              ["Cinza","grayscale",selected.grayscale??0,0,100],
+              ["Desfoque","blur",selected.blur??0,0,20],
+            ] as const).map(([label,key,value,min,max])=>(
+              <label key={key}>
+                <span>{label}<strong>{value}</strong></span>
+                <input
+                  type="range"
+                  min={min}
+                  max={max}
+                  value={value}
+                  onChange={e=>mutateElement(selected.id,{[key]:Number(e.target.value)} as Partial<InviteElement>)}
+                />
+              </label>
+            ))}
+          </div>
+        ) : null}
+
+        {mobileTool==="link" && selected.type==="link" ? (
+          <div className={styles.mobileLinkTool}>
+            <label className={styles.mobileQuickField}>
+              <span>Texto do botão</span>
+              <input value={selected.text||""} onChange={e=>mutateElement(selected.id,{text:e.target.value})}/>
+            </label>
+            <label className={styles.mobileQuickField}>
+              <span>Destino</span>
+              <input value={selected.href||""} onChange={e=>mutateElement(selected.id,{href:e.target.value})} placeholder="https://... ou #"/>
+            </label>
+          </div>
+        ) : null}
+
+        {mobileTool==="border" ? (
+          <div className={styles.mobileBorderTool}>
+            <label>
+              <span>Cor</span>
+              <input type="color" value={selected.borderColor||"#12308e"} onChange={e=>mutateElement(selected.id,{borderColor:e.target.value})}/>
+            </label>
+            <label className={styles.mobileQuickField}>
+              <span>Espessura</span>
+              <input type="number" min={0} max={20} value={selected.borderWidth??0} onChange={e=>mutateElement(selected.id,{borderWidth:clamp(Number(e.target.value)||0,0,20)})}/>
+            </label>
+            <label className={styles.mobileQuickField}>
+              <span>Arredondamento</span>
+              <input type="number" min={0} max={999} value={selected.borderRadius??0} onChange={e=>mutateElement(selected.id,{borderRadius:clamp(Number(e.target.value)||0,0,999)})}/>
+            </label>
+          </div>
+        ) : null}
+      </section>
+    ) : null}
+
     <nav className={styles.mobileDock} aria-label="Ferramentas do editor">
-      <button type="button" className={mobilePanel==="themes"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="themes"?null:"themes")}>
-        <Palette size={22}/><span>Temas</span>
-      </button>
-      <button type="button" className={mobilePanel==="pages"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="pages"?null:"pages")}>
-        <Grid3X3 size={22}/><span>Páginas</span>
-      </button>
-      <button type="button" className={mobilePanel==="add"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="add"?null:"add")}>
-        <Plus size={24}/><span>Elementos</span>
-      </button>
-      <button type="button" onClick={()=>{addElement("text");setMobilePanel(null)}}>
-        <Type size={23}/><span>Texto</span>
-      </button>
-      <button type="button" onClick={()=>{addElement("image");setMobilePanel(null)}}>
-        <ImagePlus size={23}/><span>Imagem</span>
-      </button>
-      <button type="button" className={mobilePanel==="layers"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="layers"?null:"layers")}>
-        <Layers3 size={22}/><span>Camadas</span>
-      </button>
-      <button type="button" disabled={!selected} className={mobilePanel==="edit"&&inspectorMode!=="screen"?styles.mobileDockActive:""} onClick={()=>{setInspectorMode("essential");setMobilePanel("edit")}}>
-        <SlidersHorizontal size={22}/><span>Editar</span>
-      </button>
-      <button type="button" className={mobilePanel==="edit"&&inspectorMode==="screen"?styles.mobileDockActive:""} onClick={()=>{setSelectedId(null);setSelectedPart(null);setInspectorMode("screen");setMobilePanel("edit")}}>
-        <Box size={22}/><span>Fundo</span>
-      </button>
+      {!selected ? (
+        <>
+          <button type="button" className={mobilePanel==="themes"?styles.mobileDockActive:""} onClick={()=>{setMobileTool(null);setMobilePanel(mobilePanel==="themes"?null:"themes")}}>
+            <Palette size={22}/><span>Temas</span>
+          </button>
+          <button type="button" className={mobilePanel==="pages"?styles.mobileDockActive:""} onClick={()=>{setMobileTool(null);setMobilePanel(mobilePanel==="pages"?null:"pages")}}>
+            <Grid3X3 size={22}/><span>Páginas</span>
+          </button>
+          <button type="button" className={mobilePanel==="add"?styles.mobileDockActive:""} onClick={()=>{setMobileTool(null);setMobilePanel(mobilePanel==="add"?null:"add")}}>
+            <Plus size={24}/><span>Elementos</span>
+          </button>
+          <button type="button" onClick={()=>{addElement("text");setMobilePanel(null);setMobileTool(null)}}>
+            <Type size={23}/><span>Texto</span>
+          </button>
+          <button type="button" onClick={()=>{addElement("image");setMobilePanel(null);setMobileTool(null)}}>
+            <ImagePlus size={23}/><span>Imagem</span>
+          </button>
+          <button type="button" onClick={()=>{setMobileTool(null);setSelectedId(null);setSelectedPart(null);setInspectorMode("screen");setMobilePanel("edit")}}>
+            <Box size={22}/><span>Fundo</span>
+          </button>
+        </>
+      ) : selected.type==="text" ? (
+        <>
+          <button type="button" className={mobileTool==="text"?styles.mobileDockActive:""} onClick={()=>openMobileTool("text")}><Type size={22}/><span>Editar</span></button>
+          <button type="button" className={mobileTool==="font"?styles.mobileDockActive:""} onClick={()=>openMobileTool("font")}><Type size={22}/><span>Fonte</span></button>
+          <button type="button" className={mobileTool==="size"?styles.mobileDockActive:""} onClick={()=>openMobileTool("size")}><SlidersHorizontal size={22}/><span>Tamanho</span></button>
+          <button type="button" className={mobileTool==="color"?styles.mobileDockActive:""} onClick={()=>openMobileTool("color")}><Palette size={22}/><span>Cor</span></button>
+          <button type="button" className={mobileTool==="opacity"?styles.mobileDockActive:""} onClick={()=>openMobileTool("opacity")}><Eye size={22}/><span>Transparência</span></button>
+          <button type="button" onClick={openMobileLayers}><Layers3 size={22}/><span>Camadas</span></button>
+          <button type="button" onClick={openMobileInspector}><SlidersHorizontal size={22}/><span>Mais</span></button>
+        </>
+      ) : selected.type==="image" ? (
+        <>
+          <button type="button" className={mobileTool==="replace"?styles.mobileDockActive:""} onClick={()=>openMobileTool("replace")}><ImagePlus size={22}/><span>Substituir</span></button>
+          <button type="button" className={mobileTool==="adjust"?styles.mobileDockActive:""} onClick={()=>openMobileTool("adjust")}><SlidersHorizontal size={22}/><span>Ajustar</span></button>
+          <button type="button" className={mobileTool==="opacity"?styles.mobileDockActive:""} onClick={()=>openMobileTool("opacity")}><Eye size={22}/><span>Transparência</span></button>
+          <button type="button" onClick={openMobileLayers}><Layers3 size={22}/><span>Camadas</span></button>
+          <button type="button" onClick={openMobileInspector}><SlidersHorizontal size={22}/><span>Mais</span></button>
+        </>
+      ) : selected.type==="link" ? (
+        <>
+          <button type="button" className={mobileTool==="text"?styles.mobileDockActive:""} onClick={()=>openMobileTool("text")}><Type size={22}/><span>Texto</span></button>
+          <button type="button" className={mobileTool==="link"?styles.mobileDockActive:""} onClick={()=>openMobileTool("link")}><Link2 size={22}/><span>Link</span></button>
+          <button type="button" className={mobileTool==="color"?styles.mobileDockActive:""} onClick={()=>openMobileTool("color")}><Palette size={22}/><span>Cor</span></button>
+          <button type="button" className={mobileTool==="border"?styles.mobileDockActive:""} onClick={()=>openMobileTool("border")}><Box size={22}/><span>Borda</span></button>
+          <button type="button" className={mobileTool==="opacity"?styles.mobileDockActive:""} onClick={()=>openMobileTool("opacity")}><Eye size={22}/><span>Transparência</span></button>
+          <button type="button" onClick={openMobileLayers}><Layers3 size={22}/><span>Camadas</span></button>
+          <button type="button" onClick={openMobileInspector}><SlidersHorizontal size={22}/><span>Mais</span></button>
+        </>
+      ) : selected.type==="box" ? (
+        <>
+          <button type="button" className={mobileTool==="color"?styles.mobileDockActive:""} onClick={()=>openMobileTool("color")}><Palette size={22}/><span>Cor</span></button>
+          <button type="button" className={mobileTool==="border"?styles.mobileDockActive:""} onClick={()=>openMobileTool("border")}><Box size={22}/><span>Borda</span></button>
+          <button type="button" className={mobileTool==="opacity"?styles.mobileDockActive:""} onClick={()=>openMobileTool("opacity")}><Eye size={22}/><span>Transparência</span></button>
+          <button type="button" onClick={openMobileLayers}><Layers3 size={22}/><span>Camadas</span></button>
+          <button type="button" onClick={openMobileInspector}><SlidersHorizontal size={22}/><span>Mais</span></button>
+        </>
+      ) : (
+        <>
+          <button type="button" onClick={openMobileInspector}><SlidersHorizontal size={22}/><span>Editar bloco</span></button>
+          <button type="button" className={mobileTool==="opacity"?styles.mobileDockActive:""} onClick={()=>openMobileTool("opacity")}><Eye size={22}/><span>Transparência</span></button>
+          <button type="button" onClick={openMobileLayers}><Layers3 size={22}/><span>Camadas</span></button>
+        </>
+      )}
     </nav>
 
   </div>
