@@ -151,13 +151,14 @@ function SlotPreview({ el }: { el: InviteElement }) {
 }
 
 
-export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:{initial:InviteVisualConfig;defaults:InviteVisualConfig;previewData:InviteEditorPreviewData;themeLibrary:ThemeLibraryItem[]}){
+export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,eventContext}:{initial:InviteVisualConfig;defaults:InviteVisualConfig;previewData:InviteEditorPreviewData;themeLibrary:ThemeLibraryItem[];eventContext?:{type:string;name:string;capabilities:string[]}}){
 
   // The public invitation always renders the normalized visual config. The editor
   // must start from the exact same normalized object, otherwise a newly-added
   // default part (for example retry-button/error-card) can look like a raw browser
   // button in the editor while the public page receives the default visual style.
   const normalizedInitial=useMemo(()=>normalizeInviteVisualConfig(deep(initial)),[initial]);
+  const availableEditorPages=useMemo(()=>EDITOR_PAGES.filter(page=>page.id!=="rsvp"||eventContext?.capabilities.includes("rsvp")!==false),[eventContext]);
 
   const [config,setConfig]=useState(()=>deep(normalizedInitial));
   const [screenId,setScreenId]=useState<InviteScreenId>("cover");
@@ -2323,7 +2324,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
         </div>
         <div className={styles.leftHeading}>Páginas</div>
         <div className={styles.screenTabs}>
-          {EDITOR_PAGES.map(page=><button key={page.id} className={editorPage===page.id?styles.active:""} onClick={()=>switchEditorPage(page.id)}>{page.label}</button>)}
+          {availableEditorPages.map(page=><button key={page.id} className={editorPage===page.id?styles.active:""} onClick={()=>switchEditorPage(page.id)}>{page.label}</button>)}
         </div>
 
         {editorPage==="invite-flow"&&(
