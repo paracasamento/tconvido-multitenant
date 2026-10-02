@@ -14,8 +14,8 @@ import {
 
 const schema = z.object({
   submitted_name: z.string().trim().min(2).max(120),
-  has_children: z.boolean(),
-  children_count: z.number().int().min(0).max(20),
+  has_children: z.boolean().optional().default(false),
+  children_count: z.number().int().min(0).max(20).optional().default(0),
 }).superRefine((value, ctx) => {
   if (!value.has_children && value.children_count !== 0) {
     ctx.addIssue({
