@@ -6,6 +6,7 @@ import { requirePlatformAdmin } from "@/lib/sessions";
 import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
 import { IntakeStatusControl } from "@/components/gestao/IntakeStatusControl";
 import { IntakeReferenceGallery } from "@/components/gestao/IntakeReferenceGallery";
+import { ConvertIntakeButton } from "@/components/gestao/ConvertIntakeButton";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ export default async function FichaDetailPage({params}:{params:Promise<{id:strin
   return <main className="gestao-home">
     <Link href="/gestao/fichas" className="text-link">← Voltar às fichas</Link>
     <section className="gestao-hero gestao-hero--events"><div><p className="gestao-kicker">{type?.label}</p><h1>{a.identity || row.contact_name}</h1><p>Ficha enviada por {row.contact_name}.</p></div><a className="gestao-primary-action" target="_blank" rel="noreferrer" href={"https://wa.me/"+wa}><MessageCircle size={16}/> WhatsApp</a></section>
-    <IntakeStatusControl id={row.id} initialStatus={row.status} />
+    <div className="intake-actions"><IntakeStatusControl id={row.id} initialStatus={row.status} />{row.converted_event_id ? <Link className="gestao-primary-action" href={`/gestao/eventos/${row.converted_event_id}`}>Abrir evento criado</Link> : <ConvertIntakeButton id={row.id} disabled={row.status==="discarded"} />}</div>
     <div className="intake-detail-grid">
       <section className="settings-card"><h2>Evento</h2><dl className="intake-detail-list"><div><dt>Data</dt><dd>{row.event_date_defined && row.event_date ? new Date(row.event_date).toLocaleDateString("pt-BR",{timeZone:"UTC"}) : "Ainda não definida"}</dd></div><div><dt>Horário</dt><dd>{row.event_time ? String(row.event_time).slice(0,5) : "A definir"}</dd></div><div><dt>Local</dt><dd>{a.location_defined ? [a.venue,a.address,a.city].filter(Boolean).join(" · ") || "Informações incompletas" : "Ainda não definido"}</dd></div></dl></section>
       <section className="settings-card"><h2>Recursos desejados</h2><div className="intake-feature-list">{[["RSVP",a.rsvp_wanted],["Presentes",a.gifts_wanted],["Traje",a.dress_code_wanted],["Programação",a.schedule_wanted]].map(([label,on])=><span key={String(label)} className={on?"is-on":""}>{on?"✓":"—"} {label}</span>)}</div></section>
