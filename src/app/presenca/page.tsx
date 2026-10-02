@@ -8,6 +8,7 @@ import {
   getRsvpSubmissionSession
 } from "@/lib/sessions";
 import { getPublicInvitePageData } from "@/lib/public-invite-data";
+import { buildEventTemplateVars } from "@/lib/event";
 
 export default async function RsvpPage() {
   const invite = await requireInvite("/presenca");
@@ -60,6 +61,9 @@ export default async function RsvpPage() {
       config={pageData.config}
       initialSubmission={initialSubmission}
       identityName={guestSession.guest_name}
+      vars={buildEventTemplateVars(pageData.event, {
+        guest_name: guestSession.guest_name,
+      })}
     />
   );
 }
