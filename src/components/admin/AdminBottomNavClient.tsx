@@ -1,0 +1,4 @@
+"use client";
+import Link from "next/link";import {Gift,Home,Mail,UserRound,UsersRound} from "lucide-react";import {usePathname} from "next/navigation";
+const icons:any={home:Home,users:UsersRound,gift:Gift,mail:Mail,user:UserRound};
+export function AdminBottomNavClient({items}:{items:Array<{href:string;label:string;icon:string;exact?:boolean}>}){const pathname=usePathname();return <nav className="admin-bottom-nav" aria-label="Navegação principal da área do evento">{items.map(item=>{const active=item.exact?pathname===item.href:item.href==="/admin/convite"?pathname.startsWith(item.href)||pathname.startsWith("/admin/preparar"):pathname.startsWith(item.href);const Icon=icons[item.icon];return <Link key={item.href} href={item.href} className={active?"is-active":""} aria-current={active?"page":undefined}><Icon size={20} strokeWidth={2}/><span>{item.label}</span></Link>})}</nav>}
