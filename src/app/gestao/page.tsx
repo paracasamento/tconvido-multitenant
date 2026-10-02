@@ -65,7 +65,7 @@ export default async function GestaoHomePage() {
               </div>
             </div>
 
-            <div className="gestao-event-card__actions">
+            <div className="gestao-event-card__actions"><Link href={`/gestao/eventos/${event.id}`}><LayoutDashboard size={16} /> Produção</Link>
               <form action={`/api/owner/events/${event.id}/select?next=%2Fadmin`} method="post">
                 <button type="submit"><LayoutDashboard size={16} /> Painel</button>
               </form>
