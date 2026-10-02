@@ -171,6 +171,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   const [status,setStatus]=useState("");
   const [mobilePanel,setMobilePanel]=useState<null|"themes"|"pages"|"add"|"layers"|"edit">(null);
   const [mobileTool,setMobileTool]=useState<null|"text"|"font"|"size"|"color"|"opacity"|"replace"|"adjust"|"link"|"border">(null);
+  const [mobileCanvasMenu,setMobileCanvasMenu]=useState(false);
   const [selectedThemeId,setSelectedThemeId]=useState(THEME_LIBRARY[0].id);
   const [zoom,setZoom]=useState(1);
   const [grid,setGrid]=useState(true);
@@ -344,6 +345,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
     if (typeof window === "undefined" || window.innerWidth > 640) return;
     setMobileTool(null);
     setMobilePanel(null);
+    setMobileCanvasMenu(false);
   }, [selectedId]);
 
   const activePart:InvitePartStyle=selectedPart
@@ -2335,10 +2337,36 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
                               type="button"
                               title="Mais opções"
                               aria-label="Mais opções"
-                              onClick={event=>{event.stopPropagation();openMobileInspector()}}
+                              aria-expanded={mobileCanvasMenu}
+                              onClick={event=>{event.stopPropagation();setMobileCanvasMenu(value=>!value)}}
                             >
                               <MoreHorizontal size={20}/>
                             </button>
+
+                            {mobileCanvasMenu ? (
+                              <div
+                                className={styles.canvasQuickMenu}
+                                onPointerDown={event=>event.stopPropagation()}
+                                onClick={event=>event.stopPropagation()}
+                              >
+                                <button type="button" onClick={()=>{reorder("front");setMobileCanvasMenu(false)}}>
+                                  <BringToFront size={16}/><span>Trazer para frente</span>
+                                </button>
+                                <button type="button" onClick={()=>{reorder("back");setMobileCanvasMenu(false)}}>
+                                  <SendToBack size={16}/><span>Enviar para trás</span>
+                                </button>
+                                <button type="button" onClick={()=>{mutateElement(el.id,{visible:false});setMobileCanvasMenu(false)}}>
+                                  <EyeOff size={16}/><span>Ocultar</span>
+                                </button>
+                                <button type="button" onClick={()=>{mutateElement(el.id,{locked:!el.locked});setMobileCanvasMenu(false)}}>
+                                  {el.locked ? <Unlock size={16}/> : <Lock size={16}/>}
+                                  <span>{el.locked ? "Desbloquear" : "Bloquear"}</span>
+                                </button>
+                                <button type="button" onClick={()=>{setMobileCanvasMenu(false);openMobileInspector()}}>
+                                  <SlidersHorizontal size={16}/><span>Mais ajustes</span>
+                                </button>
+                              </div>
+                            ) : null}
                           </div>
                           {!el.locked ? (
                             <button
