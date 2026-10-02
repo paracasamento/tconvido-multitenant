@@ -2393,7 +2393,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
         )}
 
         {screenId==="rsvp"&&<section className={styles.rsvpScenarios}>
-          <div className={styles.rsvpScenariosHeader}><strong>Cenários da confirmação</strong><span>5 estados</span></div>
+          <div className={styles.rsvpScenariosHeader}><strong>Cenários da confirmação</strong><span>{availableRsvpPreviewStates.length} estados</span></div>
           <p>Cada etapa é uma tela independente. Texto, posição, imagens, botões e exclusões ficam somente nela.</p>
           <div className={styles.rsvpScenarioGrid}>{availableRsvpPreviewStates.map(item=><button key={item.id} type="button" className={rsvpPreviewState===item.id?styles.rsvpScenarioActive:""} onClick={()=>openRsvpScenario(item.id)}>{item.label}</button>)}</div>
           <button type="button" className={styles.rsvpScenarioReset} onClick={resetCurrentRsvpScenario}>
