@@ -8,7 +8,7 @@ import {
 
   AlignCenter, AlignLeft, AlignRight, ArrowLeft, Box, BringToFront, ChevronDown, Copy, Eye, EyeOff,
 
-  ExternalLink, Grid3X3, ImagePlus, Layers3, Link2, Lock, MoreHorizontal, MoveDown, MoveUp, Plus, Redo2, RotateCcw, Save,
+  ExternalLink, Grid3X3, ImagePlus, Layers3, LayoutTemplate, Link2, Lock, MoreHorizontal, MoveDown, MoveUp, Plus, Redo2, RotateCcw, Save,
 
   Palette, SendToBack, SlidersHorizontal, Trash2, Type, Undo2, Unlock, ZoomIn, ZoomOut
 
@@ -37,6 +37,13 @@ import { CountdownView } from "@/components/invite/functional/CountdownView";
 import { INVITE_ICON_OPTIONS } from "@/components/invite/InvitePartIcon";
 import type { InviteEditorPreviewData } from "@/lib/invite-editor-preview";
 import type { ThemeLibraryAsset, ThemeLibraryItem } from "@/lib/theme-library";
+import {
+  INVITE_COMPONENT_PRESETS,
+  INVITE_COMPONENT_PRESET_CATEGORIES,
+  type InviteComponentPreset,
+  type InviteComponentPresetCategory,
+  type InviteComponentPresetElement,
+} from "@/lib/component-presets";
 import styles from "./InviteVisualBuilder.module.css";
 
 
@@ -169,9 +176,10 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
   const [saving,setSaving]=useState(false);
   const [inspectorMode,setInspectorMode]=useState<"essential"|"pro"|"screen">("essential");
   const [status,setStatus]=useState("");
-  const [mobilePanel,setMobilePanel]=useState<null|"themes"|"pages"|"add"|"layers"|"edit">(null);
-  const [mobileTool,setMobileTool]=useState<null|"text"|"font"|"size"|"color"|"opacity"|"replace"|"adjust"|"link"|"border">(null);
+  const [mobilePanel,setMobilePanel]=useState<null|"themes"|"components"|"pages"|"add"|"layers"|"edit">(null);
+  const [mobileTool,setMobileTool]=useState<null|"text"|"font"|"size"|"color"|"opacity"|"replace"|"adjust"|"link"|"icon"|"border">(null);
   const [mobileCanvasMenu,setMobileCanvasMenu]=useState(false);
+  const [componentPresetCategory,setComponentPresetCategory]=useState<InviteComponentPresetCategory>("date");
   const [selectedThemeId,setSelectedThemeId]=useState(themeLibrary[0]?.id || "");
   const [zoom,setZoom]=useState(1);
   const [grid,setGrid]=useState(true);
@@ -974,6 +982,109 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
 
     const allowed=new Set(RSVP_SCENARIO_PART_IDS[rsvpPreviewState]);
     return all.filter(part=>allowed.has(part.id));
+  }
+
+  function materializePresetElement(
+    template: InviteComponentPresetElement,
+    compositionId: string,
+    zBase: number
+  ): InviteElement {
+    const id=`${template.type}-${uid()}`;
+    const type=template.type;
+    const base:any={
+      id,
+      name:template.name || `Novo ${type}`,
+      type,
+      x:25,
+      y:42,
+      width:50,
+      height:type==="text"?8:12,
+      opacity:1,
+      rotate:0,
+      scaleX:1,
+      scaleY:1,
+      zIndex:zBase,
+      visible:true,
+      locked:false,
+      compositionId,
+    };
+
+    if(type==="text"){
+      Object.assign(base,{
+        text:"Novo texto",
+        color:"#0f238d",
+        fontSize:26,
+        fontFamily:"Cormorant Garamond",
+        fontWeight:400,
+        textAlign:"center",
+        lineHeight:1.06
+      });
+    }
+
+    if(type==="link"){
+      Object.assign(base,{
+        text:"NOVO BOTÃO",
+        href:"#",
+        backgroundColor:"#0f238d",
+        color:"#fff",
+        borderColor:"#0f238d",
+        borderWidth:0,
+        borderStyle:"solid",
+        borderRadius:999,
+        fontSize:15,
+        fontFamily:"Cormorant Garamond",
+        fontWeight:600,
+        textAlign:"center",
+        letterSpacing:1.2,
+        height:7
+      });
+    }
+
+    if(type==="box"){
+      Object.assign(base,{
+        backgroundColor:"rgba(255,255,255,.5)",
+        borderColor:"#c59b3a",
+        borderWidth:1,
+        borderStyle:"solid",
+        borderRadius:16,
+        height:18
+      });
+    }
+
+    if(type==="image"){
+      Object.assign(base,{
+        src:"/florals/floral-divider.webp",
+        objectFit:"contain",
+        objectPositionX:50,
+        objectPositionY:50,
+        brightness:100,
+        contrast:100,
+        saturate:100,
+        grayscale:0,
+        blur:0,
+        height:18
+      });
+    }
+
+    Object.assign(base,deep(template));
+    base.id=id;
+    base.compositionId=compositionId;
+    base.zIndex=zBase + Number(template.zIndex || 0);
+    return base as InviteElement;
+  }
+
+  function addComponentPreset(preset:InviteComponentPreset){
+    const compositionId=`composition-${uid()}`;
+    const highestZ=screen.elements.reduce((max,element)=>Math.max(max,element.zIndex||0),0)+1;
+    const inserted=preset.elements.map((template,index)=>
+      materializePresetElement(template,compositionId,highestZ+index)
+    );
+
+    updateScreen({elements:[...screen.elements,...inserted]},true);
+    setSelectedId(inserted.find(element=>element.type!=="box")?.id||inserted[0]?.id||null);
+    setSelectedPart(null);
+    setMobilePanel(null);
+    setStatus(`Composição “${preset.name}” adicionada. Todos os textos continuam ligados aos dados do evento.`);
   }
 
   function addElement(type:InviteElement["type"],src?:string,name?:string,preset?:Partial<InviteElement>){
@@ -2322,6 +2433,31 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
                 </article>)}
               </div>}
           </section>
+          <div className={styles.componentLibrary}>
+            <div className={styles.assetTitle}>Composições prontas</div>
+            <div className={styles.componentCategoryTabs}>
+              {INVITE_COMPONENT_PRESET_CATEGORIES.map(category=>(
+                <button
+                  key={category.id}
+                  type="button"
+                  className={componentPresetCategory===category.id?styles.componentCategoryActive:""}
+                  onClick={()=>setComponentPresetCategory(category.id)}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
+            <div className={styles.componentPresetGrid}>
+              {INVITE_COMPONENT_PRESETS.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
+                <button key={preset.id} type="button" onClick={()=>addComponentPreset(preset)}>
+                  <span className={styles.componentPresetPreview}>{preset.previewLabel}</span>
+                  <strong>{preset.name}</strong>
+                  <small>{preset.description}</small>
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className={styles.assetTitle}>Temas</div>
           {!themeLibrary.length ? (
             <div className={styles.themeEmptyState}>
@@ -3278,10 +3414,19 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
                     ) : null}
 
                     {selected.type==="link" ? (
-                      <label>
-                        Destino
-                        <input value={selected.href||""} onChange={e=>mutateElement(selected.id,{href:e.target.value})}/>
-                      </label>
+                      <>
+                        <label>
+                          Destino
+                          <input value={selected.href||""} onChange={e=>mutateElement(selected.id,{href:e.target.value})}/>
+                        </label>
+                        <label>
+                          Ícone
+                          <select value={selected.icon||""} onChange={e=>mutateElement(selected.id,{icon:e.target.value||undefined})}>
+                            <option value="">Sem ícone</option>
+                            {INVITE_ICON_OPTIONS.map(([value,label])=><option key={value} value={value}>{label}</option>)}
+                          </select>
+                        </label>
+                      </>
                     ) : null}
                   </div>
                 </details>
@@ -3547,6 +3692,41 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
       />
     ) : null}
 
+    {mobilePanel==="components" ? (
+      <section className={styles.mobileComponentSheet} aria-label="Biblioteca de composições">
+        <div className={styles.mobileSheetHeader}>
+          <span className={styles.mobileSheetHandle}/>
+          <strong>Formatações</strong>
+          <button type="button" onClick={()=>setMobilePanel(null)}>Fechar</button>
+        </div>
+
+        <div className={styles.mobileComponentCategories}>
+          {INVITE_COMPONENT_PRESET_CATEGORIES.map(category=>(
+            <button
+              key={category.id}
+              type="button"
+              className={componentPresetCategory===category.id?styles.mobileComponentCategoryActive:""}
+              onClick={()=>setComponentPresetCategory(category.id)}
+            >
+              {category.label}
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.mobileComponentGrid}>
+          {INVITE_COMPONENT_PRESETS.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
+            <button key={preset.id} type="button" onClick={()=>addComponentPreset(preset)}>
+              <span className={styles.mobileComponentPreview}>{preset.previewLabel}</span>
+              <div>
+                <strong>{preset.name}</strong>
+                <small>{preset.description}</small>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
+    ) : null}
+
     {mobilePanel==="themes" ? (
       <section className={styles.mobileThemeSheet} aria-label="Biblioteca de temas">
         <div className={styles.mobileSheetHeader}>
@@ -3618,6 +3798,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
           <button type="button" onClick={()=>setMobilePanel(null)}>Fechar</button>
         </div>
         <div className={styles.mobileAddGrid}>
+          <button type="button" onClick={()=>setMobilePanel("components")}><LayoutTemplate size={23}/><strong>Formatações</strong><small>Datas, botões e blocos prontos</small></button>
           <button type="button" onClick={()=>{addElement("text");setMobilePanel(null)}}><Type size={23}/><strong>Texto</strong><small>Título ou frase</small></button>
           <button type="button" onClick={()=>{addElement("image");setMobilePanel(null)}}><ImagePlus size={23}/><strong>Imagem</strong><small>Foto ou arte</small></button>
           <button type="button" onClick={()=>{addElement("link");setMobilePanel(null)}}><Link2 size={23}/><strong>Botão</strong><small>Link ou ação</small></button>
@@ -3653,6 +3834,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
              mobileTool==="replace" ? "Substituir imagem" :
              mobileTool==="adjust" ? "Ajustar imagem" :
              mobileTool==="link" ? "Link" :
+             mobileTool==="icon" ? "Ícone" :
              "Borda"}
           </strong>
           <button type="button" onClick={()=>setMobileTool(null)}>Fechar</button>
@@ -3806,6 +3988,28 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
           </div>
         ) : null}
 
+        {mobileTool==="icon" && selected.type==="link" ? (
+          <div className={styles.mobileIconGrid}>
+            <button
+              type="button"
+              className={!selected.icon?styles.mobileQuickActive:""}
+              onClick={()=>mutateElement(selected.id,{icon:undefined})}
+            >
+              Sem ícone
+            </button>
+            {INVITE_ICON_OPTIONS.map(([value,label])=>(
+              <button
+                key={value}
+                type="button"
+                className={selected.icon===value?styles.mobileQuickActive:""}
+                onClick={()=>mutateElement(selected.id,{icon:value})}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        ) : null}
+
         {mobileTool==="border" ? (
           <div className={styles.mobileBorderTool}>
             <label>
@@ -3830,6 +4034,9 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
         <>
           <button type="button" className={mobilePanel==="themes"?styles.mobileDockActive:""} onClick={()=>{setMobileTool(null);setMobilePanel(mobilePanel==="themes"?null:"themes")}}>
             <Palette size={22}/><span>Temas</span>
+          </button>
+          <button type="button" className={mobilePanel==="components"?styles.mobileDockActive:""} onClick={()=>{setMobileTool(null);setMobilePanel(mobilePanel==="components"?null:"components")}}>
+            <LayoutTemplate size={22}/><span>Formatos</span>
           </button>
           <button type="button" className={mobilePanel==="pages"?styles.mobileDockActive:""} onClick={()=>{setMobileTool(null);setMobilePanel(mobilePanel==="pages"?null:"pages")}}>
             <Grid3X3 size={22}/><span>Páginas</span>
@@ -3869,6 +4076,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
         <>
           <button type="button" className={mobileTool==="text"?styles.mobileDockActive:""} onClick={()=>openMobileTool("text")}><Type size={22}/><span>Texto</span></button>
           <button type="button" className={mobileTool==="link"?styles.mobileDockActive:""} onClick={()=>openMobileTool("link")}><Link2 size={22}/><span>Link</span></button>
+          <button type="button" className={mobileTool==="icon"?styles.mobileDockActive:""} onClick={()=>openMobileTool("icon")}><LayoutTemplate size={22}/><span>Ícone</span></button>
           <button type="button" className={mobileTool==="color"?styles.mobileDockActive:""} onClick={()=>openMobileTool("color")}><Palette size={22}/><span>Cor</span></button>
           <button type="button" className={mobileTool==="border"?styles.mobileDockActive:""} onClick={()=>openMobileTool("border")}><Box size={22}/><span>Borda</span></button>
           <button type="button" className={mobileTool==="opacity"?styles.mobileDockActive:""} onClick={()=>openMobileTool("opacity")}><Eye size={22}/><span>Transparência</span></button>
