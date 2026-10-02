@@ -5,6 +5,7 @@ import { CopyInviteLinkButton } from "@/components/admin/CopyInviteLinkButton";
 
 export function ConfiguredHome({ state, adminName }: { state: AdminSetupState; adminName: string }) {
   const active = state.event.status === "active";
+  const giftsEnabled = state.event.enabled_capabilities.includes("gifts");
 
   return (
     <main className="admin-page configured-home-v6">
@@ -26,18 +27,20 @@ export function ConfiguredHome({ state, adminName }: { state: AdminSetupState; a
           <div><strong>{state.counts.guests}</strong><span>Convidados</span></div>
           <small>{state.counts.guestsConfirmed} confirmados · {state.counts.guestsPending} aguardando</small>
         </Link>
-        <Link href="/admin/presentes" className="home-summary-card-v6">
-          <span className="home-summary-card-v6__icon"><Gift size={20} /></span>
-          <div><strong>{state.counts.gifts}</strong><span>Presentes</span></div>
-          <small>{state.counts.giftsReserved} escolhidos · {state.counts.giftsAvailable} disponíveis</small>
-        </Link>
+        {giftsEnabled && (
+          <Link href="/admin/presentes" className="home-summary-card-v6">
+            <span className="home-summary-card-v6__icon"><Gift size={20} /></span>
+            <div><strong>{state.counts.gifts}</strong><span>Presentes</span></div>
+            <small>{state.counts.giftsReserved} escolhidos · {state.counts.giftsAvailable} disponíveis</small>
+          </Link>
+        )}
       </section>
 
       <section className="quick-actions-v6">
         <div className="quick-actions-v6__heading"><strong>Ações rápidas</strong></div>
         <div className="quick-actions-grid-v6">
           <Link href="/admin/convidados"><Plus size={18} /><span>Convidados</span></Link>
-          <Link href="/admin/presentes"><Plus size={18} /><span>Presente</span></Link>
+          {giftsEnabled && <Link href="/admin/presentes"><Plus size={18} /><span>Presente</span></Link>}
           <Link href="/admin/convite"><MessageCircle size={18} /><span>Mensagem</span></Link>
           <Link href="/admin/convite"><MailOpen size={18} /><span>Link e acesso</span></Link>
         </div>
