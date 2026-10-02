@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { adminLog } from "@/lib/admin-log";
 import { db } from "@/lib/db";
+import { eventHasCapability } from "@/lib/event-capabilities";
 import { sameOrigin } from "@/lib/security";
 import { getAdminSession } from "@/lib/sessions";
 
@@ -23,6 +24,7 @@ async function savePreferences(request: Request) {
   if (!session) {
     return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
+  if (!(await eventHasCapability(session.event_id,"gifts"))) return NextResponse.json({message:"Presentes não estão habilitados para este evento."},{status:403});
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
