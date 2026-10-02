@@ -14,6 +14,8 @@ export function PublicIntakeForm({ resume }: { resume?: { id: string; token: str
   const [done, setDone] = useState(false);
   const [message, setMessage] = useState("");
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
+  const [invitePhotoFiles, setInvitePhotoFiles] = useState<File[]>([]);
+  const [invitePhotoChoice, setInvitePhotoChoice] = useState<"yes"|"no"|"later">("later");
   const [resumeLoaded, setResumeLoaded] = useState(!resume);
   const [locked, setLocked] = useState(false);
   const [initial, setInitial] = useState<any>(null);
@@ -79,13 +81,14 @@ export function PublicIntakeForm({ resume }: { resume?: { id: string; token: str
       reception_venue: form.get("reception_venue") || "", reception_address: form.get("reception_address") || "", reception_city: form.get("reception_city") || "",
       special_text_choice: eventType === "wedding" ? specialTextChoice : undefined,
       special_text: form.get("special_text") || "", selected_colors: selectedColors,
+      invite_photo_choice: invitePhotoChoice, invite_photo_drive_url: form.get("invite_photo_drive_url") || "", event_specific: {},
     };
 
     try {
       const response = await fetch(resume ? `/api/public/intakes/${resume.id}` : "/api/public/intakes", { method: resume ? "PATCH" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(resume ? { access_token: resume.token, data: payload } : payload) });
       const raw = await response.text(); const data = raw ? JSON.parse(raw) : {};
       if (!response.ok) throw new Error(data.message || "Não foi possível enviar sua ficha.");
-      if (referenceFiles.length && !resume) {
+      if ((referenceFiles.length || invitePhotoFiles.length) && !resume) {
         const media = new FormData();
         media.set("access_token", data.access_token);
         referenceFiles.forEach(file => media.append("files", file));
@@ -145,7 +148,7 @@ export function PublicIntakeForm({ resume }: { resume?: { id: string; token: str
           <div><span className="intake-label">Escolha até 3 estilos</span><div className="intake-tags">{styles.map(style => <button key={style} type="button" className={styleTags.includes(style) ? "is-selected" : ""} disabled={locked} onClick={() => toggleStyle(style)}>{style}</button>)}</div></div>
           <div><span className="intake-label">Quais cores combinam com o evento? <small>Escolha até 5</small></span><div className="intake-colors">{colorOptions.map(([name,color])=><button type="button" key={name} className={selectedColors.includes(name)?"is-selected":""} onClick={()=>toggleColor(name)}><i style={{background:color}}/><span>{name}</span></button>)}</div></div><label><span>Outra cor ou observação <small>opcional</small></span><input name="color_notes" defaultValue={initial?.visual_direction?.color_notes || ""} disabled={locked} placeholder="Ex.: evitar tons muito escuros" /></label>
           <label><span>Mais alguma direção de estilo?</span><textarea name="style_notes" defaultValue={initial?.visual_direction?.style_notes || ""} disabled={locked} /></label>
-          <label className="intake-media-placeholder"><strong>Referências visuais</strong><p>Envie até 8 fotos da decoração, paleta, papelaria ou outras referências. JPG, PNG ou WebP, até 12 MB cada.</p><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e => setReferenceFiles(Array.from(e.target.files || []).slice(0, 8))} /><small>{referenceFiles.length ? `${referenceFiles.length} imagem(ns) selecionada(s)` : "Nenhuma imagem selecionada"}</small></label>
+          <div className="intake-photo-block"><div className="intake-choice"><span>Você quer usar fotos próprias no convite?</span>{[["yes","Sim"],["no","Não"],["later","Ainda não decidi"]].map(([v,l])=><button key={v} type="button" className={invitePhotoChoice===v?"is-selected":""} onClick={()=>setInvitePhotoChoice(v as "yes"|"no"|"later")}>{l}</button>)}</div>{invitePhotoChoice!=="no"&&<div className="intake-photo-options"><p>{invitePhotoChoice==="yes"?"Envie as fotos que gostaria que fossem consideradas no convite.":"Sem problema. Envie as fotos que você considera usar e decidimos depois."}</p><label className="intake-media-placeholder"><strong>Enviar fotos</strong><span>JPG, PNG ou WebP. Você pode selecionar mais de uma.</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e=>setInvitePhotoFiles(Array.from(e.target.files||[]).slice(0,8))}/><small>{invitePhotoFiles.length? `${invitePhotoFiles.length} foto(s) selecionada(s)`:"Nenhuma foto selecionada"}</small></label><div className="intake-or"><span>ou</span></div><label><span>Link compartilhável do Drive <small>opcional</small></span><input name="invite_photo_drive_url" type="url" placeholder="Cole aqui o link da pasta ou das fotos" /></label></div>}</div>\n          <label className="intake-media-placeholder"><strong>Referências visuais</strong><p>Envie até 8 fotos da decoração, paleta, papelaria ou outras referências. JPG, PNG ou WebP, até 12 MB cada.</p><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e => setReferenceFiles(Array.from(e.target.files || []).slice(0, 8))} /><small>{referenceFiles.length ? `${referenceFiles.length} imagem(ns) selecionada(s)` : "Nenhuma imagem selecionada"}</small></label>
         </section>
 
         <section className="intake-section">
