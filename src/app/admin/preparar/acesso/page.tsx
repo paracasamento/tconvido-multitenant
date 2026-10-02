@@ -28,7 +28,7 @@ export default async function SetupAccessPage() {
           {accessReady ? (
             <Link href="/admin/preparar/convidados" className="button button--primary">Continuar</Link>
           ) : (
-            <span className="button button--disabled" aria-disabled="true">Escolha o acesso</span>
+            <span className="button button--disabled" aria-disabled="true">Salve uma senha para continuar</span>
           )}
         </div>
       )}
