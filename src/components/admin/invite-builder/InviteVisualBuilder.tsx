@@ -171,7 +171,14 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
   const [unitMode,setUnitMode]=useState<"px"|"pct">("px");
 
   const [selectedId,setSelectedId]=useState<string|null>(normalizedInitial.screens.cover.elements[0]?.id||null); const [selectedPart,setSelectedPart]=useState<string|null>(null);
-  const [rsvpPreviewState,setRsvpPreviewState]=useState<RsvpPreviewState>("children-question");
+  const rsvpAllowsChildren=eventContext?.type==="wedding";
+  const availableRsvpPreviewStates=useMemo(
+    ()=>RSVP_PREVIEW_STATES.filter(item=>rsvpAllowsChildren||!["children-question","form-children"].includes(item.id)),
+    [rsvpAllowsChildren]
+  );
+  const [rsvpPreviewState,setRsvpPreviewState]=useState<RsvpPreviewState>(
+    rsvpAllowsChildren ? "children-question" : "form-no-children"
+  );
   const [layoutPanelOpen,setLayoutPanelOpen]=useState(false);
   const [layoutName,setLayoutName]=useState("");
   const [layoutBusy,setLayoutBusy]=useState(false);
@@ -2388,7 +2395,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
         {screenId==="rsvp"&&<section className={styles.rsvpScenarios}>
           <div className={styles.rsvpScenariosHeader}><strong>Cenários da confirmação</strong><span>5 estados</span></div>
           <p>Cada etapa é uma tela independente. Texto, posição, imagens, botões e exclusões ficam somente nela.</p>
-          <div className={styles.rsvpScenarioGrid}>{RSVP_PREVIEW_STATES.map(item=><button key={item.id} type="button" className={rsvpPreviewState===item.id?styles.rsvpScenarioActive:""} onClick={()=>openRsvpScenario(item.id)}>{item.label}</button>)}</div>
+          <div className={styles.rsvpScenarioGrid}>{availableRsvpPreviewStates.map(item=><button key={item.id} type="button" className={rsvpPreviewState===item.id?styles.rsvpScenarioActive:""} onClick={()=>openRsvpScenario(item.id)}>{item.label}</button>)}</div>
           <button type="button" className={styles.rsvpScenarioReset} onClick={resetCurrentRsvpScenario}>
             Restaurar somente este cenário
           </button>
