@@ -2167,6 +2167,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
         <RsvpFlowView
           key={element.id}
           parts={element.partStyles}
+          allowChildren={rsvpAllowsChildren}
           preview
           previewState={rsvpPreviewState}
           selectedPart={selectedId===element.id ? selectedPart : null}
