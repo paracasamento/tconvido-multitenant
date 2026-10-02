@@ -283,3 +283,287 @@
   .gestao-create-grid { grid-template-columns: 1fr; }
   .gestao-create-grid label.is-wide { grid-column: auto; }
 }
+
+
+/* Mobile-first management app shell ------------------------------------ */
+.gestao-topbar-link.is-primary {
+  border-color: #12308e;
+  background: #12308e;
+  color: #fff;
+}
+
+.gestao-bottom-nav { display: none; }
+
+.gestao-event-card__email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gestao-form-section { display: grid; gap: 16px; }
+
+.gestao-form-section__heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+}
+
+.gestao-form-section__heading > span {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgba(18,48,142,.08);
+  color: #12308e;
+  font: 800 10px/1 Arial, sans-serif;
+}
+
+.gestao-form-section__heading > div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.gestao-form-section__heading strong { font-size: 14px; }
+.gestao-form-section__heading small { color: #7b8190; font-size: 11px; }
+
+@media (max-width: 760px) {
+  .gestao-shell {
+    min-height: 100dvh;
+    padding-bottom: calc(76px + env(safe-area-inset-bottom));
+  }
+
+  .gestao-topbar {
+    min-height: 56px;
+    padding: 8px 16px;
+  }
+
+  .gestao-brand {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+  }
+
+  .gestao-brand strong { font-size: 16px; }
+  .gestao-brand small { font-size: 9px; }
+  .gestao-topbar-actions { display: none; }
+
+  .gestao-main {
+    width: 100%;
+    margin: 0;
+    padding: 20px 16px 24px;
+  }
+
+  .gestao-home { gap: 20px; }
+  .gestao-hero { max-width: none; }
+  .gestao-hero--events { gap: 16px; }
+
+  .gestao-hero h1 {
+    font-size: 30px;
+    line-height: 1.03;
+    letter-spacing: -.025em;
+  }
+
+  .gestao-hero > p:last-child {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.45;
+  }
+
+  .gestao-hero--events > .gestao-primary-action {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 14px;
+  }
+
+  .gestao-event-list { gap: 10px; }
+
+  .gestao-event-card {
+    padding: 16px;
+    border-radius: 20px;
+    gap: 15px;
+    box-shadow: 0 8px 24px rgba(28,34,51,.045);
+  }
+
+  .gestao-event-card__main {
+    display: grid;
+    gap: 14px;
+  }
+
+  .gestao-event-card__title h2 {
+    margin-top: 8px;
+    font-size: 20px;
+    line-height: 1.12;
+  }
+
+  .gestao-event-card__title p { font-size: 12px; }
+
+  .gestao-event-card__meta {
+    gap: 6px;
+    font-size: 11px;
+  }
+
+  .gestao-event-card__meta small {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .gestao-event-card__actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .gestao-event-card__actions form {
+    display: block;
+    min-width: 0;
+  }
+
+  .gestao-event-card__actions button,
+  .gestao-event-card__actions a {
+    width: 100%;
+    min-width: 0;
+    min-height: 46px;
+    padding: 0 8px;
+    border-radius: 12px;
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .gestao-empty-events {
+    padding: 30px 18px;
+    border-radius: 20px;
+  }
+
+  .gestao-back-link { min-height: 40px; }
+
+  .gestao-create-form {
+    padding: 16px;
+    gap: 24px;
+    border-radius: 20px;
+  }
+
+  .gestao-create-owner { padding-top: 22px; }
+
+  .gestao-create-grid {
+    grid-template-columns: 1fr;
+    gap: 13px;
+  }
+
+  .gestao-create-grid label.is-wide { grid-column: auto; }
+  .gestao-create-grid label { gap: 7px; }
+  .gestao-create-grid label > span { font-size: 12px; }
+
+  .gestao-create-grid input {
+    min-height: 52px;
+    padding: 0 14px;
+    border-radius: 13px;
+    font-size: 16px;
+  }
+
+  .gestao-create-grid small {
+    font-size: 10px;
+    line-height: 1.35;
+  }
+
+  .gestao-create-actions {
+    position: sticky;
+    bottom: calc(68px + env(safe-area-inset-bottom));
+    z-index: 25;
+    margin: 0 -16px -16px;
+    padding: 11px 16px;
+    display: grid;
+    grid-template-columns: minmax(0,.75fr) minmax(0,1.25fr);
+    gap: 8px;
+    border-top: 1px solid rgba(23,32,57,.08);
+    background: rgba(255,255,255,.95);
+    backdrop-filter: blur(14px);
+  }
+
+  .gestao-create-actions .gestao-primary-action,
+  .gestao-create-actions .gestao-secondary-action {
+    min-height: 48px;
+    border-radius: 13px;
+  }
+
+  .gestao-bottom-nav {
+    position: fixed;
+    inset: auto 0 0 0;
+    z-index: 100;
+    min-height: calc(68px + env(safe-area-inset-bottom));
+    padding: 6px 8px env(safe-area-inset-bottom);
+    border-top: 1px solid rgba(23,32,57,.09);
+    background: rgba(255,255,255,.96);
+    backdrop-filter: blur(18px);
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0,1fr));
+    box-shadow: 0 -10px 30px rgba(23,32,57,.045);
+  }
+
+  .gestao-bottom-nav__form {
+    margin: 0;
+    min-width: 0;
+  }
+
+  .gestao-bottom-nav__item {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+    min-height: 58px;
+    padding: 4px 2px 3px;
+    border: 0;
+    background: transparent;
+    color: #7a8190;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    text-decoration: none;
+    cursor: pointer;
+    font: inherit;
+  }
+
+  .gestao-bottom-nav__icon {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+  }
+
+  .gestao-bottom-nav__item small {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: inherit;
+    font: 700 9px/1 Arial, sans-serif;
+    white-space: nowrap;
+  }
+
+  .gestao-bottom-nav__item.is-active { color: #12308e; }
+
+  .gestao-bottom-nav__item.is-primary .gestao-bottom-nav__icon {
+    width: 42px;
+    height: 42px;
+    margin-top: -18px;
+    border-radius: 14px;
+    background: #12308e;
+    color: #fff;
+    box-shadow: 0 8px 20px rgba(18,48,142,.23);
+  }
+
+  .gestao-bottom-nav__item.is-primary small { margin-top: -2px; }
+}
+
+@media (max-width: 380px) {
+  .gestao-main { padding-left: 12px; padding-right: 12px; }
+  .gestao-event-card { padding: 14px; }
+  .gestao-event-card__actions button,
+  .gestao-event-card__actions a { font-size: 9px; }
+  .gestao-bottom-nav { padding-left: 4px; padding-right: 4px; }
+}

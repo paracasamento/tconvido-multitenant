@@ -39,7 +39,12 @@ export function CreateEventForm() {
 
   return (
     <form className="gestao-create-form" onSubmit={submit}>
-      <div className="gestao-create-grid">
+      <section className="gestao-form-section">
+        <div className="gestao-form-section__heading">
+          <span>01</span>
+          <div><strong>Dados do evento</strong><small>Informações principais do convite.</small></div>
+        </div>
+        <div className="gestao-create-grid">
         <label>
           <span>Nome do casal ou evento</span>
           <input name="couple_names" required minLength={2} maxLength={120} placeholder="Ana & João" />
@@ -69,12 +74,13 @@ export function CreateEventForm() {
           <span>Cidade</span>
           <input name="city" required minLength={2} maxLength={180} />
         </label>
-      </div>
+        </div>
+      </section>
 
-      <div className="gestao-create-owner">
-        <div>
-          <strong>Acesso do dono</strong>
-          <p>Essa conta entrará apenas no painel deste evento.</p>
+      <section className="gestao-create-owner gestao-form-section">
+        <div className="gestao-form-section__heading">
+          <span>02</span>
+          <div><strong>Acesso do dono</strong><small>Conta exclusiva para administrar este evento.</small></div>
         </div>
         <div className="gestao-create-grid">
           <label>
@@ -91,7 +97,7 @@ export function CreateEventForm() {
             <small>Mínimo de 12 caracteres.</small>
           </label>
         </div>
-      </div>
+      </section>
 
       {message && <p className="form-error">{message}</p>}
 

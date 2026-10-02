@@ -6,7 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
 
-  AlignCenter, AlignLeft, AlignRight, Box, BringToFront, ChevronDown, Copy, Eye, EyeOff,
+  AlignCenter, AlignLeft, AlignRight, ArrowLeft, Box, BringToFront, ChevronDown, Copy, Eye, EyeOff,
 
   ExternalLink, Grid3X3, ImagePlus, Layers3, Link2, Lock, MoveDown, MoveUp, Plus, Redo2, RotateCcw, Save,
 
@@ -227,6 +227,13 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   useEffect(() => {
     configRef.current = config;
   }, [config]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || window.innerWidth > 640) return;
+    setPreviewWidth(360);
+    setZoom(window.innerWidth <= 380 ? 0.86 : 0.92);
+    setShowRulers(false);
+  }, []);
 
   useEffect(() => {
     // Keep editor/public parity when the server sends a fresher saved design.
@@ -1974,6 +1981,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   return <div className={styles.builder}>
 
     <header className={styles.topbar}><div className={styles.brand}><strong>Editor do convite</strong><span>Mobile-first · preview real do convidado</span></div><div className={styles.toolbar}>
+      <a href="/gestao" className={styles.backLink}><ArrowLeft size={16}/> Gestão</a>
 
       <button onClick={undo} disabled={!history.length} title="Desfazer"><Undo2 size={16}/></button>
       <button onClick={redo} disabled={!future.length} title="Refazer"><Redo2 size={16}/></button>

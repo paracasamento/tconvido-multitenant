@@ -1571,3 +1571,172 @@
   background:#eef2ff;
   color:#12308e;
 }
+
+
+/* Mobile editor ergonomics ---------------------------------------------- */
+.backLink{
+  min-height:32px;
+  padding:6px 9px;
+  border:1px solid #dfe2e8;
+  border-radius:8px;
+  background:#fff;
+  color:#333946;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:5px;
+  text-decoration:none;
+  font-size:10px;
+  font-weight:700;
+  flex:0 0 auto;
+}
+
+@media(max-width:640px){
+  .builder{
+    min-height:100dvh;
+    border:0;
+    border-radius:0;
+  }
+
+  .topbar{
+    position:sticky;
+    top:0;
+    z-index:1500;
+    min-height:0;
+    padding:8px;
+    gap:7px;
+    background:rgba(255,255,255,.97);
+    backdrop-filter:blur(14px);
+  }
+
+  .brand{
+    min-width:0;
+    width:100%;
+    padding:0 3px;
+  }
+
+  .brand strong{font-size:14px}
+  .brand span{font-size:9px}
+
+  .toolbar{
+    width:100%;
+    max-width:100%;
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+    gap:5px;
+    overflow-x:auto;
+    overscroll-behavior-x:contain;
+    scrollbar-width:none;
+    padding:1px 1px 3px;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  .toolbar::-webkit-scrollbar{display:none}
+
+  .toolbar button,
+  .backLink{
+    min-height:40px;
+    padding:7px 10px;
+    border-radius:10px;
+    flex:0 0 auto;
+    font-size:10px;
+  }
+
+  .toolbar .save{
+    position:sticky;
+    right:0;
+    z-index:2;
+    box-shadow:-8px 0 12px rgba(255,255,255,.88);
+  }
+
+  .viewportSelect{
+    min-height:40px;
+    flex:0 0 auto;
+  }
+
+  .status{
+    position:sticky;
+    top:104px;
+    z-index:1200;
+    padding:7px 10px;
+    font-size:10px;
+  }
+
+  .workspace{
+    display:flex;
+    flex-direction:column;
+    height:auto;
+    min-height:0;
+  }
+
+  .stage{
+    order:0;
+    min-height:0;
+    padding:12px 6px 24px;
+    overflow:auto;
+    border-bottom:1px solid #e5e7eb;
+  }
+
+  .leftbar{
+    order:1;
+    padding:14px 12px 18px;
+    border:0;
+    border-bottom:1px solid #e5e7eb;
+  }
+
+  .inspector{
+    order:2;
+    padding:14px 12px 32px;
+    border:0;
+  }
+
+  .measurementShell{
+    min-width:0;
+    padding:0;
+    margin:0 auto 10px;
+  }
+
+  .rulerCorner,.rulerX,.rulerY{display:none}
+
+  .deviceLabel{
+    top:0;
+    margin-bottom:7px;
+  }
+
+  .layers{max-height:240px}
+
+  .screenTabs{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:4px;
+    overflow-x:auto;
+  }
+
+  .screenTabs button{
+    min-height:40px;
+    padding:7px 5px;
+  }
+
+  .addGrid button,
+  .inlineBtns button,
+  .styleTools button,
+  .elementActions button{min-height:40px}
+
+  .inspector input,
+  .inspector textarea,
+  .inspector select{
+    min-height:42px;
+    font-size:12px;
+  }
+
+  .inspector details>summary{
+    min-height:44px;
+    font-size:10px;
+  }
+
+  .inspectorTabs button{min-height:38px}
+
+  .stageStatusBar{
+    position:relative;
+    margin-top:12px;
+  }
+}

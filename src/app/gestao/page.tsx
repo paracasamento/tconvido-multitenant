@@ -36,9 +36,9 @@ export default async function GestaoHomePage() {
     <main className="gestao-home">
       <section className="gestao-hero gestao-hero--events">
         <div>
-          <p className="gestao-kicker">Área de gestão</p>
-          <h1>Eventos</h1>
-          <p>Olá, {session.admin_name}. Crie convites, acesse o painel dos clientes e edite cada evento sem misturar os dados.</p>
+          <p className="gestao-kicker">Olá, {session.admin_name}</p>
+          <h1>Seus eventos</h1>
+          <p>Crie, configure e abra cada convite a partir de um único painel.</p>
         </div>
         <Link href="/gestao/eventos/novo" className="gestao-primary-action">
           <Plus size={17} />
@@ -60,6 +60,7 @@ export default async function GestaoHomePage() {
               <div className="gestao-event-card__meta">
                 <span><CalendarDays size={14} /> {event.event_date}</span>
                 <span><UserRound size={14} /> {event.owner_name || "Sem dono definido"}</span>
+                {event.owner_email ? <span className="gestao-event-card__email">{event.owner_email}</span> : null}
                 <small>/e/{event.slug}</small>
               </div>
             </div>
