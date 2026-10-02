@@ -14,6 +14,12 @@ export type EventRecord = {
   maps_url: string | null;
   gift_color_preferences: Array<{ name: string; hex: string }>;
   status: "draft" | "active" | "closed";
+  event_type?: string;
+  event_name?: string | null;
+  celebrant_name?: string | null;
+  baby_name?: string | null;
+  hosts_names?: string | null;
+  enabled_capabilities?: string[];
 };
 
 async function getEventByWhere(slug: string): Promise<EventRecord | null> {
@@ -32,7 +38,13 @@ async function getEventByWhere(slug: string): Promise<EventRecord | null> {
       city,
       maps_url,
       COALESCE(gift_color_preferences, '[]'::jsonb) AS gift_color_preferences,
-      status
+      status,
+      event_type,
+      event_name,
+      celebrant_name,
+      baby_name,
+      hosts_names,
+      COALESCE(enabled_capabilities,\'[]\'::jsonb) AS enabled_capabilities
     FROM events
     WHERE slug = ${slug}
     LIMIT 1
