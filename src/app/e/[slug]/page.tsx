@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { InviteEntryFlow } from "@/components/invite/InviteEntryFlow";
-import { getEventBySlug } from "@/lib/event";
+import { buildEventTemplateVars, getEventBySlug } from "@/lib/event";
 import { getInviteVisualConfig } from "@/lib/invite-builder-server";
 
 export const dynamic = "force-dynamic";
@@ -21,10 +21,7 @@ export default async function EventEntryPage({
       coverScreen={config.screens.cover}
       accessScreen={config.screens.access}
       eventSlug={event.slug}
-      vars={{
-        couple_names: event.couple_names,
-        title: event.title,
-      }}
+      vars={buildEventTemplateVars(event)}
     />
   );
 }
