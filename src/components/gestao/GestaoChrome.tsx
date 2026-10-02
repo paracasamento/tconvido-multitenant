@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { CalendarDays, LayoutDashboard, LogOut, Palette, Plus } from "lucide-react";
 
 const navItems = [
-  { href: "/gestao", label: "Eventos", icon: CalendarDays, match: (path: string) => path === "/gestao" },
-  { href: "/gestao/painel", label: "Painel", icon: LayoutDashboard, match: (path: string) => path === "/gestao/painel" },
+  { href: "/gestao", label: "Eventos", icon: CalendarDays, match: (path: string) => path === "/gestao", primary: false },
+  { href: "/gestao/painel", label: "Painel", icon: LayoutDashboard, match: (path: string) => path === "/gestao/painel", primary: false },
   { href: "/gestao/eventos/novo", label: "Novo", icon: Plus, match: (path: string) => path.startsWith("/gestao/eventos/novo"), primary: true },
-  { href: "/gestao/editor", label: "Editor", icon: Palette, match: (path: string) => path.startsWith("/gestao/editor") },
+  { href: "/gestao/editor", label: "Editor", icon: Palette, match: (path: string) => path.startsWith("/gestao/editor"), primary: false },
 ] as const;
 
 export function GestaoChrome({ children }: { children: React.ReactNode }) {
