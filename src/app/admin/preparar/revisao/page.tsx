@@ -12,15 +12,17 @@ export default async function SetupReviewPage() {
 
   if (setup.event.status !== "draft") redirect("/admin/convite");
 
-  const checklist = setup.steps.slice(0, 4);
+  const reviewStep = setup.steps.find(step => step.id === "review")!;
+  const checklist = setup.steps.filter(step => step.id !== "review");
+  const backHref = setup.steps.some(step => step.id === "gifts") ? "/admin/preparar/presentes" : "/admin/preparar/convidados";
 
   return (
     <SetupStepShell
-      step={5}
+      step={reviewStep.number}
       title="Publicar"
       description="Confira e libere o convite."
       steps={setup.steps}
-      backHref="/admin/preparar/presentes"
+      backHref={backHref}
     >
       <section className="review-checklist-v6">
         {checklist.map(step => (
