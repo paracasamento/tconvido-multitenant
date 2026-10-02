@@ -5,7 +5,7 @@ import { adminLog } from "@/lib/admin-log";
 import { hashPassword, sameOriginStrict } from "@/lib/security";
 import { getPlatformSession } from "@/lib/sessions";
 
-const schema = z.object({
+const createSchema = z.object({
   name: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(200),
   password: z.string().min(12).max(200),
@@ -24,7 +24,7 @@ export async function POST(
     return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
   }
 
-  const parsed = schema.safeParse(await request.json().catch(() => null));
+  const parsed = createSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json(
       { message: "Informe nome, e-mail válido e uma senha com pelo menos 12 caracteres." },
@@ -139,4 +139,77 @@ export async function POST(
       { status: 500 }
     );
   }
+}
+
+
+const resetSchema = z.object({
+  password: z.string().min(12).max(200),
+});
+
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  if (!sameOriginStrict(request)) {
+    return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
+  }
+
+  const platform = await getPlatformSession();
+  if (!platform) {
+    return NextResponse.json({ message: "Não autorizado." }, { status: 401 });
+  }
+
+  const parsed = resetSchema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) {
+    return NextResponse.json(
+      { message: "Use uma senha com pelo menos 12 caracteres." },
+      { status: 400 }
+    );
+  }
+
+  const { id: eventId } = await context.params;
+  const sql = db();
+  const ownerRows = await sql`
+    SELECT a.id, a.email
+    FROM event_admins ea
+    JOIN admins a ON a.id = ea.admin_id
+    WHERE ea.event_id = ${eventId}
+      AND ea.role = 'owner'
+    LIMIT 1
+  `;
+
+  if (!ownerRows.length) {
+    return NextResponse.json(
+      { message: "Este evento ainda não possui acesso de cliente." },
+      { status: 404 }
+    );
+  }
+
+  const owner = ownerRows[0] as any;
+  const passwordHash = await hashPassword(parsed.data.password);
+
+  await sql`
+    UPDATE admins
+    SET password_hash = ${passwordHash}, updated_at = now()
+    WHERE id = ${owner.id}
+  `;
+
+  await sql`
+    UPDATE admin_sessions
+    SET revoked_at = now()
+    WHERE admin_id = ${owner.id}
+      AND event_id = ${eventId}
+      AND revoked_at IS NULL
+  `;
+
+  await adminLog({
+    eventId,
+    adminId: platform.admin_id,
+    action: "client_access_password_reset",
+    entityType: "admin",
+    entityId: String(owner.id),
+    metadata: { email: String(owner.email || "") },
+  });
+
+  return NextResponse.json({ ok: true });
 }
