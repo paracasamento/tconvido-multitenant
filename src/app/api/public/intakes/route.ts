@@ -2,8 +2,10 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { intakeSchema, buildIntakePendingItems } from "@/lib/intake";
+import { sameOriginStrict } from "@/lib/security";
 
 export async function POST(request: Request) {
+  if (!sameOriginStrict(request)) return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
   const parsed = intakeSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ message: parsed.error.issues[0]?.message || "Confira os dados da ficha." }, { status: 400 });
