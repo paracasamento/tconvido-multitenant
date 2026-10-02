@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { INTAKE_REFERENCE_BUCKET, supabaseStorageAdmin } from "@/lib/supabase-storage";
+import { sameOriginStrict } from "@/lib/security";
 
 const TYPES=new Set(["image/jpeg","image/png","image/webp"]);
 const MAX_SIZE=12*1024*1024;
@@ -11,6 +12,7 @@ function tokenHash(token:string){return crypto.createHash("sha256").update(token
 function ext(type:string){return type==="image/png"?"png":type==="image/webp"?"webp":"jpg";}
 
 export async function POST(request:Request,{params}:{params:Promise<{id:string}>}) {
+  if(!sameOriginStrict(request)) return NextResponse.json({message:"Origem inválida."},{status:403});
   const {id}=await params;
   const form=await request.formData();
   const token=String(form.get("access_token")||"");
@@ -35,11 +37,11 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
       const {error}=await storage.storage.from(INTAKE_REFERENCE_BUCKET).upload(path,Buffer.from(await file.arrayBuffer()),{contentType:file.type,upsert:false,cacheControl:"3600"});
       if(error) throw error;
       await sql`INSERT INTO invitation_intake_media(id,intake_id,storage_key,original_name,mime_type,byte_size,sort_order,media_kind) VALUES(${mediaId},${id},${path},${file.name},${file.type},${file.size},${i},${mediaKind})`;
-      saved.push({id:mediaId,name:file.name});
+      saved.push({id:mediaId,name:file.name,path});
     }
     return NextResponse.json({ok:true,files:saved});
   }catch(error){
-    if(saved.length){await storage.storage.from(INTAKE_REFERENCE_BUCKET).remove(saved.map((x:any)=>`${id}/${x.id}.${ext(files[saved.indexOf(x)].type)}`)).catch(()=>null);}
-    return NextResponse.json({message:error instanceof Error?error.message:"Não foi possível enviar as referências."},{status:500});
+    if(saved.length){await storage.storage.from(INTAKE_REFERENCE_BUCKET).remove(saved.map((x:any)=>x.path)).catch(()=>null);}
+    console.error("intake media upload failed",error); return NextResponse.json({message:"Não foi possível enviar as imagens. Tente novamente."},{status:500});
   }
 }
