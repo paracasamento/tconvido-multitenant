@@ -2167,6 +2167,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
         <RsvpFlowView
           key={element.id}
           parts={element.partStyles}
+          maxAdults={previewData.guestAllowedAdults}
           allowChildren={rsvpAllowsChildren}
           preview
           previewState={rsvpPreviewState}
