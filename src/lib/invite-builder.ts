@@ -1300,16 +1300,16 @@ export const defaultInviteVisualConfig: InviteVisualConfig = {
   },
   screens: {
     cover: { id:"cover", name:"Capa", backgroundColor:"#fbfaf5", minHeight:844, paperOpacity:.5, elements:[
-      img("cover-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-8,-5,47,37,1), img("cover-floral-right","Floral superior direito","/florals/floral-top-right.webp",61,-5,47,37,1), img("cover-divider","Divisor floral","/florals/floral-divider.webp",17,31,66,12,2), text("cover-names","Nomes","{{couple_names}}",10,43,80,7,24), text("cover-title","Título","{{title}}",7,50,86,10,43), img("cover-kitchen","Arranjo de cozinha","/florals/kitchen-arrangement.webp",8,60,84,30,2), text("cover-open","Instrução","DESLIZE PARA ABRIR\n⌃",15,91,70,7,13,5)
+      img("cover-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-8,-5,47,37,1), img("cover-floral-right","Floral superior direito","/florals/floral-top-right.webp",61,-5,47,37,1), img("cover-divider","Divisor floral","/florals/floral-divider.webp",17,31,66,12,2), text("cover-names","Identidade","{{event_identity}}",10,43,80,7,24), text("cover-title","Título","{{title}}",7,50,86,10,43), img("cover-kitchen","Arranjo de cozinha","/florals/kitchen-arrangement.webp",8,60,84,30,2), text("cover-open","Instrução","DESLIZE PARA ABRIR\n⌃",15,91,70,7,13,5)
     ]},
     access: { id:"access", name:"Login", backgroundColor:"#fbfaf5", minHeight:844, paperOpacity:.5, elements:[
-      img("access-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-5,43,34,1), img("access-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-5,43,34,1), img("access-divider","Divisor floral","/florals/floral-divider.webp",24,21,52,9,2), text("access-heading","Título","Seu convite\nestá reservado",8,31,84,16,40), text("access-copy","Instrução","Informe seu nome e o código enviado pelos noivos para abrir seu convite.",12,49,76,8,17), accessSlot("access-form","Formulário de acesso",9,58,82,31,5), img("access-kitchen","Arranjo inferior","/florals/kitchen-arrangement.webp",53,82,53,23,2)
+      img("access-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-5,43,34,1), img("access-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-5,43,34,1), img("access-divider","Divisor floral","/florals/floral-divider.webp",24,21,52,9,2), text("access-heading","Título","Seu convite\nestá reservado",8,31,84,16,40), text("access-copy","Instrução","Informe seu nome e a senha do convite para abrir seu acesso.",12,49,76,8,17), accessSlot("access-form","Formulário de acesso",9,58,82,31,5), img("access-kitchen","Arranjo inferior","/florals/kitchen-arrangement.webp",53,82,53,23,2)
     ]},
     invite: { id:"invite", name:"Convite", backgroundColor:"#fbfaf5", minHeight:1080, paperOpacity:.46, layoutRevision:2, elements:[
       img("invite-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-4,43,28,1),
       img("invite-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-4,43,28,1),
 
-      text("invite-names","Nomes","{{couple_names}}",16,4,68,4.5,18,4),
+      text("invite-names","Identidade","{{event_identity}}",16,4,68,4.5,18,4),
       img("invite-divider","Divisor floral","/florals/floral-divider.webp",25,21,50,6,2),
 
       text("invite-title","Título","{{title}}",8,28,84,7,43,4),
