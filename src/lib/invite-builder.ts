@@ -94,6 +94,8 @@ export type InviteElement = {
   text?: string;
   src?: string;
   href?: string;
+  icon?: string;
+  compositionId?: string;
   slot?: "access-form" | "rsvp-controls" | "rsvp-status" | "rsvp-flow" | "gift-grid" | "gift-note" | "countdown";
   partStyles?: Record<string, InvitePartStyle>;
   /**
