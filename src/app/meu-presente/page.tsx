@@ -6,9 +6,12 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { db } from "@/lib/db";
 import { requireGuest } from "@/lib/sessions";
 import { signGiftImages } from "@/lib/storage";
+import { eventHasCapability } from "@/lib/event-capabilities";
+import { redirect } from "next/navigation";
 
 export default async function MyGiftPage() {
   const session = await requireGuest("/meu-presente");
+  if (!(await eventHasCapability(session.event_id, "gifts"))) redirect("/convite");
   const sql = db();
   const rows = await sql`
     SELECT g.id, g.name, g.description, g.image_path
