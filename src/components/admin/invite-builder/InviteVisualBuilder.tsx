@@ -1326,24 +1326,77 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
     setStatus(`Decoração “${layout.name}” aplicada somente nesta tela.`);
   }
 
-  function duplicate(){if(!selected)return;const id=`${selected.type}-${uid()}`,copy={...deep(selected),id,name:`${selected.name} cópia`,x:selected.x+3,y:selected.y+3,zIndex:selected.zIndex+1};updateScreen({elements:[...screen.elements,copy]},true);setSelectedId(id);setSelectedPart(null)}
+  function duplicate(){
+    if(!selected)return;
+
+    if(selected.compositionId){
+      const members=screen.elements.filter(element=>element.compositionId===selected.compositionId);
+      const nextCompositionId=`composition-${uid()}`;
+      const highestZ=screen.elements.reduce((max,element)=>Math.max(max,element.zIndex||0),0)+1;
+      let selectedCopyId:string|null=null;
+      const copies=members.map((element,index)=>{
+        const id=`${element.type}-${uid()}`;
+        if(element.id===selected.id) selectedCopyId=id;
+        return {
+          ...deep(element),
+          id,
+          name:`${element.name} cópia`,
+          compositionId:nextCompositionId,
+          x:element.x+3,
+          y:element.y+3,
+          zIndex:highestZ+index,
+        } as InviteElement;
+      });
+      updateScreen({elements:[...screen.elements,...copies]},true);
+      setSelectedId(selectedCopyId||copies[0]?.id||null);
+      setSelectedPart(null);
+      setStatus("Composição duplicada como um grupo.");
+      return;
+    }
+
+    const id=`${selected.type}-${uid()}`;
+    const copy={...deep(selected),id,name:`${selected.name} cópia`,x:selected.x+3,y:selected.y+3,zIndex:selected.zIndex+1};
+    updateScreen({elements:[...screen.elements,copy]},true);
+    setSelectedId(id);
+    setSelectedPart(null);
+  }
+
+  function ungroupComposition(){
+    if(!selected?.compositionId)return;
+    const compositionId=selected.compositionId;
+    updateScreen({
+      elements:screen.elements.map(element=>
+        element.compositionId===compositionId
+          ? {...element,compositionId:undefined}
+          : element
+      )
+    },true);
+    setStatus("Composição desagrupada. Os elementos agora podem ser movidos separadamente.");
+  }
 
   function remove(){
     if(!selected)return;
 
+    const idsToRemove=new Set(
+      selected.compositionId
+        ? screen.elements.filter(element=>element.compositionId===selected.compositionId).map(element=>element.id)
+        : [selected.id]
+    );
     const defaultScreen = defaults.screens[screenId];
-    const isDefaultElement = defaultScreen.elements.some(element => element.id === selected.id);
     const deletedElementIds = new Set(((screen as any).deletedElementIds || []) as string[]);
 
-    if(isDefaultElement) deletedElementIds.add(selected.id);
+    for(const element of defaultScreen.elements){
+      if(idsToRemove.has(element.id)) deletedElementIds.add(element.id);
+    }
 
     updateScreen({
-      elements: screen.elements.filter(element => element.id !== selected.id),
+      elements: screen.elements.filter(element => !idsToRemove.has(element.id)),
       deletedElementIds: [...deletedElementIds]
     }, true);
 
     setSelectedId(null);
     setSelectedPart(null);
+    if(idsToRemove.size>1)setStatus("Composição excluída.");
   }
 
   function resetScreen(){
@@ -1634,7 +1687,13 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
       rect,
       moved: false,
       historyCaptured: false,
-      before: deep(configRef.current)
+      before: deep(configRef.current),
+      groupMembers:
+        mode==="move" && el.compositionId
+          ? screen.elements
+              .filter(element=>element.compositionId===el.compositionId && !element.locked)
+              .map(element=>({id:element.id,x:element.x,y:element.y}))
+          : null
     };
   }
 
@@ -1758,10 +1817,34 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
       const sx=snapAxis(rawXPx,wPx,"x",d.id);
       const sy=snapAxis(rawYPx,hPx,"y",d.id);
 
-      updateElement(d.id,{
-        x:snapped(pxToPctX(sx.px)),
-        y:snapped(pxToPctY(sy.px))
-      });
+      const nextX=snapped(pxToPctX(sx.px));
+      const nextY=snapped(pxToPctY(sy.px));
+
+      if(Array.isArray(d.groupMembers) && d.groupMembers.length>1){
+        const deltaX=nextX-d.x;
+        const deltaY=nextY-d.y;
+        const memberPositions=new Map(
+          d.groupMembers.map((member:any)=>[
+            member.id,
+            {x:member.x+deltaX,y:member.y+deltaY}
+          ])
+        );
+        const cur=screenId==="rsvp"
+          ? resolveRsvpScenarioScreen(configRef.current,rsvpPreviewState as RsvpScenarioId)
+          : screenId==="invite"
+            ? resolveInviteFlowScreen(configRef.current,inviteFlowState)
+            : configRef.current.screens[screenId];
+        updateScreen({
+          elements:cur.elements.map(element=>{
+            const position=memberPositions.get(element.id);
+            return position
+              ? {...element,x:snapped(position.x),y:snapped(position.y)}
+              : element;
+          })
+        });
+      }else{
+        updateElement(d.id,{x:nextX,y:nextY});
+      }
       setSmartGuideLines({x:sx.lines,y:sy.lines});
       setDragMetrics({
         x:sx.px,y:sy.px,w:wPx,h:hPx,
@@ -2710,6 +2793,11 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
                         {selected.locked ? <Unlock size={16}/> : <Lock size={16}/>}
                         <span>{selected.locked ? "Desbloquear" : "Bloquear"}</span>
                       </button>
+                      {selected.compositionId ? (
+                        <button type="button" onClick={()=>{ungroupComposition();setMobileCanvasMenu(false)}}>
+                          <Layers3 size={16}/><span>Desagrupar composição</span>
+                        </button>
+                      ) : null}
                       <button type="button" onClick={()=>{setMobileCanvasMenu(false);openMobileInspector()}}>
                         <SlidersHorizontal size={16}/><span>Mais ajustes</span>
                       </button>
