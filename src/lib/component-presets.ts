@@ -14,6 +14,8 @@ export type InviteComponentPresetElement = Partial<InviteElement> & {
 
 export type InviteComponentPreset = {
   id: string;
+  capabilities?: string[];
+  eventTypes?: string[];
   name: string;
   category: InviteComponentPresetCategory;
   description: string;
@@ -282,6 +284,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
 
   {
     id: "button-solid",
+    capabilities: ["rsvp"],
     name: "Botão sólido",
     category: "button",
     description: "Cápsula forte com alto contraste.",
@@ -295,6 +298,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
   },
   {
     id: "button-outline",
+    capabilities: ["gifts"],
     name: "Botão contorno",
     category: "button",
     description: "Leve e elegante para ações secundárias.",
@@ -352,6 +356,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
 
   {
     id: "actions-three",
+    capabilities: ["rsvp","gifts"],
     name: "3 ações com ícones",
     category: "actions",
     description: "Local, confirmação e presentes em uma linha.",
@@ -388,6 +393,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
   },
   {
     id: "actions-circular",
+    capabilities: ["rsvp","gifts"],
     name: "Ações circulares",
     category: "actions",
     description: "Três atalhos circulares no estilo convite interativo.",
@@ -471,6 +477,7 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
 
   {
     id: "heading-elegant",
+    eventTypes: ["wedding"],
     name: "Nomes elegantes",
     category: "heading",
     description: "Nomes em destaque com título acima.",
@@ -509,4 +516,12 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
 
 export function presetsByCategory(category: InviteComponentPresetCategory) {
   return INVITE_COMPONENT_PRESETS.filter(preset => preset.category === category);
+}
+
+export function presetsForEvent(eventType:string,capabilities:string[]){
+  return INVITE_COMPONENT_PRESETS.filter(preset=>{
+    const typeOk=!preset.eventTypes?.length||preset.eventTypes.includes(eventType);
+    const capabilityOk=!preset.capabilities?.length||preset.capabilities.every(cap=>capabilities.includes(cap));
+    return typeOk&&capabilityOk;
+  });
 }
