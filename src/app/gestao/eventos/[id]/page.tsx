@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, ExternalLink, LayoutDashboard, Palette, UserRound, CircleAlert } from "lucide-react";
+import { CalendarDays, ExternalLink, LayoutDashboard, LayoutTemplate, Palette, UserRound, CircleAlert } from "lucide-react";
 import { db } from "@/lib/db";
 import { requirePlatformAdmin } from "@/lib/sessions";
 import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
@@ -113,7 +113,7 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
     </section>
 
     <section className="settings-card"><h2>Pedidos de alteração</h2><ChangeRequestManager eventId={event.id} items={changeRequests.map((item:any)=>({...item,created_at:new Date(item.created_at).toISOString()}))}/>{approvals[0]&&<p className="muted">Última decisão do cliente: {approvals[0].status==="approved"?"Aprovado":"Alterações solicitadas"} · {new Date(approvals[0].created_at).toLocaleString("pt-BR")}</p>}</section><section className="settings-card"><h2>Controle de produção</h2><ProductionControl eventId={event.id} initialStatus={event.production_status||"draft"} initialDeadline={event.delivery_deadline?new Date(event.delivery_deadline).toISOString().slice(0,10):""} initialNotes={event.internal_notes||""}/></section><section className="settings-card"><h2>Ferramentas do evento</h2><div className="card-actions">
-      <form action={`/api/owner/events/${event.id}/select?next=%2Fgestao%2Feditor`} method="post"><button className="gestao-primary-action" type="submit"><Palette size={16}/> Editar convite</button></form>
+      <Link href={`/gestao/modelos?event=${event.id}`} className="button button--soft"><LayoutTemplate size={16}/> Escolher modelo</Link><form action={`/api/owner/events/${event.id}/select?next=%2Fgestao%2Feditor`} method="post"><button className="gestao-primary-action" type="submit"><Palette size={16}/> Editar convite</button></form>
       <form action={`/api/owner/events/${event.id}/select?next=%2Fadmin`} method="post"><button className="gestao-primary-action" type="submit"><LayoutDashboard size={16}/> Abrir painel do cliente</button></form>
     </div></section>
   </main>;
