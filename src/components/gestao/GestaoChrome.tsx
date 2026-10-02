@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ImagePlus, LayoutDashboard, LogOut, Palette, Plus } from "lucide-react";
+import { CalendarDays, ClipboardList, ImagePlus, LayoutDashboard, LogOut, Palette, Plus } from "lucide-react";
 
 const navItems = [
+  { href: "/gestao/fichas", label: "Fichas", icon: ClipboardList, match: (path: string) => path.startsWith("/gestao/fichas"), primary: false },
   { href: "/gestao", label: "Eventos", icon: CalendarDays, match: (path: string) => path === "/gestao", primary: false },
   { href: "/gestao/biblioteca", label: "Biblioteca", icon: ImagePlus, match: (path: string) => path.startsWith("/gestao/biblioteca"), primary: false },
   { href: "/gestao/eventos/novo", label: "Novo", icon: Plus, match: (path: string) => path.startsWith("/gestao/eventos/novo"), primary: true },
@@ -26,6 +27,7 @@ export function GestaoChrome({ children }: { children: React.ReactNode }) {
         </Link>
 
         <div className="gestao-topbar-actions">
+          <Link href="/gestao/fichas" className="gestao-topbar-link"><ClipboardList size={15} /> Fichas</Link>
           <Link href="/gestao" className="gestao-topbar-link"><CalendarDays size={15} /> Eventos</Link>
           <Link href="/gestao/painel" className="gestao-topbar-link"><LayoutDashboard size={15} /> Painel</Link>
           <Link href="/gestao/biblioteca" className="gestao-topbar-link"><ImagePlus size={15} /> Biblioteca</Link>
