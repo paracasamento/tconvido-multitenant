@@ -2192,3 +2192,249 @@
     min-width:62px;
   }
 }
+
+
+/* Standardized theme library -------------------------------------------- */
+.themeMiniPicker{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  margin-bottom:10px;
+}
+
+.themeMiniPicker button,
+.themeBackgrounds button{
+  min-width:0;
+  padding:5px;
+  border:1px solid #e3e6ec;
+  border-radius:9px;
+  background:#fff;
+  color:#4a5060;
+  display:grid;
+  gap:4px;
+  cursor:pointer;
+  text-align:left;
+}
+
+.themeMiniPicker img{
+  width:100%;
+  height:76px;
+  object-fit:cover;
+  object-position:top;
+  border-radius:6px;
+  background:#f4f4f6;
+}
+
+.themeMiniPicker span,
+.themeBackgrounds span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:8px;
+  font-weight:700;
+}
+
+.themeMiniPicker .themeMiniActive{
+  border-color:#6b55df;
+  background:#f3efff;
+  box-shadow:0 0 0 1px rgba(107,85,223,.16);
+}
+
+.themeBackgrounds{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:6px;
+  margin-bottom:10px;
+}
+
+.themeBackgrounds img{
+  width:100%;
+  height:54px;
+  object-fit:cover;
+  border-radius:6px;
+  border:1px solid #f0f1f4;
+}
+
+@media(min-width:641px){
+  .mobileThemeSheet{display:none!important}
+}
+
+@media(max-width:640px){
+  .mobileThemeSheet{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:calc(69px + env(safe-area-inset-bottom));
+    z-index:2200;
+    max-height:min(74dvh,700px);
+    padding:0 16px 22px;
+    border-radius:22px 22px 0 0;
+    background:#fff;
+    box-shadow:0 -16px 45px rgba(18,24,40,.20);
+    overflow:auto;
+    overscroll-behavior:contain;
+  }
+
+  .mobileThemeGrid{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+  }
+
+  .mobileThemeGrid > button{
+    min-width:0;
+    padding:7px;
+    border:1px solid #e4e6ec;
+    border-radius:15px;
+    background:#fafbfc;
+    color:#2c313c;
+    display:grid;
+    gap:7px;
+    text-align:left;
+  }
+
+  .mobileThemeGrid > button > img{
+    width:100%;
+    height:126px;
+    object-fit:cover;
+    object-position:top;
+    border-radius:10px;
+    background:#f0f1f4;
+  }
+
+  .mobileThemeGrid > button > div{
+    min-width:0;
+    display:grid;
+    gap:2px;
+  }
+
+  .mobileThemeGrid strong{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:11px;
+  }
+
+  .mobileThemeGrid small{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#808694;
+    font-size:9px;
+  }
+
+  .mobileThemeCardActive{
+    border-color:#7048ee!important;
+    background:#f5f1ff!important;
+    box-shadow:0 0 0 2px rgba(112,72,238,.10);
+  }
+
+  .mobileThemePalette{
+    display:flex;
+    gap:4px;
+  }
+
+  .mobileThemePalette i{
+    width:13px;
+    height:13px;
+    border:1px solid rgba(20,24,34,.08);
+    border-radius:50%;
+    display:block;
+  }
+
+  .mobileThemeSection{
+    display:grid;
+    gap:10px;
+    margin-top:18px;
+    padding-top:16px;
+    border-top:1px solid #edf0f4;
+  }
+
+  .mobileThemeSection > div:first-child{
+    display:grid;
+    gap:3px;
+  }
+
+  .mobileThemeSection > div:first-child strong{
+    font-size:13px;
+  }
+
+  .mobileThemeSection > div:first-child small{
+    color:#7b8190;
+    font-size:10px;
+    line-height:1.35;
+  }
+
+  .mobileThemeBackgrounds{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:9px;
+  }
+
+  .mobileThemeBackgrounds button{
+    min-width:0;
+    padding:7px;
+    border:1px solid #e4e6ec;
+    border-radius:13px;
+    background:#fff;
+    display:grid;
+    gap:6px;
+    color:#383e4b;
+  }
+
+  .mobileThemeBackgrounds img{
+    width:100%;
+    height:86px;
+    object-fit:cover;
+    border-radius:9px;
+  }
+
+  .mobileThemeBackgrounds span{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:9px;
+    font-weight:700;
+  }
+
+  .mobileThemeAssets{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:8px;
+  }
+
+  .mobileThemeAssets button{
+    min-width:0;
+    min-height:98px;
+    padding:7px;
+    border:1px solid #e5e7ec;
+    border-radius:13px;
+    background:#fafbfc;
+    display:grid;
+    align-content:space-between;
+    gap:5px;
+    color:#444a57;
+  }
+
+  .mobileThemeAssets img{
+    width:100%;
+    height:66px;
+    object-fit:contain;
+    border-radius:8px;
+    background:
+      linear-gradient(45deg,#f4f4f6 25%,transparent 25%),
+      linear-gradient(-45deg,#f4f4f6 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#f4f4f6 75%),
+      linear-gradient(-45deg,transparent 75%,#f4f4f6 75%);
+    background-size:12px 12px;
+    background-position:0 0,0 6px,6px -6px,-6px 0;
+  }
+
+  .mobileThemeAssets span{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-size:8px;
+    font-weight:700;
+  }
+}
