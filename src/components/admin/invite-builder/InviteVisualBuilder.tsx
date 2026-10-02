@@ -2477,64 +2477,6 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
                             className={`${styles.selectionFrame} ${el.locked ? styles.selectionFrameLocked : ""}`}
                             aria-hidden
                           />
-                          <div
-                            className={styles.canvasQuickActions}
-                            style={el.y < 11 ? { top: "calc(100% + 8px)" } : undefined}
-                            onPointerDown={event=>event.stopPropagation()}
-                            onClick={event=>event.stopPropagation()}
-                          >
-                            <button
-                              type="button"
-                              title="Duplicar"
-                              aria-label="Duplicar elemento"
-                              onClick={event=>{event.stopPropagation();duplicate()}}
-                            >
-                              <Copy size={18}/>
-                            </button>
-                            <button
-                              type="button"
-                              title="Excluir"
-                              aria-label="Excluir elemento"
-                              className={styles.canvasQuickDelete}
-                              onClick={event=>{event.stopPropagation();remove()}}
-                            >
-                              <Trash2 size={18}/>
-                            </button>
-                            <button
-                              type="button"
-                              title="Mais opções"
-                              aria-label="Mais opções"
-                              aria-expanded={mobileCanvasMenu}
-                              onClick={event=>{event.stopPropagation();setMobileCanvasMenu(value=>!value)}}
-                            >
-                              <MoreHorizontal size={20}/>
-                            </button>
-
-                            {mobileCanvasMenu ? (
-                              <div
-                                className={styles.canvasQuickMenu}
-                                onPointerDown={event=>event.stopPropagation()}
-                                onClick={event=>event.stopPropagation()}
-                              >
-                                <button type="button" onClick={()=>{reorder("front");setMobileCanvasMenu(false)}}>
-                                  <BringToFront size={16}/><span>Trazer para frente</span>
-                                </button>
-                                <button type="button" onClick={()=>{reorder("back");setMobileCanvasMenu(false)}}>
-                                  <SendToBack size={16}/><span>Enviar para trás</span>
-                                </button>
-                                <button type="button" onClick={()=>{mutateElement(el.id,{visible:false});setMobileCanvasMenu(false)}}>
-                                  <EyeOff size={16}/><span>Ocultar</span>
-                                </button>
-                                <button type="button" onClick={()=>{mutateElement(el.id,{locked:!el.locked});setMobileCanvasMenu(false)}}>
-                                  {el.locked ? <Unlock size={16}/> : <Lock size={16}/>}
-                                  <span>{el.locked ? "Desbloquear" : "Bloquear"}</span>
-                                </button>
-                                <button type="button" onClick={()=>{setMobileCanvasMenu(false);openMobileInspector()}}>
-                                  <SlidersHorizontal size={16}/><span>Mais ajustes</span>
-                                </button>
-                              </div>
-                            ) : null}
-                          </div>
                           {!el.locked ? (
                             <button
                               type="button"
@@ -2548,6 +2490,79 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
                   }
                 />
               </div>
+
+              {selected && !selectedPart ? (
+                <div
+                  className={`${styles.canvasQuickActions} ${styles.canvasQuickActionsOverlay}`}
+                  style={{
+                    left:`${clamp(
+                      selected.x + selected.width / 2,
+                      Math.min(34, 105 / CANVAS_W * 100),
+                      100 - Math.min(34, 105 / CANVAS_W * 100)
+                    )}%`,
+                    top: selected.y < 11
+                      ? `${clamp(selected.y + selected.height, 0, 94)}%`
+                      : `${clamp(selected.y, 6, 100)}%`,
+                    transform: selected.y < 11
+                      ? "translate(-50%, 8px)"
+                      : "translate(-50%, calc(-100% - 8px))",
+                  }}
+                  onPointerDown={event=>event.stopPropagation()}
+                  onClick={event=>event.stopPropagation()}
+                >
+                  <button
+                    type="button"
+                    title="Duplicar"
+                    aria-label="Duplicar elemento"
+                    onClick={event=>{event.stopPropagation();duplicate()}}
+                  >
+                    <Copy size={18}/>
+                  </button>
+                  <button
+                    type="button"
+                    title="Excluir"
+                    aria-label="Excluir elemento"
+                    className={styles.canvasQuickDelete}
+                    onClick={event=>{event.stopPropagation();remove()}}
+                  >
+                    <Trash2 size={18}/>
+                  </button>
+                  <button
+                    type="button"
+                    title="Mais opções"
+                    aria-label="Mais opções"
+                    aria-expanded={mobileCanvasMenu}
+                    onClick={event=>{event.stopPropagation();setMobileCanvasMenu(value=>!value)}}
+                  >
+                    <MoreHorizontal size={20}/>
+                  </button>
+
+                  {mobileCanvasMenu ? (
+                    <div
+                      className={styles.canvasQuickMenu}
+                      onPointerDown={event=>event.stopPropagation()}
+                      onClick={event=>event.stopPropagation()}
+                    >
+                      <button type="button" onClick={()=>{reorder("front");setMobileCanvasMenu(false)}}>
+                        <BringToFront size={16}/><span>Trazer para frente</span>
+                      </button>
+                      <button type="button" onClick={()=>{reorder("back");setMobileCanvasMenu(false)}}>
+                        <SendToBack size={16}/><span>Enviar para trás</span>
+                      </button>
+                      <button type="button" onClick={()=>{mutateElement(selected.id,{visible:false});setMobileCanvasMenu(false)}}>
+                        <EyeOff size={16}/><span>Ocultar</span>
+                      </button>
+                      <button type="button" onClick={()=>{mutateElement(selected.id,{locked:!selected.locked});setMobileCanvasMenu(false)}}>
+                        {selected.locked ? <Unlock size={16}/> : <Lock size={16}/>}
+                        <span>{selected.locked ? "Desbloquear" : "Bloquear"}</span>
+                      </button>
+                      <button type="button" onClick={()=>{setMobileCanvasMenu(false);openMobileInspector()}}>
+                        <SlidersHorizontal size={16}/><span>Mais ajustes</span>
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
 
               <div className={styles.precisionGridOverlay} style={{display:grid?"block":"none",backgroundSize:`${gridPx}px ${gridPx}px`}}/>
 
