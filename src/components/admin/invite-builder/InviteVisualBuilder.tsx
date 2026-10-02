@@ -8,7 +8,7 @@ import {
 
   AlignCenter, AlignLeft, AlignRight, ArrowLeft, Box, BringToFront, ChevronDown, Copy, Eye, EyeOff,
 
-  ExternalLink, Grid3X3, ImagePlus, Layers3, Link2, Lock, MoveDown, MoveUp, Plus, Redo2, RotateCcw, Save,
+  ExternalLink, Grid3X3, ImagePlus, Layers3, Link2, Lock, MoreHorizontal, MoveDown, MoveUp, Plus, Redo2, RotateCcw, Save,
 
   Palette, SendToBack, SlidersHorizontal, Trash2, Type, Undo2, Unlock, ZoomIn, ZoomOut
 
@@ -2308,10 +2308,43 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
                             className={`${styles.selectionFrame} ${el.locked ? styles.selectionFrameLocked : ""}`}
                             aria-hidden
                           />
+                          <div
+                            className={styles.canvasQuickActions}
+                            style={el.y < 11 ? { top: "calc(100% + 8px)" } : undefined}
+                            onPointerDown={event=>event.stopPropagation()}
+                            onClick={event=>event.stopPropagation()}
+                          >
+                            <button
+                              type="button"
+                              title="Duplicar"
+                              aria-label="Duplicar elemento"
+                              onClick={event=>{event.stopPropagation();duplicate()}}
+                            >
+                              <Copy size={18}/>
+                            </button>
+                            <button
+                              type="button"
+                              title="Excluir"
+                              aria-label="Excluir elemento"
+                              className={styles.canvasQuickDelete}
+                              onClick={event=>{event.stopPropagation();remove()}}
+                            >
+                              <Trash2 size={18}/>
+                            </button>
+                            <button
+                              type="button"
+                              title="Mais opções"
+                              aria-label="Mais opções"
+                              onClick={event=>{event.stopPropagation();openMobileInspector()}}
+                            >
+                              <MoreHorizontal size={20}/>
+                            </button>
+                          </div>
                           {!el.locked ? (
                             <button
                               type="button"
                               className={styles.resize}
+                              aria-label="Redimensionar elemento"
                               onPointerDown={event=>beginPointer(event,el,"resize")}
                             />
                           ) : null}
