@@ -2887,3 +2887,20 @@
   .mobileThemeEmpty strong{font-size:13px}
   .mobileThemeEmpty span{font-size:10px}
 }
+
+
+.themePreviewPlaceholder{
+  width:100%;
+  min-height:76px;
+  border-radius:6px;
+  background:#f1f2f5;
+  color:#9aa0ad;
+  display:grid;
+  place-items:center;
+}
+@media(max-width:640px){
+  .mobileThemeGrid .themePreviewPlaceholder{
+    min-height:126px;
+    border-radius:10px;
+  }
+}
