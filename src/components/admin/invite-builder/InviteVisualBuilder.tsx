@@ -2190,7 +2190,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
                 className={selectedThemeId===theme.id?styles.themeMiniActive:""}
                 onClick={()=>setSelectedThemeId(theme.id)}
               >
-                <img src={theme.preview} alt=""/>
+                {theme.preview ? <img src={theme.preview} alt=""/> : <span className={styles.themePreviewPlaceholder}><ImagePlus size={20}/></span>}
                 <span>{theme.name}</span>
               </button>
             ))}
@@ -3409,7 +3409,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
               className={selectedThemeId===theme.id?styles.mobileThemeCardActive:""}
               onClick={()=>setSelectedThemeId(theme.id)}
             >
-              <img src={theme.preview} alt=""/>
+              {theme.preview ? <img src={theme.preview} alt=""/> : <span className={styles.themePreviewPlaceholder}><ImagePlus size={20}/></span>}
               <div>
                 <strong>{theme.name}</strong>
                 <small>{theme.category}</small>
