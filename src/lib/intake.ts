@@ -37,6 +37,9 @@ export const intakeSchema = z.object({
   special_text_choice: z.enum(["yes","no","later"]).optional(),
   special_text: z.string().trim().max(3000).optional().default(""),
   selected_colors: z.array(z.string().trim().min(1).max(30)).max(5).optional().default([]),
+  invite_photo_choice: z.enum(["yes","no","later"]).optional().default("later"),
+  invite_photo_drive_url: z.union([z.string().trim().url().max(1200), z.literal("")]).optional().default(""),
+  event_specific: z.record(z.string(), z.unknown()).optional().default({}),
 }).superRefine((value, ctx) => {
   if (value.event_type === "wedding" && !value.wedding_hosting) ctx.addIssue({ code: "custom", path: ["wedding_hosting"], message: "Escolha quem convida para o casamento." });
   if (value.event_type === "wedding" && (value.wedding_hosting === "parents" || value.wedding_hosting === "couple_and_parents") && (!value.bride_parents || !value.groom_parents)) ctx.addIssue({ code: "custom", path: ["bride_parents"], message: "Informe os nomes dos pais das duas famílias." });
