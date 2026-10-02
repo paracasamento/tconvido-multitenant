@@ -1,26 +1,26 @@
 import Link from "next/link";
-import { ArrowLeft, Gift, UserRound } from "lucide-react";
+import { ArrowLeft, Gift } from "lucide-react";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { db } from "@/lib/db";
+import { eventHasCapability } from "@/lib/event-capabilities";
+import { redirect } from "next/navigation";
 import { requireAdmin } from "@/lib/sessions";
 
 export default async function GiftConfirmationsPage() {
   const session = await requireAdmin("/admin/presentes/confirmacoes");
+  if (!(await eventHasCapability(session.event_id, "gifts"))) redirect("/admin");
   const sql = db();
 
   const reservations = await sql`
     SELECT
       r.id,
       r.created_at,
-      g.name AS gift_name,
-      gu.name AS guest_name
+      g.name AS gift_name
     FROM reservations r
     JOIN gifts g ON g.id = r.gift_id AND g.event_id = r.event_id
-    JOIN guests gu ON gu.id = r.guest_id AND gu.event_id = r.event_id
     WHERE r.event_id = ${session.event_id}
       AND r.released_at IS NULL
       AND g.deleted_at IS NULL
-      AND gu.deleted_at IS NULL
     ORDER BY r.created_at DESC
   `;
 
@@ -34,7 +34,7 @@ export default async function GiftConfirmationsPage() {
       <AdminPageHeader
         eyebrow="Presentes"
         title="Confirmações de presentes"
-        description="Esta é a área específica para consultar quem confirmou cada presente."
+        description="Consulte quais presentes já foram escolhidos para este evento."
       />
 
       <section className="admin-list-section-v6">
@@ -53,10 +53,7 @@ export default async function GiftConfirmationsPage() {
               </span>
               <div className="admin-gift-confirmation-row-v1__copy">
                 <strong>{reservation.gift_name}</strong>
-                <span>
-                  <UserRound size={13} />
-                  {reservation.guest_name}
-                </span>
+                <span>Presente reservado</span>
               </div>
             </article>
           ))}
