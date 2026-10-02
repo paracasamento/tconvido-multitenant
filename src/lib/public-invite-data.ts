@@ -8,6 +8,7 @@ import {
   type InviteFlowSettings,
 } from "@/lib/invite-builder";
 import type { EventRecord } from "@/lib/event";
+import { getDefaultCapabilities, isEventType } from "@/lib/event-types";
 
 function normalizeSingleScreen(
   screenId: InviteScreenId,
@@ -23,6 +24,15 @@ function normalizeSingleScreen(
 }
 
 function rowToEvent(row: any): EventRecord {
+  const configuredCapabilities = Array.isArray(row.enabled_capabilities)
+    ? row.enabled_capabilities.filter((value: unknown): value is string => typeof value === "string")
+    : [];
+  const eventType = String(row.event_type || "");
+  const enabledCapabilities =
+    configuredCapabilities.length === 0 && isEventType(eventType)
+      ? getDefaultCapabilities(eventType)
+      : configuredCapabilities;
+
   return {
     id: String(row.id),
     slug: String(row.slug),
@@ -47,7 +57,7 @@ function rowToEvent(row: any): EventRecord {
     celebrant_name: row.celebrant_name,
     baby_name: row.baby_name,
     hosts_names: row.hosts_names,
-    enabled_capabilities: Array.isArray(row.enabled_capabilities)?row.enabled_capabilities:[],
+    enabled_capabilities: enabledCapabilities,
   };
 }
 
