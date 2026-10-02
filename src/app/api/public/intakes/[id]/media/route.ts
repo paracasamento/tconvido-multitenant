@@ -14,6 +14,8 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
   const {id}=await params;
   const form=await request.formData();
   const token=String(form.get("access_token")||"");
+  const mediaKind=String(form.get("media_kind")||"reference");
+  if(mediaKind!=="reference"&&mediaKind!=="invite_photo") return NextResponse.json({message:"Tipo de imagem inválido."},{status:400});
   if(!token) return NextResponse.json({message:"Acesso à ficha inválido."},{status:401});
   const files=form.getAll("files").filter((v):v is File=>v instanceof File && v.size>0);
   if(!files.length) return NextResponse.json({ok:true,files:[]});
@@ -23,8 +25,8 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
   const sql=db();
   const rows=await sql`SELECT id FROM invitation_intakes WHERE id=${id} AND public_token_hash=${tokenHash(token)} LIMIT 1`;
   if(!rows.length) return NextResponse.json({message:"Acesso à ficha inválido."},{status:403});
-  const countRows=await sql`SELECT count(*)::int AS total FROM invitation_intake_media WHERE intake_id=${id}`;
-  if(Number(countRows[0]?.total||0)+files.length>MAX_FILES)return NextResponse.json({message:"Esta ficha pode ter no máximo 8 referências."},{status:400});
+  const countRows=await sql`SELECT count(*)::int AS total FROM invitation_intake_media WHERE intake_id=${id} AND media_kind=${mediaKind}`;
+  if(Number(countRows[0]?.total||0)+files.length>MAX_FILES)return NextResponse.json({message:"Envie no máximo 8 imagens deste tipo."},{status:400});
 
   const storage=supabaseStorageAdmin(); const saved:any[]=[];
   try{
@@ -32,7 +34,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
       const file=files[i]; const mediaId=crypto.randomUUID(); const path=`${id}/${mediaId}.${ext(file.type)}`;
       const {error}=await storage.storage.from(INTAKE_REFERENCE_BUCKET).upload(path,Buffer.from(await file.arrayBuffer()),{contentType:file.type,upsert:false,cacheControl:"3600"});
       if(error) throw error;
-      await sql`INSERT INTO invitation_intake_media(id,intake_id,storage_key,original_name,mime_type,byte_size,sort_order) VALUES(${mediaId},${id},${path},${file.name},${file.type},${file.size},${i})`;
+      await sql`INSERT INTO invitation_intake_media(id,intake_id,storage_key,original_name,mime_type,byte_size,sort_order,media_kind) VALUES(${mediaId},${id},${path},${file.name},${file.type},${file.size},${i},${mediaKind})`;
       saved.push({id:mediaId,name:file.name});
     }
     return NextResponse.json({ok:true,files:saved});
