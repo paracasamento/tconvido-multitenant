@@ -88,7 +88,7 @@ export function PublicIntakeForm({ resume }: { resume?: { id: string; token: str
       <section className="intake-section">
         <span className="intake-step">01</span><h2>Qual é o seu evento?</h2>
         <div className="intake-type-grid">
-          {(Object.values(EVENT_TYPE_DEFINITIONS)).map(item => <button key={item.type} type="button" className={eventType === item.type ? "is-selected" : ""} onClick={() => setEventType(item.type)}>{item.label}</button>)}
+          {(Object.values(EVENT_TYPE_DEFINITIONS)).map(item => <button key={item.type} type="button" className={eventType === item.type ? "is-selected" : ""} disabled={locked} onClick={() => setEventType(item.type)}>{item.label}</button>)}
         </div>
       </section>
 
@@ -97,29 +97,29 @@ export function PublicIntakeForm({ resume }: { resume?: { id: string; token: str
           <span className="intake-step">02</span><h2>Sobre o evento</h2>
           <label><span>{definition.identityLabel}</span><input name="identity" required defaultValue={initial?.answers?.identity || ""} disabled={locked} placeholder={definition.type === "wedding" ? "Ana & João" : ""} /></label>
           {(eventType === "kids_birthday" || eventType === "quinceanera") && <label><span>Idade</span><input name="age" type="number" min="1" max="120" defaultValue={initial?.answers?.age ?? ""} disabled={locked} /></label>}
-          <div className="intake-choice"><span>Você já tem a data definida?</span><button type="button" className={dateDefined ? "is-selected" : ""} onClick={() => setDateDefined(true)}>Sim</button><button type="button" className={!dateDefined ? "is-selected" : ""} onClick={() => setDateDefined(false)}>Ainda não</button></div>
+          <div className="intake-choice"><span>Você já tem a data definida?</span><button type="button" className={dateDefined ? "is-selected" : ""} disabled={locked} onClick={() => setDateDefined(true)}>Sim</button><button type="button" className={!dateDefined ? "is-selected" : ""} disabled={locked} onClick={() => setDateDefined(false)}>Ainda não</button></div>
           {dateDefined && <label><span>Data</span><input name="event_date" type="date" required defaultValue={initial?.event_date || ""} disabled={locked} /></label>}
           <label><span>Horário <small>pode deixar em branco se ainda não souber</small></span><input name="event_time" type="time" defaultValue={initial?.event_time || ""} disabled={locked} /></label>
         </section>
 
         <section className="intake-section">
           <span className="intake-step">03</span><h2>Local</h2>
-          <div className="intake-choice"><span>O local já está definido?</span><button type="button" className={locationDefined ? "is-selected" : ""} onClick={() => setLocationDefined(true)}>Sim</button><button type="button" className={!locationDefined ? "is-selected" : ""} onClick={() => setLocationDefined(false)}>Ainda não</button></div>
+          <div className="intake-choice"><span>O local já está definido?</span><button type="button" className={locationDefined ? "is-selected" : ""} disabled={locked} onClick={() => setLocationDefined(true)}>Sim</button><button type="button" className={!locationDefined ? "is-selected" : ""} disabled={locked} onClick={() => setLocationDefined(false)}>Ainda não</button></div>
           {locationDefined && <div className="intake-fields"><label><span>Nome do local</span><input name="venue" defaultValue={initial?.answers?.venue || ""} disabled={locked} /></label><label><span>Endereço</span><input name="address" defaultValue={initial?.answers?.address || ""} disabled={locked} /></label><label><span>Cidade</span><input name="city" defaultValue={initial?.answers?.city || ""} disabled={locked} /></label><label><span>Link do Maps</span><input name="maps_url" type="url" defaultValue={initial?.answers?.maps_url || ""} disabled={locked} /></label></div>}
         </section>
 
         <section className="intake-section">
           <span className="intake-step">04</span><h2>O que o convite precisa ter?</h2>
-          <div className="intake-switches"><label><input name="rsvp_wanted" type="checkbox" defaultChecked /><span>Confirmação de presença</span></label><label><input name="gifts_wanted" type="checkbox" /><span>Presentes</span></label><label><input name="dress_code_wanted" type="checkbox" /><span>Traje / dress code</span></label><label><input name="schedule_wanted" type="checkbox" /><span>Programação</span></label></div>
+          <div className="intake-switches"><label><input name="rsvp_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.rsvp_wanted) : true} disabled={locked} /><span>Confirmação de presença</span></label><label><input name="gifts_wanted" type="checkbox" defaultChecked={Boolean(initial?.answers?.gifts_wanted)} disabled={locked} /><span>Presentes</span></label><label><input name="dress_code_wanted" type="checkbox" defaultChecked={Boolean(initial?.answers?.dress_code_wanted)} disabled={locked} /><span>Traje / dress code</span></label><label><input name="schedule_wanted" type="checkbox" defaultChecked={Boolean(initial?.answers?.schedule_wanted)} disabled={locked} /><span>Programação</span></label></div>
           <label><span>Informações importantes aos convidados</span><textarea name="important_info" defaultValue={initial?.answers?.important_info || ""} disabled={locked} placeholder="Estacionamento, crianças, piscina, horário de chegada..." /></label>
           <label><span>Alguma frase ou mensagem que precisa aparecer?</span><textarea name="required_message" defaultValue={initial?.answers?.required_message || ""} disabled={locked} placeholder="Pode deixar em branco e deixar por nossa conta." /></label>
         </section>
 
         <section className="intake-section">
           <span className="intake-step">05</span><h2>Estilo e referências</h2>
-          <label><span>A decoração está definida?</span><select name="decoration_status" defaultValue="undefined"><option value="defined">Sim</option><option value="partial">Parcialmente</option><option value="undefined">Ainda não</option></select></label>
+          <label><span>A decoração está definida?</span><select name="decoration_status" defaultValue={initial?.visual_direction?.decoration_status || "undefined"} disabled={locked}><option value="defined">Sim</option><option value="partial">Parcialmente</option><option value="undefined">Ainda não</option></select></label>
           <label><span>Conte um pouco sobre a decoração</span><textarea name="decoration_notes" defaultValue={initial?.visual_direction?.decoration_notes || ""} disabled={locked} /></label>
-          <div><span className="intake-label">Escolha até 3 estilos</span><div className="intake-tags">{styles.map(style => <button key={style} type="button" className={styleTags.includes(style) ? "is-selected" : ""} onClick={() => toggleStyle(style)}>{style}</button>)}</div></div>
+          <div><span className="intake-label">Escolha até 3 estilos</span><div className="intake-tags">{styles.map(style => <button key={style} type="button" className={styleTags.includes(style) ? "is-selected" : ""} disabled={locked} onClick={() => toggleStyle(style)}>{style}</button>)}</div></div>
           <label><span>Cores que gostaria que fossem consideradas</span><input name="color_notes" defaultValue={initial?.visual_direction?.color_notes || ""} disabled={locked} placeholder="Verde oliva, off-white, dourado..." /></label>
           <label><span>Mais alguma direção de estilo?</span><textarea name="style_notes" defaultValue={initial?.visual_direction?.style_notes || ""} disabled={locked} /></label>
           <label className="intake-media-placeholder"><strong>Referências visuais</strong><p>Envie até 8 fotos da decoração, paleta, papelaria ou outras referências. JPG, PNG ou WebP, até 12 MB cada.</p><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e => setReferenceFiles(Array.from(e.target.files || []).slice(0, 8))} /><small>{referenceFiles.length ? `${referenceFiles.length} imagem(ns) selecionada(s)` : "Nenhuma imagem selecionada"}</small></label>
