@@ -171,7 +171,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
   const [unitMode,setUnitMode]=useState<"px"|"pct">("px");
 
   const [selectedId,setSelectedId]=useState<string|null>(normalizedInitial.screens.cover.elements[0]?.id||null); const [selectedPart,setSelectedPart]=useState<string|null>(null);
-  const rsvpAllowsChildren=eventContext?.type==="wedding";
+  const rsvpAllowsChildren=previewData.guestAllowedChildren > 0;
   const availableRsvpPreviewStates=useMemo(
     ()=>RSVP_PREVIEW_STATES.filter(item=>rsvpAllowsChildren||!["children-question","form-children"].includes(item.id)),
     [rsvpAllowsChildren]
