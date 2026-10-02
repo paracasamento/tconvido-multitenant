@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { requirePlatformAdmin } from "@/lib/sessions";
 import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
 import { IntakeStatusControl } from "@/components/gestao/IntakeStatusControl";
+import { IntakeReferenceGallery } from "@/components/gestao/IntakeReferenceGallery";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +14,7 @@ export default async function FichaDetailPage({params}:{params:Promise<{id:strin
   const {id}=await params; const sql=db();
   const rows=await sql`SELECT * FROM invitation_intakes WHERE id=${id} LIMIT 1`;
   const row:any=rows[0]; if(!row) notFound();
+  const media:any[]=await sql`SELECT id,storage_key,original_name,mime_type,byte_size FROM invitation_intake_media WHERE intake_id=${id} ORDER BY sort_order,created_at`;
   const type=EVENT_TYPE_DEFINITIONS[row.event_type as EventType];
   const a=row.answers || {}; const v=row.visual_direction || {};
   const digits=String(row.whatsapp||"").replace(/\D/g,""); const wa=digits.startsWith("55")?digits:"55"+digits;
@@ -23,7 +25,7 @@ export default async function FichaDetailPage({params}:{params:Promise<{id:strin
     <div className="intake-detail-grid">
       <section className="settings-card"><h2>Evento</h2><dl className="intake-detail-list"><div><dt>Data</dt><dd>{row.event_date_defined && row.event_date ? new Date(row.event_date).toLocaleDateString("pt-BR",{timeZone:"UTC"}) : "Ainda não definida"}</dd></div><div><dt>Horário</dt><dd>{row.event_time ? String(row.event_time).slice(0,5) : "A definir"}</dd></div><div><dt>Local</dt><dd>{a.location_defined ? [a.venue,a.address,a.city].filter(Boolean).join(" · ") || "Informações incompletas" : "Ainda não definido"}</dd></div></dl></section>
       <section className="settings-card"><h2>Recursos desejados</h2><div className="intake-feature-list">{[["RSVP",a.rsvp_wanted],["Presentes",a.gifts_wanted],["Traje",a.dress_code_wanted],["Programação",a.schedule_wanted]].map(([label,on])=><span key={String(label)} className={on?"is-on":""}>{on?"✓":"—"} {label}</span>)}</div></section>
-      <section className="settings-card"><h2>Estilo e referências</h2><dl className="intake-detail-list"><div><dt>Decoração</dt><dd>{v.decoration_status==="defined"?"Definida":v.decoration_status==="partial"?"Parcialmente definida":"Ainda não definida"}</dd></div><div><dt>Estilos</dt><dd>{v.style_tags?.join(" · ") || "Não informado"}</dd></div><div><dt>Cores</dt><dd>{v.color_notes || "Não informado"}</dd></div><div><dt>Observações</dt><dd>{v.decoration_notes || v.style_notes || "Nenhuma"}</dd></div></dl></section>
+      <section className="settings-card"><h2>Estilo e referências</h2><dl className="intake-detail-list"><div><dt>Decoração</dt><dd>{v.decoration_status==="defined"?"Definida":v.decoration_status==="partial"?"Parcialmente definida":"Ainda não definida"}</dd></div><div><dt>Estilos</dt><dd>{v.style_tags?.join(" · ") || "Não informado"}</dd></div><div><dt>Cores</dt><dd>{v.color_notes || "Não informado"}</dd></div><div><dt>Observações</dt><dd>{v.decoration_notes || v.style_notes || "Nenhuma"}</dd></div></dl><h3>Referências enviadas</h3><IntakeReferenceGallery media={media} /></section>
       <section className="settings-card"><h2>Informações adicionais</h2><p>{a.important_info || "Nenhuma informação adicional."}</p><h3>Mensagem/frase</h3><p>{a.required_message || "Pode ficar por nossa conta."}</p></section>
       <section className="settings-card"><h2>Contato</h2><dl className="intake-detail-list"><div><dt>Nome</dt><dd>{row.contact_name}</dd></div><div><dt>WhatsApp</dt><dd>{row.whatsapp}</dd></div><div><dt>E-mail</dt><dd>{row.email || "Não informado"}</dd></div></dl></section>
     </div>
