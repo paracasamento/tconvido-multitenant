@@ -17,9 +17,18 @@ export function PublicIntakeForm({ resume }: { resume?: { id: string; token: str
   const [resumeLoaded, setResumeLoaded] = useState(!resume);
   const [locked, setLocked] = useState(false);
   const [initial, setInitial] = useState<any>(null);
+  const [featureDefaults, setFeatureDefaults] = useState({ rsvp: true, gifts: false, dress_code: false, schedule: false });
   const definition = useMemo(() => eventType ? EVENT_TYPE_DEFINITIONS[eventType] : null, [eventType]);
 
-  useEffect(() => { if (!resume) return; fetch(`/api/public/intakes/${resume.id}?token=${encodeURIComponent(resume.token)}`).then(async r => { const d=await r.json(); if(!r.ok) throw new Error(d.message||"Não foi possível abrir a ficha."); setInitial(d); setEventType(d.event_type); setDateDefined(d.event_date_defined); setLocationDefined(Boolean(d.answers?.location_defined)); setStyleTags(d.visual_direction?.style_tags||[]); setLocked(Boolean(d.locked)); }).catch(e=>setMessage(e.message)).finally(()=>setResumeLoaded(true)); }, [resume]);
+  useEffect(() => { if (!resume) return; fetch(`/api/public/intakes/${resume.id}?token=${encodeURIComponent(resume.token)}`).then(async r => { const d=await r.json(); if(!r.ok) throw new Error(d.message||"Não foi possível abrir a ficha."); setInitial(d); setEventType(d.event_type); setFeatureDefaults({ rsvp:Boolean(d.answers?.rsvp_wanted), gifts:Boolean(d.answers?.gifts_wanted), dress_code:Boolean(d.answers?.dress_code_wanted), schedule:Boolean(d.answers?.schedule_wanted) }); setDateDefined(d.event_date_defined); setLocationDefined(Boolean(d.answers?.location_defined)); setStyleTags(d.visual_direction?.style_tags||[]); setLocked(Boolean(d.locked)); }).catch(e=>setMessage(e.message)).finally(()=>setResumeLoaded(true)); }, [resume]);
+
+  function chooseEventType(type: EventType) {
+    setEventType(type);
+    if (!resume) {
+      const defaults = EVENT_TYPE_DEFINITIONS[type].defaultCapabilities;
+      setFeatureDefaults({ rsvp: defaults.includes("rsvp"), gifts: defaults.includes("gifts"), dress_code: defaults.includes("dress_code"), schedule: defaults.includes("schedule") });
+    }
+  }
 
   function toggleStyle(value: string) {
     setStyleTags(current => current.includes(value) ? current.filter(item => item !== value) : current.length < 3 ? [...current, value] : current);
@@ -84,11 +93,11 @@ export function PublicIntakeForm({ resume }: { resume?: { id: string; token: str
 
   return <main className="intake-shell">
     <header className="intake-hero"><p className="eyebrow">TConvido</p><h1>Ficha do seu convite</h1><p>Conte sobre o seu evento para prepararmos um convite em site feito para ele.</p></header>
-    <form className="intake-card" onSubmit={submit} key={initial?.id || "new"}>
+    <form className="intake-card" onSubmit={submit} key={`${initial?.id || "new"}-${eventType}` }>
       <section className="intake-section">
         <span className="intake-step">01</span><h2>Qual é o seu evento?</h2>
         <div className="intake-type-grid">
-          {(Object.values(EVENT_TYPE_DEFINITIONS)).map(item => <button key={item.type} type="button" className={eventType === item.type ? "is-selected" : ""} disabled={locked} onClick={() => setEventType(item.type)}>{item.label}</button>)}
+          {(Object.values(EVENT_TYPE_DEFINITIONS)).map(item => <button key={item.type} type="button" className={eventType === item.type ? "is-selected" : ""} disabled={locked} onClick={() => chooseEventType(item.type)}>{item.label}</button>)}
         </div>
       </section>
 
@@ -110,7 +119,7 @@ export function PublicIntakeForm({ resume }: { resume?: { id: string; token: str
 
         <section className="intake-section">
           <span className="intake-step">04</span><h2>O que o convite precisa ter?</h2>
-          <div className="intake-switches"><label><input name="rsvp_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.rsvp_wanted) : true} disabled={locked} /><span>Confirmação de presença</span></label><label><input name="gifts_wanted" type="checkbox" defaultChecked={Boolean(initial?.answers?.gifts_wanted)} disabled={locked} /><span>Presentes</span></label><label><input name="dress_code_wanted" type="checkbox" defaultChecked={Boolean(initial?.answers?.dress_code_wanted)} disabled={locked} /><span>Traje / dress code</span></label><label><input name="schedule_wanted" type="checkbox" defaultChecked={Boolean(initial?.answers?.schedule_wanted)} disabled={locked} /><span>Programação</span></label></div>
+          <div className="intake-switches"><label><input name="rsvp_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.rsvp_wanted) : featureDefaults.rsvp} disabled={locked} /><span>Confirmação de presença</span></label><label><input name="gifts_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.gifts_wanted) : featureDefaults.gifts} disabled={locked} /><span>Presentes</span></label><label><input name="dress_code_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.dress_code_wanted) : featureDefaults.dress_code} disabled={locked} /><span>Traje / dress code</span></label><label><input name="schedule_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.schedule_wanted) : featureDefaults.schedule} disabled={locked} /><span>Programação</span></label></div>
           <label><span>Informações importantes aos convidados</span><textarea name="important_info" defaultValue={initial?.answers?.important_info || ""} disabled={locked} placeholder="Estacionamento, crianças, piscina, horário de chegada..." /></label>
           <label><span>Alguma frase ou mensagem que precisa aparecer?</span><textarea name="required_message" defaultValue={initial?.answers?.required_message || ""} disabled={locked} placeholder="Pode deixar em branco e deixar por nossa conta." /></label>
         </section>
