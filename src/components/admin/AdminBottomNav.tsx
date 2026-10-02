@@ -12,12 +12,12 @@ const items = [
   { href: "/admin/configuracoes", label: "Conta", icon: UserRound },
 ];
 
-export function AdminBottomNav() {
+export function AdminBottomNav({ showGifts = true }: { showGifts?: boolean }) {
   const pathname = usePathname();
 
   return (
     <nav className="admin-bottom-nav" aria-label="Navegação principal da área do evento">
-      {items.map((item) => {
+      {items.filter(item => showGifts || item.href !== "/admin/presentes").map((item) => {
         const active = item.exact
           ? pathname === item.href
           : item.href === "/admin/convite"
