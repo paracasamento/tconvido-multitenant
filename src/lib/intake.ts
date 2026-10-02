@@ -27,7 +27,19 @@ export const intakeSchema = z.object({
   style_tags: z.array(z.string().trim().min(1).max(50)).max(3).default([]),
   color_notes: z.string().trim().max(500).optional().default(""),
   style_notes: z.string().trim().max(3000).optional().default(""),
+  wedding_hosting: z.enum(["couple","parents","couple_and_parents"]).optional(),
+  bride_parents: z.string().trim().max(300).optional().default(""),
+  groom_parents: z.string().trim().max(300).optional().default(""),
+  wedding_venues: z.enum(["same","different","undefined"]).optional(),
+  reception_venue: z.string().trim().max(180).optional().default(""),
+  reception_address: z.string().trim().max(300).optional().default(""),
+  reception_city: z.string().trim().max(180).optional().default(""),
+  special_text_choice: z.enum(["yes","no","later"]).optional(),
+  special_text: z.string().trim().max(3000).optional().default(""),
+  selected_colors: z.array(z.string().trim().min(1).max(30)).max(5).optional().default([]),
 }).superRefine((value, ctx) => {
+  if (value.event_type === "wedding" && !value.wedding_hosting) ctx.addIssue({ code: "custom", path: ["wedding_hosting"], message: "Escolha quem convida para o casamento." });
+  if (value.event_type === "wedding" && (value.wedding_hosting === "parents" || value.wedding_hosting === "couple_and_parents") && (!value.bride_parents || !value.groom_parents)) ctx.addIssue({ code: "custom", path: ["bride_parents"], message: "Informe os nomes dos pais das duas famílias." });
   if (value.event_date_defined && !value.event_date) {
     ctx.addIssue({ code: "custom", path: ["event_date"], message: "Informe a data do evento." });
   }
