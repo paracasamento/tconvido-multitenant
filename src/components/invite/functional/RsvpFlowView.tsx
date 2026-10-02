@@ -26,6 +26,7 @@ type Props = {
   initialSubmission?: CurrentRsvpSubmission | null;
   identityName?: string;
   allowChildren?: boolean;
+  maxChildren?: number;
   preview?: boolean;
   previewState?: RsvpPreviewState;
   selectedPart?: string | null;
@@ -40,6 +41,7 @@ export function RsvpFlowView({
   initialSubmission = null,
   identityName = "",
   allowChildren = true,
+  maxChildren = 20,
   preview = false,
   previewState = "children-question",
   selectedPart = null,
@@ -97,7 +99,7 @@ export function RsvpFlowView({
 
   function changeChildren(delta: number) {
     if (preview) return;
-    setChildrenCount(current => Math.max(1, Math.min(20, current + delta)));
+    setChildrenCount(current => Math.max(1, Math.min(Math.max(1, maxChildren), current + delta)));
   }
 
   async function confirmPresence() {
