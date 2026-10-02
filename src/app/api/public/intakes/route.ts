@@ -37,6 +37,9 @@ export async function POST(request: Request) {
     reception_city: value.reception_city,
     special_text_choice: value.special_text_choice,
     special_text: value.special_text,
+    invite_photo_choice: value.invite_photo_choice,
+    invite_photo_drive_url: value.invite_photo_drive_url,
+    event_specific: value.event_specific,
   };
   const visualDirection = {
     decoration_status: value.decoration_status,
