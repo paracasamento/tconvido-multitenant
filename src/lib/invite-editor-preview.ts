@@ -1,5 +1,5 @@
 import { db } from "@/lib/db";
-import { displayDate } from "@/lib/event";
+import { buildEventTemplateVars } from "@/lib/event";
 import { giftImageUrl } from "@/lib/storage";
 import type { GiftUi } from "@/components/GiftCard";
 
@@ -8,28 +8,6 @@ export type InviteEditorPreviewData = {
   gifts: GiftUi[];
   giftColorPreferences: Array<{ name: string; hex: string }>;
 };
-
-function compactTime(time: string) {
-  return time.replace(/:00$/, "");
-}
-
-function dateParts(date: string) {
-  const [year, month, day] = date.split("-").map(Number);
-  const value = new Date(Date.UTC(year, month - 1, day));
-
-  return {
-    day: String(day).padStart(2, "0"),
-    month: new Intl.DateTimeFormat("pt-BR", {
-      month: "long",
-      timeZone: "UTC",
-    }).format(value),
-    weekday: new Intl.DateTimeFormat("pt-BR", {
-      weekday: "long",
-      timeZone: "UTC",
-    }).format(value),
-    year: String(year),
-  };
-}
 
 export async function getInviteEditorPreviewData(eventId: string): Promise<InviteEditorPreviewData> {
   const sql = db();
@@ -40,6 +18,7 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
         id,
         title,
         couple_names,
+        public_intro,
         to_char(event_date, 'YYYY-MM-DD') AS event_date,
         to_char(event_time, 'HH24:MI') AS event_time,
         venue,
@@ -110,10 +89,6 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
 
   const eventDate = String(event.event_date || "");
   const eventTime = String(event.event_time || "");
-  const parts = dateParts(eventDate);
-  const fallbackMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    [event.venue, event.city].filter(Boolean).join(", ")
-  )}`;
 
   const giftColorPreferences = Array.isArray(event.gift_color_preferences)
     ? event.gift_color_preferences
@@ -134,22 +109,21 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
   }));
 
   return {
-    vars: {
-      couple_names: String(event.couple_names || ""),
-      title: String(event.title || ""),
-      date: displayDate(eventDate),
-      time: compactTime(eventTime),
-      venue: String(event.venue || ""),
-      city: String(event.city || ""),
-      city_suffix: event.city ? `, ${String(event.city)}` : "",
-      maps_url: String(event.maps_url || fallbackMapsUrl),
-      weekday: parts.weekday,
-      day: parts.day,
-      month: parts.month,
-      year: parts.year,
-      event_datetime: `${eventDate}T${eventTime}:00-03:00`,
-      guest_name: guestRows[0]?.name ? String(guestRows[0].name) : "Convidado",
-    },
+    vars: buildEventTemplateVars(
+      {
+        title: String(event.title || ""),
+        couple_names: String(event.couple_names || ""),
+        public_intro: String(event.public_intro || ""),
+        event_date: eventDate,
+        event_time: eventTime,
+        venue: String(event.venue || ""),
+        city: String(event.city || ""),
+        maps_url: event.maps_url ? String(event.maps_url) : null,
+      },
+      {
+        guest_name: guestRows[0]?.name ? String(guestRows[0].name) : "Convidado",
+      }
+    ),
     gifts,
     giftColorPreferences,
   };
