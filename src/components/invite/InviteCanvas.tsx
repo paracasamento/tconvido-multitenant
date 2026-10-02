@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { InviteElement, InviteScreen } from "@/lib/invite-builder";
 import { inviteScreenBackgroundStyle } from "@/lib/invite-background-style";
+import { InvitePartIcon } from "@/components/invite/InvitePartIcon";
 import {
   buildScreenScopedCss,
   elementStyleFromConfig,
@@ -81,6 +82,25 @@ export function InviteCanvas({
             />
           ) : el.type === "slot" ? (
             slots[el.slot || ""]
+          ) : el.type === "link" ? (
+            <>
+              {el.icon ? (
+                <span
+                  aria-hidden
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "1.35em",
+                    lineHeight: 1,
+                    flex: "0 0 auto",
+                  }}
+                >
+                  <InvitePartIcon name={el.icon} />
+                </span>
+              ) : null}
+              <span style={{ minWidth: 0 }}>{resolveText(el.text, vars)}</span>
+            </>
           ) : (
             resolveText(el.text, vars)
           );
