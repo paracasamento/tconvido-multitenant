@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
 
 const styles = ["Clássico", "Romântico", "Minimalista", "Moderno", "Delicado", "Divertido", "Rústico/Natural", "Luxuoso"];
 
-export function PublicIntakeForm() {
+export function PublicIntakeForm({ resume }: { resume?: { id: string; token: string } }) {
   const [eventType, setEventType] = useState<EventType | "">("");
   const [dateDefined, setDateDefined] = useState(true);
   const [locationDefined, setLocationDefined] = useState(true);
@@ -14,7 +14,12 @@ export function PublicIntakeForm() {
   const [done, setDone] = useState(false);
   const [message, setMessage] = useState("");
   const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
+  const [resumeLoaded, setResumeLoaded] = useState(!resume);
+  const [locked, setLocked] = useState(false);
+  const [initial, setInitial] = useState<any>(null);
   const definition = useMemo(() => eventType ? EVENT_TYPE_DEFINITIONS[eventType] : null, [eventType]);
+
+  useEffect(() => { if (!resume) return; fetch(`/api/public/intakes/${resume.id}?token=${encodeURIComponent(resume.token)}`).then(async r => { const d=await r.json(); if(!r.ok) throw new Error(d.message||"Não foi possível abrir a ficha."); setInitial(d); setEventType(d.event_type); setDateDefined(d.event_date_defined); setLocationDefined(Boolean(d.answers?.location_defined)); setStyleTags(d.visual_direction?.style_tags||[]); setLocked(Boolean(d.locked)); }).catch(e=>setMessage(e.message)).finally(()=>setResumeLoaded(true)); }, [resume]);
 
   function toggleStyle(value: string) {
     setStyleTags(current => current.includes(value) ? current.filter(item => item !== value) : current.length < 3 ? [...current, value] : current);
@@ -54,10 +59,10 @@ export function PublicIntakeForm() {
     };
 
     try {
-      const response = await fetch("/api/public/intakes", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
+      const response = await fetch(resume ? `/api/public/intakes/${resume.id}` : "/api/public/intakes", { method: resume ? "PATCH" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(resume ? { access_token: resume.token, data: payload } : payload) });
       const data = await response.json();
       if (!response.ok) throw new Error(data.message || "Não foi possível enviar sua ficha.");
-      if (referenceFiles.length) {
+      if (referenceFiles.length && !resume) {
         const media = new FormData();
         media.set("access_token", data.access_token);
         referenceFiles.forEach(file => media.append("files", file));
@@ -65,6 +70,7 @@ export function PublicIntakeForm() {
         const mediaData = await mediaResponse.json();
         if (!mediaResponse.ok) throw new Error(`A ficha foi salva, mas houve um problema com as referências: ${mediaData.message || "tente novamente."}`);
       }
+      if (!resume) { localStorage.setItem("tconvido:last-intake", JSON.stringify({ id: data.intake_id, token: data.access_token })); }
       setDone(true);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Não foi possível enviar sua ficha.");
@@ -73,11 +79,12 @@ export function PublicIntakeForm() {
     }
   }
 
+  if (!resumeLoaded) return <main className="intake-shell"><section className="intake-card"><p>Carregando sua ficha...</p></section></main>;
   if (done) return <main className="intake-shell"><section className="intake-card intake-success"><span>✓</span><h1>Ficha enviada!</h1><p>Recebemos as informações do seu convite. Entraremos em contato pelo WhatsApp informado antes de iniciar a produção.</p></section></main>;
 
   return <main className="intake-shell">
     <header className="intake-hero"><p className="eyebrow">TConvido</p><h1>Ficha do seu convite</h1><p>Conte sobre o seu evento para prepararmos um convite em site feito para ele.</p></header>
-    <form className="intake-card" onSubmit={submit}>
+    <form className="intake-card" onSubmit={submit} key={initial?.id || "new"}>
       <section className="intake-section">
         <span className="intake-step">01</span><h2>Qual é o seu evento?</h2>
         <div className="intake-type-grid">
@@ -88,46 +95,46 @@ export function PublicIntakeForm() {
       {definition && <>
         <section className="intake-section">
           <span className="intake-step">02</span><h2>Sobre o evento</h2>
-          <label><span>{definition.identityLabel}</span><input name="identity" required placeholder={definition.type === "wedding" ? "Ana & João" : ""} /></label>
-          {(eventType === "kids_birthday" || eventType === "quinceanera") && <label><span>Idade</span><input name="age" type="number" min="1" max="120" /></label>}
+          <label><span>{definition.identityLabel}</span><input name="identity" required defaultValue={initial?.answers?.identity || ""} disabled={locked} placeholder={definition.type === "wedding" ? "Ana & João" : ""} /></label>
+          {(eventType === "kids_birthday" || eventType === "quinceanera") && <label><span>Idade</span><input name="age" type="number" min="1" max="120" defaultValue={initial?.answers?.age ?? ""} disabled={locked} /></label>}
           <div className="intake-choice"><span>Você já tem a data definida?</span><button type="button" className={dateDefined ? "is-selected" : ""} onClick={() => setDateDefined(true)}>Sim</button><button type="button" className={!dateDefined ? "is-selected" : ""} onClick={() => setDateDefined(false)}>Ainda não</button></div>
-          {dateDefined && <label><span>Data</span><input name="event_date" type="date" required /></label>}
-          <label><span>Horário <small>pode deixar em branco se ainda não souber</small></span><input name="event_time" type="time" /></label>
+          {dateDefined && <label><span>Data</span><input name="event_date" type="date" required defaultValue={initial?.event_date || ""} disabled={locked} /></label>}
+          <label><span>Horário <small>pode deixar em branco se ainda não souber</small></span><input name="event_time" type="time" defaultValue={initial?.event_time || ""} disabled={locked} /></label>
         </section>
 
         <section className="intake-section">
           <span className="intake-step">03</span><h2>Local</h2>
           <div className="intake-choice"><span>O local já está definido?</span><button type="button" className={locationDefined ? "is-selected" : ""} onClick={() => setLocationDefined(true)}>Sim</button><button type="button" className={!locationDefined ? "is-selected" : ""} onClick={() => setLocationDefined(false)}>Ainda não</button></div>
-          {locationDefined && <div className="intake-fields"><label><span>Nome do local</span><input name="venue" /></label><label><span>Endereço</span><input name="address" /></label><label><span>Cidade</span><input name="city" /></label><label><span>Link do Maps</span><input name="maps_url" type="url" /></label></div>}
+          {locationDefined && <div className="intake-fields"><label><span>Nome do local</span><input name="venue" defaultValue={initial?.answers?.venue || ""} disabled={locked} /></label><label><span>Endereço</span><input name="address" defaultValue={initial?.answers?.address || ""} disabled={locked} /></label><label><span>Cidade</span><input name="city" defaultValue={initial?.answers?.city || ""} disabled={locked} /></label><label><span>Link do Maps</span><input name="maps_url" type="url" defaultValue={initial?.answers?.maps_url || ""} disabled={locked} /></label></div>}
         </section>
 
         <section className="intake-section">
           <span className="intake-step">04</span><h2>O que o convite precisa ter?</h2>
           <div className="intake-switches"><label><input name="rsvp_wanted" type="checkbox" defaultChecked /><span>Confirmação de presença</span></label><label><input name="gifts_wanted" type="checkbox" /><span>Presentes</span></label><label><input name="dress_code_wanted" type="checkbox" /><span>Traje / dress code</span></label><label><input name="schedule_wanted" type="checkbox" /><span>Programação</span></label></div>
-          <label><span>Informações importantes aos convidados</span><textarea name="important_info" placeholder="Estacionamento, crianças, piscina, horário de chegada..." /></label>
-          <label><span>Alguma frase ou mensagem que precisa aparecer?</span><textarea name="required_message" placeholder="Pode deixar em branco e deixar por nossa conta." /></label>
+          <label><span>Informações importantes aos convidados</span><textarea name="important_info" defaultValue={initial?.answers?.important_info || ""} disabled={locked} placeholder="Estacionamento, crianças, piscina, horário de chegada..." /></label>
+          <label><span>Alguma frase ou mensagem que precisa aparecer?</span><textarea name="required_message" defaultValue={initial?.answers?.required_message || ""} disabled={locked} placeholder="Pode deixar em branco e deixar por nossa conta." /></label>
         </section>
 
         <section className="intake-section">
           <span className="intake-step">05</span><h2>Estilo e referências</h2>
           <label><span>A decoração está definida?</span><select name="decoration_status" defaultValue="undefined"><option value="defined">Sim</option><option value="partial">Parcialmente</option><option value="undefined">Ainda não</option></select></label>
-          <label><span>Conte um pouco sobre a decoração</span><textarea name="decoration_notes" /></label>
+          <label><span>Conte um pouco sobre a decoração</span><textarea name="decoration_notes" defaultValue={initial?.visual_direction?.decoration_notes || ""} disabled={locked} /></label>
           <div><span className="intake-label">Escolha até 3 estilos</span><div className="intake-tags">{styles.map(style => <button key={style} type="button" className={styleTags.includes(style) ? "is-selected" : ""} onClick={() => toggleStyle(style)}>{style}</button>)}</div></div>
-          <label><span>Cores que gostaria que fossem consideradas</span><input name="color_notes" placeholder="Verde oliva, off-white, dourado..." /></label>
-          <label><span>Mais alguma direção de estilo?</span><textarea name="style_notes" /></label>
+          <label><span>Cores que gostaria que fossem consideradas</span><input name="color_notes" defaultValue={initial?.visual_direction?.color_notes || ""} disabled={locked} placeholder="Verde oliva, off-white, dourado..." /></label>
+          <label><span>Mais alguma direção de estilo?</span><textarea name="style_notes" defaultValue={initial?.visual_direction?.style_notes || ""} disabled={locked} /></label>
           <label className="intake-media-placeholder"><strong>Referências visuais</strong><p>Envie até 8 fotos da decoração, paleta, papelaria ou outras referências. JPG, PNG ou WebP, até 12 MB cada.</p><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e => setReferenceFiles(Array.from(e.target.files || []).slice(0, 8))} /><small>{referenceFiles.length ? `${referenceFiles.length} imagem(ns) selecionada(s)` : "Nenhuma imagem selecionada"}</small></label>
         </section>
 
         <section className="intake-section">
           <span className="intake-step">06</span><h2>Como falamos com você?</h2>
-          <label><span>Seu nome</span><input name="contact_name" required /></label>
-          <label><span>WhatsApp</span><input name="whatsapp" type="tel" required placeholder="(42) 99999-9999" /></label>
-          <label><span>E-mail <small>opcional</small></span><input name="email" type="email" /></label>
+          <label><span>Seu nome</span><input name="contact_name" required defaultValue={initial?.contact_name || ""} disabled={locked} /></label>
+          <label><span>WhatsApp</span><input name="whatsapp" type="tel" required defaultValue={initial?.whatsapp || ""} disabled={locked} placeholder="(42) 99999-9999" /></label>
+          <label><span>E-mail <small>opcional</small></span><input name="email" type="email" defaultValue={initial?.email || ""} disabled={locked} /></label>
           <p className="intake-consent">Ao enviar, você autoriza nosso contato pelo WhatsApp informado sobre esta solicitação de convite.</p>
         </section>
 
-        {message && <p className="form-error">{message}</p>}
-        <button className="button button--primary intake-submit" disabled={busy}>{busy ? "Enviando..." : "Enviar minha ficha"}</button>
+        {locked && <p className="intake-consent">Esta ficha já entrou em produção. As respostas permanecem disponíveis para consulta.</p>}{message && <p className="form-error">{message}</p>}
+        {!locked && <button className="button button--primary intake-submit" disabled={busy}>{busy ? "Salvando..." : resume ? "Salvar alterações" : "Enviar minha ficha"}</button>}
       </>}
     </form>
   </main>;
