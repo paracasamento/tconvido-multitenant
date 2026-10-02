@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { PublicIntakeForm } from "@/components/public/PublicIntakeForm";
 
 export default function Home() {
-  redirect("/gestao");
+  return <PublicIntakeForm />;
 }
