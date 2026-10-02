@@ -1,4 +1,3 @@
-import crypto from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
@@ -10,16 +9,6 @@ const schema = z.object({
   email: z.string().trim().min(3).max(200),
   password: z.string().min(12).max(200)
 });
-
-const EDITOR_LOGIN = "marcelaqueji";
-const EDITOR_ACCOUNT_EMAIL = "marcela@casamentopl.com";
-const EDITOR_PASSWORD_DIGEST = "636cf7be7b95cd852559fc8f9c05ae370c0b17f5c8472c31bc7705df37a280ac";
-
-function verifyEditorPassword(value: string) {
-  const actual = crypto.scryptSync(value, "tconvido-editor-v1", 32);
-  const expected = Buffer.from(EDITOR_PASSWORD_DIGEST, "hex");
-  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
-}
 
 export async function POST(request: Request) {
   if (!sameOriginStrict(request)) {
@@ -39,9 +28,7 @@ export async function POST(request: Request) {
   }
 
   const sql = db();
-  const login = parsed.data.email.trim();
-  const isEditorLogin = login.toLowerCase() === EDITOR_LOGIN;
-  const accountEmail = isEditorLogin ? EDITOR_ACCOUNT_EMAIL : login;
+  const accountEmail = parsed.data.email.trim();
 
   const rows = await sql`
     SELECT a.id, a.password_hash
@@ -54,11 +41,9 @@ export async function POST(request: Request) {
   `;
 
   const owner = rows[0] as any;
-  const passwordValid = isEditorLogin
-    ? verifyEditorPassword(parsed.data.password)
-    : owner
-      ? await verifyPassword(parsed.data.password, owner.password_hash)
-      : false;
+  const passwordValid = owner
+    ? await verifyPassword(parsed.data.password, owner.password_hash)
+    : false;
 
   if (!owner || !passwordValid) {
     await recordFailure(request, null, "owner_login_failed");
