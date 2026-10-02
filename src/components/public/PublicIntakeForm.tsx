@@ -3,165 +3,71 @@
 import { useEffect, useMemo, useState } from "react";
 import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
 
-const styles = ["Clássico", "Romântico", "Minimalista", "Moderno", "Delicado", "Divertido", "Rústico/Natural", "Luxuoso"];
+const styles=["Clássico","Romântico","Minimalista","Moderno","Delicado","Divertido","Rústico/Natural","Luxuoso"];
+const colors=[["off-white","#F4F0E8"],["verde oliva","#7C8061"],["azul","#8295AE"],["rosa antigo","#C8A0A5"],["terracota","#B86F52"],["vinho","#73343D"],["dourado","#C5A35A"],["preto","#242424"]];
+const steps=["Evento","Pessoas","Data e local","Conteúdo","Experiência","Visual e fotos","Contato"];
 
-export function PublicIntakeForm({ resume }: { resume?: { id: string; token: string } }) {
-  const [eventType, setEventType] = useState<EventType | "">("");
-  const [dateDefined, setDateDefined] = useState(true);
-  const [locationDefined, setLocationDefined] = useState(true);
-  const [styleTags, setStyleTags] = useState<string[]>([]);
-  const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
-  const [message, setMessage] = useState("");
-  const [referenceFiles, setReferenceFiles] = useState<File[]>([]);
-  const [invitePhotoFiles, setInvitePhotoFiles] = useState<File[]>([]);
-  const [invitePhotoChoice, setInvitePhotoChoice] = useState<"yes"|"no"|"later">("later");
-  const [resumeLoaded, setResumeLoaded] = useState(!resume);
-  const [locked, setLocked] = useState(false);
-  const [initial, setInitial] = useState<any>(null);
-  const [step, setStep] = useState(1);
-  const [weddingHosting, setWeddingHosting] = useState("couple");
-  const [weddingVenues, setWeddingVenues] = useState("same");
-  const [specialTextChoice, setSpecialTextChoice] = useState("later");
-  const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [featureDefaults, setFeatureDefaults] = useState({ rsvp: true, gifts: false, dress_code: false, schedule: false });
-  const definition = useMemo(() => eventType ? EVENT_TYPE_DEFINITIONS[eventType] : null, [eventType]);
+export function PublicIntakeForm({resume}:{resume?:{id:string;token:string}}){
+ const [eventType,setEventType]=useState<EventType|"">("");
+ const [step,setStep]=useState(1),[dateDefined,setDateDefined]=useState(true),[locationDefined,setLocationDefined]=useState(true);
+ const [styleTags,setStyleTags]=useState<string[]>([]),[selectedColors,setSelectedColors]=useState<string[]>([]);
+ const [busy,setBusy]=useState(false),[done,setDone]=useState(false),[message,setMessage]=useState("");
+ const [referenceFiles,setReferenceFiles]=useState<File[]>([]),[invitePhotoFiles,setInvitePhotoFiles]=useState<File[]>([]);
+ const [invitePhotoChoice,setInvitePhotoChoice]=useState<"yes"|"no"|"later">("later");
+ const [resumeLoaded,setResumeLoaded]=useState(!resume),[locked,setLocked]=useState(false),[initial,setInitial]=useState<any>(null);
+ const [weddingHosting,setWeddingHosting]=useState("couple"),[weddingVenues,setWeddingVenues]=useState("same"),[specialTextChoice,setSpecialTextChoice]=useState("later");
+ const [featureDefaults,setFeatureDefaults]=useState({rsvp:true,gifts:false,dress_code:false,schedule:false});
+ const definition=useMemo(()=>eventType?EVENT_TYPE_DEFINITIONS[eventType]:null,[eventType]);
 
-  useEffect(() => { if (!resume) return; fetch(`/api/public/intakes/${resume.id}?token=${encodeURIComponent(resume.token)}`).then(async r => { const d=await r.json(); if(!r.ok) throw new Error(d.message||"Não foi possível abrir a ficha."); setInitial(d); setEventType(d.event_type); setFeatureDefaults({ rsvp:Boolean(d.answers?.rsvp_wanted), gifts:Boolean(d.answers?.gifts_wanted), dress_code:Boolean(d.answers?.dress_code_wanted), schedule:Boolean(d.answers?.schedule_wanted) }); setDateDefined(d.event_date_defined); setLocationDefined(Boolean(d.answers?.location_defined)); setStyleTags(d.visual_direction?.style_tags||[]); setLocked(Boolean(d.locked)); }).catch(e=>setMessage(e.message)).finally(()=>setResumeLoaded(true)); }, [resume]);
+ useEffect(()=>{if(!resume)return;fetch(`/api/public/intakes/${resume.id}?token=${encodeURIComponent(resume.token)}`).then(async r=>{const t=await r.text();const d=t?JSON.parse(t):{};if(!r.ok)throw new Error(d.message||"Não foi possível abrir a ficha.");setInitial(d);setEventType(d.event_type);setDateDefined(d.event_date_defined);setLocationDefined(Boolean(d.answers?.location_defined));setStyleTags(d.visual_direction?.style_tags||[]);setSelectedColors(d.visual_direction?.selected_colors||[]);setInvitePhotoChoice(d.answers?.invite_photo_choice||"later");setWeddingHosting(d.answers?.wedding_hosting||"couple");setWeddingVenues(d.answers?.wedding_venues||"same");setSpecialTextChoice(d.answers?.special_text_choice||"later");setFeatureDefaults({rsvp:Boolean(d.answers?.rsvp_wanted),gifts:Boolean(d.answers?.gifts_wanted),dress_code:Boolean(d.answers?.dress_code_wanted),schedule:Boolean(d.answers?.schedule_wanted)});setLocked(Boolean(d.locked));}).catch(e=>setMessage(e.message)).finally(()=>setResumeLoaded(true))},[resume]);
 
-  function chooseEventType(type: EventType) {
-    setEventType(type);
-    if (!resume) {
-      const defaults = EVENT_TYPE_DEFINITIONS[type].defaultCapabilities;
-      setFeatureDefaults({ rsvp: defaults.includes("rsvp"), gifts: defaults.includes("gifts"), dress_code: defaults.includes("dress_code"), schedule: defaults.includes("schedule") });
-    }
-  }
+ function chooseEventType(type:EventType){setEventType(type);const d=EVENT_TYPE_DEFINITIONS[type].defaultCapabilities;setFeatureDefaults({rsvp:d.includes("rsvp"),gifts:d.includes("gifts"),dress_code:d.includes("dress_code"),schedule:d.includes("schedule")});}
+ function toggleStyle(v:string){setStyleTags(c=>c.includes(v)?c.filter(x=>x!==v):c.length<3?[...c,v]:c)}
+ function toggleColor(v:string){setSelectedColors(c=>c.includes(v)?c.filter(x=>x!==v):c.length<5?[...c,v]:c)}
+ function goNext(form:HTMLFormElement){setMessage("");if(step===1&&!eventType){setMessage("Escolha o tipo de evento para continuar.");return}if(step===2){const identity=(new FormData(form).get("identity")||"").toString().trim();if(!identity){setMessage("Informe o nome principal do evento para continuar.");return}}setStep(s=>Math.min(7,s+1));window.scrollTo({top:0,behavior:"smooth"});}
+ const eventSpecific=(form:FormData)=>eventType==="kids_birthday"?{theme:form.get("kids_theme")||"",guardian_info:form.get("kids_guardian_info")||"",food_notes:form.get("kids_food_notes")||""}:eventType==="quinceanera"?{party_style:form.get("quince_style")||"",special_moments:form.get("quince_moments")||"",family_names:form.get("quince_family")||""}:eventType==="baby_shower"?{shower_type:form.get("baby_type")||"",parents_names:form.get("baby_parents")||"",gift_notes:form.get("baby_gifts")||""}:eventType==="housewarming"?{hosts_context:form.get("house_hosts")||"",gift_notes:form.get("house_gifts")||"",arrival_notes:form.get("house_arrival")||""}:{};
 
-  function toggleStyle(value: string) {
-    setStyleTags(current => current.includes(value) ? current.filter(item => item !== value) : current.length < 3 ? [...current, value] : current);
-  }
+ async function uploadMedia(id:string,token:string,files:File[],kind:"reference"|"invite_photo"){if(!files.length)return;const media=new FormData();media.set("access_token",token);media.set("media_kind",kind);files.forEach(f=>media.append("files",f));const r=await fetch(`/api/public/intakes/${id}/media`,{method:"POST",body:media});const t=await r.text();const d=t?JSON.parse(t):{};if(!r.ok)throw new Error(d.message||"Não foi possível enviar as imagens.");}
 
-  function toggleColor(value:string){setSelectedColors(c=>c.includes(value)?c.filter(x=>x!==value):c.length<5?[...c,value]:c)}
-  const colorOptions=[["off-white","#F4F0E8"],["verde oliva","#7C8061"],["azul","#8295AE"],["rosa antigo","#C8A0A5"],["terracota","#B86F52"],["vinho","#73343D"],["dourado","#C5A35A"],["preto","#242424"]];
+ async function submit(e:React.FormEvent<HTMLFormElement>){e.preventDefault();if(step<7){goNext(e.currentTarget);return}setBusy(true);setMessage("");const form=new FormData(e.currentTarget);const payload={event_type:eventType,contact_name:form.get("contact_name"),whatsapp:form.get("whatsapp"),email:form.get("email"),event_date_defined:dateDefined,event_date:dateDefined?form.get("event_date"):"",event_time:form.get("event_time"),identity:form.get("identity"),age:form.get("age")?Number(form.get("age")):null,location_defined:locationDefined,venue:locationDefined?form.get("venue"):"",address:locationDefined?form.get("address"):"",city:locationDefined?form.get("city"):"",maps_url:locationDefined?form.get("maps_url"):"",rsvp_wanted:form.get("rsvp_wanted")==="on",gifts_wanted:form.get("gifts_wanted")==="on",dress_code_wanted:form.get("dress_code_wanted")==="on",schedule_wanted:form.get("schedule_wanted")==="on",important_info:form.get("important_info"),required_message:form.get("required_message"),decoration_status:form.get("decoration_status"),decoration_notes:form.get("decoration_notes"),style_tags:styleTags,color_notes:form.get("color_notes"),style_notes:form.get("style_notes"),wedding_hosting:eventType==="wedding"?weddingHosting:undefined,bride_parents:form.get("bride_parents")||"",groom_parents:form.get("groom_parents")||"",wedding_venues:eventType==="wedding"?weddingVenues:undefined,reception_venue:form.get("reception_venue")||"",reception_address:form.get("reception_address")||"",reception_city:form.get("reception_city")||"",special_text_choice:eventType==="wedding"?specialTextChoice:undefined,special_text:form.get("special_text")||"",selected_colors:selectedColors,invite_photo_choice:invitePhotoChoice,invite_photo_drive_url:form.get("invite_photo_drive_url")||"",event_specific:eventSpecific(form)};
+ try{const r=await fetch(resume?`/api/public/intakes/${resume.id}`:"/api/public/intakes",{method:resume?"PATCH":"POST",headers:{"content-type":"application/json"},body:JSON.stringify(resume?{access_token:resume.token,data:payload}:payload)});const t=await r.text();let d:any={};try{d=t?JSON.parse(t):{}}catch{}if(!r.ok)throw new Error(d.message||"Não conseguimos salvar sua ficha agora. Tente novamente.");if(!resume){await uploadMedia(d.intake_id,d.access_token,referenceFiles,"reference");await uploadMedia(d.intake_id,d.access_token,invitePhotoFiles,"invite_photo");localStorage.setItem("tconvido:last-intake",JSON.stringify({id:d.intake_id,token:d.access_token}));}setDone(true)}catch(err){setMessage(err instanceof Error?err.message:"Não foi possível enviar sua ficha.")}finally{setBusy(false)}}
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setMessage("");
-    const form = new FormData(event.currentTarget);
-    const payload = {
-      event_type: eventType,
-      contact_name: form.get("contact_name"),
-      whatsapp: form.get("whatsapp"),
-      email: form.get("email"),
-      event_date_defined: dateDefined,
-      event_date: dateDefined ? form.get("event_date") : "",
-      event_time: form.get("event_time"),
-      identity: form.get("identity"),
-      age: form.get("age") ? Number(form.get("age")) : null,
-      location_defined: locationDefined,
-      venue: locationDefined ? form.get("venue") : "",
-      address: locationDefined ? form.get("address") : "",
-      city: locationDefined ? form.get("city") : "",
-      maps_url: locationDefined ? form.get("maps_url") : "",
-      rsvp_wanted: form.get("rsvp_wanted") === "on",
-      gifts_wanted: form.get("gifts_wanted") === "on",
-      dress_code_wanted: form.get("dress_code_wanted") === "on",
-      schedule_wanted: form.get("schedule_wanted") === "on",
-      important_info: form.get("important_info"),
-      required_message: form.get("required_message"),
-      decoration_status: form.get("decoration_status"),
-      decoration_notes: form.get("decoration_notes"),
-      style_tags: styleTags,
-      color_notes: form.get("color_notes"),
-      style_notes: form.get("style_notes"),
-      wedding_hosting: eventType === "wedding" ? weddingHosting : undefined,
-      bride_parents: form.get("bride_parents") || "", groom_parents: form.get("groom_parents") || "",
-      wedding_venues: eventType === "wedding" ? weddingVenues : undefined,
-      reception_venue: form.get("reception_venue") || "", reception_address: form.get("reception_address") || "", reception_city: form.get("reception_city") || "",
-      special_text_choice: eventType === "wedding" ? specialTextChoice : undefined,
-      special_text: form.get("special_text") || "", selected_colors: selectedColors,
-      invite_photo_choice: invitePhotoChoice, invite_photo_drive_url: form.get("invite_photo_drive_url") || "", event_specific: {},
-    };
-
-    try {
-      const response = await fetch(resume ? `/api/public/intakes/${resume.id}` : "/api/public/intakes", { method: resume ? "PATCH" : "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(resume ? { access_token: resume.token, data: payload } : payload) });
-      const raw = await response.text(); const data = raw ? JSON.parse(raw) : {};
-      if (!response.ok) throw new Error(data.message || "Não foi possível enviar sua ficha.");
-      if ((referenceFiles.length || invitePhotoFiles.length) && !resume) {
-        const media = new FormData();
-        media.set("access_token", data.access_token);
-        referenceFiles.forEach(file => media.append("files", file));
-        const mediaResponse = await fetch(`/api/public/intakes/${data.intake_id}/media`, { method: "POST", body: media });
-        const mediaData = await mediaResponse.json();
-        if (!mediaResponse.ok) throw new Error(`A ficha foi salva, mas houve um problema com as referências: ${mediaData.message || "tente novamente."}`);
-      }
-      if (!resume) { localStorage.setItem("tconvido:last-intake", JSON.stringify({ id: data.intake_id, token: data.access_token })); }
-      setDone(true);
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Não foi possível enviar sua ficha.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  if (!resumeLoaded) return <main className="intake-shell"><section className="intake-card"><p>Carregando sua ficha...</p></section></main>;
-  if (done) return <main className="intake-shell"><section className="intake-card intake-success"><span>✓</span><h1>Ficha enviada!</h1><p>Recebemos as informações do seu convite. Entraremos em contato pelo WhatsApp informado antes de iniciar a produção.</p></section></main>;
-
-  return <main className="intake-shell">
-    <header className="intake-hero"><p className="eyebrow">TConvido</p><h1>Vamos criar o convite com a cara do seu evento?</h1><p>Responda só o que você já sabe. O que ainda não estiver decidido pode ficar para depois.</p></header>
-    <form className="intake-card intake-guided" onSubmit={submit} key={`${initial?.id || "new"}-${eventType}` }>
-      <section className="intake-section">
-        <span className="intake-step">01</span><h2>Qual é o seu evento?</h2>
-        <div className="intake-type-grid">
-          {(Object.values(EVENT_TYPE_DEFINITIONS)).map(item => <button key={item.type} type="button" className={eventType === item.type ? "is-selected" : ""} disabled={locked} onClick={() => chooseEventType(item.type)}>{item.label}</button>)}
-        </div>
-      </section>
-
-      {definition && <>
-        <section className="intake-section">
-          <span className="intake-step">02</span><h2>Sobre o evento</h2>
-          <p className="intake-required-note"><strong>Obrigatório</strong> para identificarmos seu convite.</p><label><span>{definition.identityLabel} <b>Obrigatório</b></span><input name="identity" required defaultValue={initial?.answers?.identity || ""} disabled={locked} placeholder={definition.type === "wedding" ? "Ana & João" : ""} /></label>
-          {eventType === "wedding" && <div className="wedding-brief"><div className="intake-choice"><span>Quem convida para o casamento? <b>Obrigatório</b></span>{[["couple","Nós, os noivos"],["parents","Nossos pais"],["couple_and_parents","Nós e nossos pais"]].map(([v,l])=><button key={v} type="button" className={weddingHosting===v?"is-selected":""} onClick={()=>setWeddingHosting(v)}>{l}</button>)}</div>{weddingHosting!=="couple"&&<div className="intake-fields"><label><span>Pais da noiva</span><input name="bride_parents" required placeholder="Ex.: Maria e José" /></label><label><span>Pais do noivo</span><input name="groom_parents" required placeholder="Ex.: Ana e Carlos" /></label></div>}</div>}\n                    {(eventType === "kids_birthday" || eventType === "quinceanera") && <label><span>Idade</span><input name="age" type="number" min="1" max="120" defaultValue={initial?.answers?.age ?? ""} disabled={locked} /></label>}
-          <div className="intake-choice"><span>Você já tem a data definida?</span><button type="button" className={dateDefined ? "is-selected" : ""} disabled={locked} onClick={() => setDateDefined(true)}>Sim</button><button type="button" className={!dateDefined ? "is-selected" : ""} disabled={locked} onClick={() => setDateDefined(false)}>Ainda não</button></div>
-          {dateDefined && <label><span>Data</span><input name="event_date" type="date" required defaultValue={initial?.event_date || ""} disabled={locked} /></label>}
-          <label><span>Horário <small>pode deixar em branco se ainda não souber</small></span><input name="event_time" type="time" defaultValue={initial?.event_time || ""} disabled={locked} /></label>
-        </section>
-
-        <section className="intake-section">
-          <span className="intake-step">03</span><h2>Local</h2>
-          <div className="intake-choice"><span>O local já está definido?</span><button type="button" className={locationDefined ? "is-selected" : ""} disabled={locked} onClick={() => setLocationDefined(true)}>Sim</button><button type="button" className={!locationDefined ? "is-selected" : ""} disabled={locked} onClick={() => setLocationDefined(false)}>Ainda não</button></div>
-          {eventType==="wedding" && locationDefined && <div className="intake-choice"><span>Cerimônia e recepção serão no mesmo local?</span>{[["same","Sim, no mesmo local"],["different","Locais diferentes"],["undefined","Ainda não sabemos"]].map(([v,l])=><button key={v} type="button" className={weddingVenues===v?"is-selected":""} onClick={()=>setWeddingVenues(v)}>{l}</button>)}</div>}\n          {locationDefined && <div className="intake-fields"><label><span>Nome do local</span><input name="venue" defaultValue={initial?.answers?.venue || ""} disabled={locked} /></label><label><span>Endereço</span><input name="address" defaultValue={initial?.answers?.address || ""} disabled={locked} /></label><label><span>Cidade</span><input name="city" defaultValue={initial?.answers?.city || ""} disabled={locked} /></label><label><span>Link do Maps</span><input name="maps_url" type="url" defaultValue={initial?.answers?.maps_url || ""} disabled={locked} /></label></div>}
-        </section>
-
-        <section className="intake-section">
-          <span className="intake-step">04</span><h2>O que o convite precisa ter?</h2>
-          <div className="intake-switches"><label><input name="rsvp_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.rsvp_wanted) : featureDefaults.rsvp} disabled={locked} /><span>Confirmação de presença</span></label><label><input name="gifts_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.gifts_wanted) : featureDefaults.gifts} disabled={locked} /><span>Presentes</span></label><label><input name="dress_code_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.dress_code_wanted) : featureDefaults.dress_code} disabled={locked} /><span>Traje / dress code</span></label><label><input name="schedule_wanted" type="checkbox" defaultChecked={initial ? Boolean(initial.answers?.schedule_wanted) : featureDefaults.schedule} disabled={locked} /><span>Programação</span></label></div>
-          <label><span>Informações importantes aos convidados</span><textarea name="important_info" defaultValue={initial?.answers?.important_info || ""} disabled={locked} placeholder="Estacionamento, crianças, piscina, horário de chegada..." /></label>
-          {eventType==="wedding"&&<div className="intake-choice"><span>Quer incluir um versículo, frase ou trecho especial?</span>{[["yes","Quero incluir"],["no","Não"],["later","Ainda não escolhi"]].map(([v,l])=><button key={v} type="button" className={specialTextChoice===v?"is-selected":""} onClick={()=>setSpecialTextChoice(v)}>{l}</button>)}</div>}{eventType==="wedding"&&specialTextChoice==="yes"&&<label><span>Versículo, frase ou trecho</span><textarea name="special_text" placeholder="Escreva aqui exatamente como gostaria que aparecesse." /></label>}\n          <label><span>Alguma outra mensagem que precisa aparecer? <small>opcional</small></span><textarea name="required_message" defaultValue={initial?.answers?.required_message || ""} disabled={locked} placeholder="Pode deixar em branco e deixar por nossa conta." /></label>
-        </section>
-
-        <section className="intake-section">
-          <span className="intake-step">05</span><h2>Estilo e referências</h2>
-          <label><span>A decoração está definida?</span><select name="decoration_status" defaultValue={initial?.visual_direction?.decoration_status || "undefined"} disabled={locked}><option value="defined">Sim</option><option value="partial">Parcialmente</option><option value="undefined">Ainda não</option></select></label>
-          <label><span>Conte um pouco sobre a decoração</span><textarea name="decoration_notes" defaultValue={initial?.visual_direction?.decoration_notes || ""} disabled={locked} /></label>
-          <div><span className="intake-label">Escolha até 3 estilos</span><div className="intake-tags">{styles.map(style => <button key={style} type="button" className={styleTags.includes(style) ? "is-selected" : ""} disabled={locked} onClick={() => toggleStyle(style)}>{style}</button>)}</div></div>
-          <div><span className="intake-label">Quais cores combinam com o evento? <small>Escolha até 5</small></span><div className="intake-colors">{colorOptions.map(([name,color])=><button type="button" key={name} className={selectedColors.includes(name)?"is-selected":""} onClick={()=>toggleColor(name)}><i style={{background:color}}/><span>{name}</span></button>)}</div></div><label><span>Outra cor ou observação <small>opcional</small></span><input name="color_notes" defaultValue={initial?.visual_direction?.color_notes || ""} disabled={locked} placeholder="Ex.: evitar tons muito escuros" /></label>
-          <label><span>Mais alguma direção de estilo?</span><textarea name="style_notes" defaultValue={initial?.visual_direction?.style_notes || ""} disabled={locked} /></label>
-          <div className="intake-photo-block"><div className="intake-choice"><span>Você quer usar fotos próprias no convite?</span>{[["yes","Sim"],["no","Não"],["later","Ainda não decidi"]].map(([v,l])=><button key={v} type="button" className={invitePhotoChoice===v?"is-selected":""} onClick={()=>setInvitePhotoChoice(v as "yes"|"no"|"later")}>{l}</button>)}</div>{invitePhotoChoice!=="no"&&<div className="intake-photo-options"><p>{invitePhotoChoice==="yes"?"Envie as fotos que gostaria que fossem consideradas no convite.":"Sem problema. Envie as fotos que você considera usar e decidimos depois."}</p><label className="intake-media-placeholder"><strong>Enviar fotos</strong><span>JPG, PNG ou WebP. Você pode selecionar mais de uma.</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e=>setInvitePhotoFiles(Array.from(e.target.files||[]).slice(0,8))}/><small>{invitePhotoFiles.length? `${invitePhotoFiles.length} foto(s) selecionada(s)`:"Nenhuma foto selecionada"}</small></label><div className="intake-or"><span>ou</span></div><label><span>Link compartilhável do Drive <small>opcional</small></span><input name="invite_photo_drive_url" type="url" placeholder="Cole aqui o link da pasta ou das fotos" /></label></div>}</div>\n          <label className="intake-media-placeholder"><strong>Referências visuais</strong><p>Envie até 8 fotos da decoração, paleta, papelaria ou outras referências. JPG, PNG ou WebP, até 12 MB cada.</p><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e => setReferenceFiles(Array.from(e.target.files || []).slice(0, 8))} /><small>{referenceFiles.length ? `${referenceFiles.length} imagem(ns) selecionada(s)` : "Nenhuma imagem selecionada"}</small></label>
-        </section>
-
-        <section className="intake-section">
-          <span className="intake-step">06</span><h2>Como falamos com você?</h2>
-          <label><span>Seu nome</span><input name="contact_name" required defaultValue={initial?.contact_name || ""} disabled={locked} /></label>
-          <label><span>WhatsApp</span><input name="whatsapp" type="tel" required defaultValue={initial?.whatsapp || ""} disabled={locked} placeholder="(42) 99999-9999" /></label>
-          <label><span>E-mail <small>opcional</small></span><input name="email" type="email" defaultValue={initial?.email || ""} disabled={locked} /></label>
-          <p className="intake-consent">Ao enviar, você autoriza nosso contato pelo WhatsApp informado sobre esta solicitação de convite.</p>
-        </section>
-
-        {locked && <p className="intake-consent">Esta ficha já entrou em produção. As respostas permanecem disponíveis para consulta.</p>}{message && <p className="form-error">{message}</p>}
-        {!locked && <button className="button button--primary intake-submit" disabled={busy}>{busy ? "Salvando..." : resume ? "Salvar alterações" : "Enviar minha ficha"}</button>}
-      </>}
-    </form>
-  </main>;
+ if(!resumeLoaded)return <main className="intake-shell"><section className="intake-card"><p>Carregando sua ficha...</p></section></main>;
+ if(done)return <main className="intake-shell"><section className="intake-card intake-success"><span>✓</span><h1>Ficha enviada!</h1><p>Recebemos seu briefing. Entraremos em contato pelo WhatsApp antes de iniciar a produção.</p></section></main>;
+ return <main className="intake-shell"><header className="intake-hero"><p className="eyebrow">TConvido</p><h1>Conte como será o seu evento</h1><p>Você não precisa ter tudo decidido. Responda o que já sabe e marque o restante para definir depois.</p></header>
+ <form className="intake-card intake-guided" onSubmit={submit}>
+  <div className="intake-progress"><span>Etapa {step} de 7 · {steps[step-1]}</span><div><i style={{width:`${step/7*100}%`}}/></div></div>
+  <section className={"intake-section "+(step===1?"is-active":"is-hidden")}><span className="intake-step">01</span><h2>Que evento vamos celebrar?</h2><p className="intake-help">As próximas perguntas mudam de acordo com sua escolha.</p><div className="intake-type-grid">{Object.values(EVENT_TYPE_DEFINITIONS).map(item=><button key={item.type} type="button" className={eventType===item.type?"is-selected":""} disabled={locked} onClick={()=>chooseEventType(item.type)}>{item.label}</button>)}</div></section>
+  {definition&&<>
+  <section className={"intake-section "+(step===2?"is-active":"is-hidden")}><span className="intake-step">02</span><h2>{eventType==="wedding"?"Sobre vocês":eventType==="kids_birthday"?"Sobre o aniversariante":eventType==="quinceanera"?"Sobre a debutante":eventType==="baby_shower"?"Sobre o bebê e a família":"Sobre os anfitriões"}</h2><label><span>{definition.identityLabel} <b>Obrigatório</b></span><input name="identity" defaultValue={initial?.answers?.identity||""} placeholder={eventType==="wedding"?"Ana & João":""}/></label>
+   {(eventType==="kids_birthday"||eventType==="quinceanera")&&<label><span>Idade que irá completar</span><input name="age" type="number" min="1" max="120" defaultValue={initial?.answers?.age??""}/></label>}
+   {eventType==="wedding"&&<><div className="intake-choice"><span>Quem convida para o casamento?</span>{[["couple","Nós, os noivos"],["parents","Nossos pais"],["couple_and_parents","Nós e nossos pais"]].map(([v,l])=><button key={v} type="button" className={weddingHosting===v?"is-selected":""} onClick={()=>setWeddingHosting(v)}>{l}</button>)}</div>{weddingHosting!=="couple"&&<div className="intake-fields"><label><span>Pais de uma das famílias</span><input name="bride_parents" defaultValue={initial?.answers?.bride_parents||""} placeholder="Nomes como devem aparecer"/></label><label><span>Pais da outra família</span><input name="groom_parents" defaultValue={initial?.answers?.groom_parents||""} placeholder="Nomes como devem aparecer"/></label></div>}</>}
+   {eventType==="kids_birthday"&&<><label><span>Tem tema, personagem ou universo definido? <small>opcional</small></span><input name="kids_theme" defaultValue={initial?.answers?.event_specific?.theme||""} placeholder="Ex.: fundo do mar, fazendinha, sem personagem..."/></label><label><span>Existe alguma orientação importante para os responsáveis? <small>opcional</small></span><textarea name="kids_guardian_info" defaultValue={initial?.answers?.event_specific?.guardian_info||""} placeholder="Ex.: levar roupa de banho, retirar às 18h..."/></label></>}
+   {eventType==="quinceanera"&&<><label><span>Como você imagina a festa? <small>opcional</small></span><input name="quince_style" defaultValue={initial?.answers?.event_specific?.party_style||""} placeholder="Ex.: tradicional, balada, jantar, festa temática..."/></label><label><span>Nomes dos pais ou familiares que devem aparecer <small>opcional</small></span><input name="quince_family" defaultValue={initial?.answers?.event_specific?.family_names||""}/></label></>}
+   {eventType==="baby_shower"&&<><label><span>Nomes dos pais/responsáveis <small>opcional</small></span><input name="baby_parents" defaultValue={initial?.answers?.event_specific?.parents_names||""}/><label><span>Que tipo de encontro será?</span><select name="baby_type" defaultValue={initial?.answers?.event_specific?.shower_type||"baby_shower"}><option value="baby_shower">Chá de bebê</option><option value="diaper_shower">Chá de fraldas</option><option value="reveal">Chá revelação</option><option value="other">Outro</option></select></label></>}
+   {eventType==="housewarming"&&<label><span>Como vocês gostariam de ser apresentados? <small>opcional</small></span><input name="house_hosts" defaultValue={initial?.answers?.event_specific?.hosts_context||""} placeholder="Ex.: Marcela & Pedro"/></label>}
+  </section>
+  <section className={"intake-section "+(step===3?"is-active":"is-hidden")}><span className="intake-step">03</span><h2>Quando e onde?</h2><div className="intake-choice"><span>A data já está definida?</span><button type="button" className={dateDefined?"is-selected":""} onClick={()=>setDateDefined(true)}>Sim</button><button type="button" className={!dateDefined?"is-selected":""} onClick={()=>setDateDefined(false)}>Ainda não</button></div>{dateDefined&&<label><span>Data</span><input name="event_date" type="date" defaultValue={initial?.event_date||""}/></label>}<label><span>Horário <small>pode ficar em branco</small></span><input name="event_time" type="time" defaultValue={initial?.event_time||""}/></label><div className="intake-choice"><span>O local já está definido?</span><button type="button" className={locationDefined?"is-selected":""} onClick={()=>setLocationDefined(true)}>Sim</button><button type="button" className={!locationDefined?"is-selected":""} onClick={()=>setLocationDefined(false)}>Ainda não</button></div>
+   {eventType==="wedding"&&locationDefined&&<div className="intake-choice"><span>Cerimônia e recepção serão no mesmo local?</span>{[["same","Mesmo local"],["different","Locais diferentes"],["undefined","Ainda não sabemos"]].map(([v,l])=><button key={v} type="button" className={weddingVenues===v?"is-selected":""} onClick={()=>setWeddingVenues(v)}>{l}</button>)}</div>}
+   {locationDefined&&<div className="intake-fields"><label><span>{eventType==="wedding"?"Local da cerimônia / principal":"Nome do local"}</span><input name="venue" defaultValue={initial?.answers?.venue||""}/></label><label><span>Endereço</span><input name="address" defaultValue={initial?.answers?.address||""}/></label><label><span>Cidade</span><input name="city" defaultValue={initial?.answers?.city||""}/></label><label><span>Link do Maps <small>opcional</small></span><input name="maps_url" type="url" defaultValue={initial?.answers?.maps_url||""}/></label>{eventType==="wedding"&&weddingVenues==="different"&&<><label><span>Local da recepção</span><input name="reception_venue" defaultValue={initial?.answers?.reception_venue||""}/></label><label><span>Endereço da recepção</span><input name="reception_address" defaultValue={initial?.answers?.reception_address||""}/></label><label><span>Cidade da recepção</span><input name="reception_city" defaultValue={initial?.answers?.reception_city||""}/></label></>}</div>}
+  </section>
+  <section className={"intake-section "+(step===4?"is-active":"is-hidden")}><span className="intake-step">04</span><h2>O que precisa aparecer no convite?</h2>
+   {eventType==="wedding"&&<><div className="intake-choice"><span>Quer incluir um versículo, frase ou trecho especial?</span>{[["yes","Quero incluir"],["no","Não"],["later","Ainda não escolhi"]].map(([v,l])=><button key={v} type="button" className={specialTextChoice===v?"is-selected":""} onClick={()=>setSpecialTextChoice(v)}>{l}</button>)}</div>{specialTextChoice==="yes"&&<label><span>Texto especial</span><textarea name="special_text" defaultValue={initial?.answers?.special_text||""} placeholder="Escreva exatamente como gostaria que aparecesse."/></label>}</>}
+   {eventType==="quinceanera"&&<label><span>Há momentos que precisam ser destacados?</span><textarea name="quince_moments" defaultValue={initial?.answers?.event_specific?.special_moments||""} placeholder="Ex.: recepção, valsa, cerimônia, abertura da pista..."/></label>}
+   {eventType==="baby_shower"&&<label><span>Orientação de presentes ou fraldas <small>opcional</small></span><textarea name="baby_gifts" defaultValue={initial?.answers?.event_specific?.gift_notes||""} placeholder="Ex.: tamanho das fraldas, lista, preferências..."/></label>}
+   {eventType==="housewarming"&&<label><span>Orientação sobre presentes <small>opcional</small></span><textarea name="house_gifts" defaultValue={initial?.answers?.event_specific?.gift_notes||""} placeholder="Lista, itens que precisam, preferências..."/></label>}
+   {eventType==="kids_birthday"&&<label><span>Alimentação ou outra informação importante <small>opcional</small></span><textarea name="kids_food_notes" defaultValue={initial?.answers?.event_specific?.food_notes||""} placeholder="Ex.: lanche incluso, restrições, bolo às 17h..."/></label>}
+   <label><span>Mensagem que precisa aparecer <small>opcional</small></span><textarea name="required_message" defaultValue={initial?.answers?.required_message||""} placeholder="Se não houver uma mensagem específica, deixe em branco."/></label>
+  </section>
+  <section className={"intake-section "+(step===5?"is-active":"is-hidden")}><span className="intake-step">05</span><h2>O que os convidados precisam poder fazer ou saber?</h2><div className="intake-switches"><label><input name="rsvp_wanted" type="checkbox" defaultChecked={initial?Boolean(initial.answers?.rsvp_wanted):featureDefaults.rsvp}/><span>Confirmar presença pelo convite</span></label><label><input name="gifts_wanted" type="checkbox" defaultChecked={initial?Boolean(initial.answers?.gifts_wanted):featureDefaults.gifts}/><span>Ver presentes / lista</span></label><label><input name="dress_code_wanted" type="checkbox" defaultChecked={initial?Boolean(initial.answers?.dress_code_wanted):featureDefaults.dress_code}/><span>Ver orientação de traje</span></label><label><input name="schedule_wanted" type="checkbox" defaultChecked={initial?Boolean(initial.answers?.schedule_wanted):featureDefaults.schedule}/><span>Ver programação / momentos</span></label></div><label><span>Outras informações importantes <small>opcional</small></span><textarea name="important_info" defaultValue={initial?.answers?.important_info||""} placeholder={eventType==="housewarming"?"Ex.: estacionamento, portaria, como chegar...":"Ex.: estacionamento, horário de chegada, orientações especiais..."}/></label>{eventType==="housewarming"&&<label><span>Alguma orientação para chegada? <small>opcional</small></span><input name="house_arrival" defaultValue={initial?.answers?.event_specific?.arrival_notes||""} placeholder="Portaria, bloco, apartamento, estacionamento..."/></label>}</section>
+  <section className={"intake-section "+(step===6?"is-active":"is-hidden")}><span className="intake-step">06</span><h2>Estilo, fotos e referências</h2><label><span>A decoração já está definida?</span><select name="decoration_status" defaultValue={initial?.visual_direction?.decoration_status||"undefined"}><option value="defined">Sim</option><option value="partial">Parcialmente</option><option value="undefined">Ainda não</option></select></label><label><span>O que já está definido na decoração? <small>opcional</small></span><textarea name="decoration_notes" defaultValue={initial?.visual_direction?.decoration_notes||""}/></label><div><span className="intake-label">Escolha até 3 estilos</span><div className="intake-tags">{styles.map(v=><button key={v} type="button" className={styleTags.includes(v)?"is-selected":""} onClick={()=>toggleStyle(v)}>{v}</button>)}</div></div><div><span className="intake-label">Cores que combinam com o evento <small>até 5</small></span><div className="intake-colors">{colors.map(([n,c])=><button key={n} type="button" className={selectedColors.includes(n)?"is-selected":""} onClick={()=>toggleColor(n)}><i style={{background:c}}/><span>{n}</span></button>)}</div></div><label><span>Outra cor ou observação <small>opcional</small></span><input name="color_notes" defaultValue={initial?.visual_direction?.color_notes||""}/></label>
+   <div className="intake-photo-block"><div className="intake-choice"><span>Você quer usar fotos próprias no convite?</span>{[["yes","Sim"],["no","Não"],["later","Ainda não decidi"]].map(([v,l])=><button key={v} type="button" className={invitePhotoChoice===v?"is-selected":""} onClick={()=>setInvitePhotoChoice(v as any)}>{l}</button>)}</div>{invitePhotoChoice!=="no"&&<div className="intake-photo-options"><p>{invitePhotoChoice==="yes"?"Envie as fotos que gostaria que fossem consideradas no convite.":"Sem problema. Envie as fotos que você considera usar e decidimos depois."}</p><label className="intake-media-placeholder"><strong>Enviar fotos próprias</strong><span>Você pode selecionar mais de uma.</span><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e=>setInvitePhotoFiles(Array.from(e.target.files||[]).slice(0,8))}/><small>{invitePhotoFiles.length?`${invitePhotoFiles.length} foto(s) selecionada(s)`:"Nenhuma foto selecionada"}</small></label><div className="intake-or"><span>ou</span></div><label><span>Link compartilhável do Drive</span><input name="invite_photo_drive_url" type="url" defaultValue={initial?.answers?.invite_photo_drive_url||""} placeholder="Cole o link da pasta ou das fotos"/></label></div>}</div>
+   <label className="intake-media-placeholder"><strong>Referências de estilo</strong><p>Decoração, papelaria, paleta ou convites que servem de inspiração.</p><input type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={e=>setReferenceFiles(Array.from(e.target.files||[]).slice(0,8))}/><small>{referenceFiles.length?`${referenceFiles.length} referência(s) selecionada(s)`:"Nenhuma referência selecionada"}</small></label><label><span>Mais alguma direção visual? <small>opcional</small></span><textarea name="style_notes" defaultValue={initial?.visual_direction?.style_notes||""}/></label>
+  </section>
+  <section className={"intake-section "+(step===7?"is-active":"is-hidden")}><span className="intake-step">07</span><h2>Pronto. Como falamos com você?</h2><p className="intake-help">Usaremos estes dados apenas para conversar sobre esta solicitação.</p><label><span>Seu nome <b>Obrigatório</b></span><input name="contact_name" required defaultValue={initial?.contact_name||""}/></label><label><span>WhatsApp <b>Obrigatório</b></span><input name="whatsapp" type="tel" required defaultValue={initial?.whatsapp||""} placeholder="(42) 99999-9999"/></label><label><span>E-mail <small>opcional</small></span><input name="email" type="email" defaultValue={initial?.email||""}/></label><div className="intake-review"><strong>Seu briefing</strong><span>{definition.label}</span><span>O que ainda não estiver definido poderá ser alinhado depois.</span></div><p className="intake-consent">Ao enviar, você autoriza nosso contato pelo WhatsApp informado sobre esta solicitação.</p></section>
+  <input type="hidden" name="style_notes_guard" value=""/>
+  </>}
+  {message&&<p className="form-error intake-global-error">{message}</p>}
+  {!locked&&<div className="intake-nav">{step>1&&<button type="button" className="button button--ghost" onClick={()=>setStep(s=>Math.max(1,s-1))}>Voltar</button>}<button type="submit" className="button button--primary" disabled={busy}>{busy?"Salvando...":step===7?(resume?"Salvar alterações":"Enviar minha ficha"):"Continuar"}</button></div>}
+ </form></main>
 }
