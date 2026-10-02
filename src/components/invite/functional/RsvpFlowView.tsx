@@ -16,6 +16,7 @@ export type RsvpPreviewState =
 export type CurrentRsvpSubmission = {
   id: string;
   submitted_name: string;
+  adults_count: number;
   has_children: boolean;
   children_count: number;
 };
@@ -25,6 +26,7 @@ type Props = {
   scenarioParts?: Record<string, Record<string, InvitePartStyle>>;
   initialSubmission?: CurrentRsvpSubmission | null;
   identityName?: string;
+  maxAdults?: number;
   allowChildren?: boolean;
   maxChildren?: number;
   preview?: boolean;
@@ -40,6 +42,7 @@ export function RsvpFlowView({
   scenarioParts = {},
   initialSubmission = null,
   identityName = "",
+  maxAdults = 1,
   allowChildren = true,
   maxChildren = 20,
   preview = false,
@@ -57,14 +60,19 @@ export function RsvpFlowView({
         : allowChildren ? "children-question" : "form-no-children"
   );
   const [name, setName] = useState(initialSubmission?.submitted_name || identityName || "");
+  const [adultsCount, setAdultsCount] = useState(
+    Math.max(1, Math.min(Math.max(1, maxAdults), initialSubmission?.adults_count || 1))
+  );
   const [hasChildren, setHasChildren] = useState(initialSubmission?.has_children || false);
   const [childrenCount, setChildrenCount] = useState(
-    Math.max(1, initialSubmission?.children_count || 1)
+    Math.max(1, Math.min(Math.max(1, maxChildren), initialSubmission?.children_count || 1))
   );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   const activeStep = preview ? previewState : (controlledState ?? step);
+  const previewAdults = Math.min(2, Math.max(1, maxAdults));
+  const previewChildren = Math.min(2, Math.max(1, maxChildren));
 
   function go(next: RsvpPreviewState) {
     setStep(next);
@@ -97,6 +105,11 @@ export function RsvpFlowView({
     go(value ? "form-children" : "form-no-children");
   }
 
+  function changeAdults(delta: number) {
+    if (preview) return;
+    setAdultsCount(current => Math.max(1, Math.min(Math.max(1, maxAdults), current + delta)));
+  }
+
   function changeChildren(delta: number) {
     if (preview) return;
     setChildrenCount(current => Math.max(1, Math.min(Math.max(1, maxChildren), current + delta)));
@@ -119,6 +132,7 @@ export function RsvpFlowView({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           submitted_name: name.trim(),
+          adults_count: adultsCount,
           has_children: allowChildren ? hasChildren : false,
           children_count: allowChildren && hasChildren ? childrenCount : 0,
         }),
@@ -128,13 +142,11 @@ export function RsvpFlowView({
       if (!response.ok) {
         const message = data.message || "Não foi possível salvar sua confirmação agora.";
 
-        // Validation belongs to the form, not to the technical-error screen.
         if (response.status === 400) {
           setError(message);
           return;
         }
 
-        // An expired invitation session is recoverable by returning to access.
         if (response.status === 401) {
           window.location.assign("/acesso");
           return;
@@ -154,6 +166,19 @@ export function RsvpFlowView({
       setBusy(false);
     }
   }
+
+  const summaryAdults = preview ? previewAdults : adultsCount;
+  const summaryChildren =
+    allowChildren && (hasChildren || (preview && previewState === "confirmed"))
+      ? (preview ? previewChildren : childrenCount)
+      : 0;
+  const hasGroupSummary = summaryAdults > 1 || summaryChildren > 0;
+  const groupSummary = [
+    `${summaryAdults} ${summaryAdults === 1 ? "adulto" : "adultos"}`,
+    summaryChildren > 0
+      ? `${summaryChildren} ${summaryChildren === 1 ? "criança" : "crianças"}`
+      : "",
+  ].filter(Boolean).join(" + ");
 
   return (
     <section className={styles.flow} data-rsvp-scenario={activeStep} {...bind("flow")}>
@@ -191,7 +216,7 @@ export function RsvpFlowView({
             <span {...bind("name-label")}>{t("name-label", "Nome e sobrenome")}</span>
             <input
               {...bind("name-input")}
-              value={preview ? "Marcela Queji" : name}
+              value={preview ? "Convidado" : name}
               onChange={event => !preview && !identityName && setName(event.target.value)}
               placeholder={t("name-input", "Seu nome")}
               autoComplete="name"
@@ -199,9 +224,36 @@ export function RsvpFlowView({
             />
           </label>
 
-          {activeStep === "form-children" && (
+          {maxAdults > 1 && (
             <div className={styles.childrenBlock}>
-              <span {...bind("children-label")}>{t("children-label", "Quantidade de filhos")}</span>
+              <span {...bind("adults-label")}>{t("adults-label", "Quantidade de adultos")}</span>
+              <div {...bind("adults-stepper")} className={styles.stepper}>
+                <button
+                  type="button"
+                  {...bind("adults-stepper-button")}
+                  onClick={preview ? bind("adults-stepper-button").onClick : () => changeAdults(-1)}
+                >
+                  <Minus size={17} />
+                </button>
+
+                <strong {...bind("adults-stepper-value")}>
+                  {preview ? previewAdults : adultsCount}
+                </strong>
+
+                <button
+                  type="button"
+                  {...bind("adults-stepper-button")}
+                  onClick={preview ? bind("adults-stepper-button").onClick : () => changeAdults(1)}
+                >
+                  <Plus size={17} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeStep === "form-children" && allowChildren && (
+            <div className={styles.childrenBlock}>
+              <span {...bind("children-label")}>{t("children-label", "Quantidade de crianças")}</span>
               <div {...bind("stepper")} className={styles.stepper}>
                 <button
                   type="button"
@@ -212,7 +264,7 @@ export function RsvpFlowView({
                 </button>
 
                 <strong {...bind("stepper-value")}>
-                  {preview ? 2 : childrenCount}
+                  {preview ? previewChildren : childrenCount}
                 </strong>
 
                 <button
@@ -247,9 +299,9 @@ export function RsvpFlowView({
             <Check size={26} />
           </div>
           <h2 {...bind("success-title")}>{t("success-title", "Presença confirmada")}</h2>
-          {allowChildren && (hasChildren || (preview && previewState === "confirmed")) ? (
-            <p {...bind("success-copy-children")}>
-              {t("success-copy-children", `Você + ${preview ? 2 : childrenCount} filho(s).`)}
+          {hasGroupSummary ? (
+            <p {...bind("success-copy-group")}>
+              {t("success-copy-group", `Confirmação registrada para ${groupSummary}.`)}
             </p>
           ) : (
             <p {...bind("success-copy")}>
