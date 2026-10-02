@@ -52,3 +52,95 @@ export function displayDate(date: string) {
     timeZone: "UTC"
   }).format(new Date(Date.UTC(year, month - 1, day)));
 }
+
+
+export function eventDateParts(date: string) {
+  const [year, month, day] = date.split("-").map(Number);
+  const value = new Date(Date.UTC(year, Math.max(0, (month || 1) - 1), day || 1));
+  const monthLong = new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    timeZone: "UTC",
+  }).format(value);
+  const monthShort = new Intl.DateTimeFormat("pt-BR", {
+    month: "short",
+    timeZone: "UTC",
+  }).format(value).replace(/\.$/, "");
+  const weekdayLong = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "long",
+    timeZone: "UTC",
+  }).format(value);
+  const weekdayShort = new Intl.DateTimeFormat("pt-BR", {
+    weekday: "short",
+    timeZone: "UTC",
+  }).format(value).replace(/\.$/, "");
+
+  return {
+    day: String(day || "").padStart(2, "0"),
+    day_number: String(day || ""),
+    month: monthLong,
+    month_short: monthShort,
+    weekday: weekdayLong,
+    weekday_short: weekdayShort,
+    year: year ? String(year) : "",
+  };
+}
+
+export function compactEventTime(time: string) {
+  return String(time || "").replace(/:00$/, "");
+}
+
+function eventInitials(coupleNames: string, title: string) {
+  const source = String(coupleNames || title || "").trim();
+  if (!source) return "";
+
+  const parties = source
+    .split(/\s*(?:&|\+|\/|\be\b)\s*/i)
+    .map(value => value.trim())
+    .filter(Boolean);
+
+  if (parties.length >= 2) {
+    return parties.slice(0, 2).map(value => value[0]?.toUpperCase() || "").join("");
+  }
+
+  return source
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(value => value[0]?.toUpperCase() || "")
+    .join("");
+}
+
+export function buildEventTemplateVars(
+  event: Pick<
+    EventRecord,
+    "title" | "couple_names" | "public_intro" | "event_date" | "event_time" | "venue" | "city" | "maps_url"
+  >,
+  extras: Record<string, string | undefined> = {}
+) {
+  const parts = eventDateParts(event.event_date);
+  const fallbackMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+    [event.venue, event.city].filter(Boolean).join(", ")
+  )}`;
+
+  return {
+    couple_names: String(event.couple_names || ""),
+    title: String(event.title || ""),
+    intro: String(event.public_intro || ""),
+    date: displayDate(event.event_date),
+    time: compactEventTime(event.event_time),
+    venue: String(event.venue || ""),
+    city: String(event.city || ""),
+    city_suffix: event.city ? `, ${String(event.city)}` : "",
+    maps_url: String(event.maps_url || fallbackMapsUrl),
+    weekday: parts.weekday,
+    weekday_short: parts.weekday_short,
+    day: parts.day,
+    day_number: parts.day_number,
+    month: parts.month,
+    month_short: parts.month_short,
+    year: parts.year,
+    initials: eventInitials(event.couple_names, event.title),
+    event_datetime: `${event.event_date}T${event.event_time}:00-03:00`,
+    ...extras,
+  };
+}
