@@ -14,6 +14,7 @@ const schema = z.object({
   event_time: z.string().regex(/^\d{2}:\d{2}$/),
   venue: z.string().trim().min(2).max(180),
   city: z.string().trim().min(2).max(180),
+  maps_url: z.union([z.string().trim().url().max(1200), z.literal("")]).optional().default(""),
   owner_name: z.string().trim().min(2).max(120),
   owner_email: z.string().trim().email().max(200),
   owner_password: z.string().min(12).max(200),
@@ -77,12 +78,12 @@ export async function POST(request: Request) {
     WITH new_event AS (
       INSERT INTO events (
         id, slug, title, couple_names, public_intro, message,
-        event_date, event_time, venue, city, status
+        event_date, event_time, venue, city, maps_url, status
       )
       VALUES (
         ${eventId}, ${slug}, ${value.title}, ${value.couple_names}, '',
         NULL, ${value.event_date}::date, ${value.event_time}::time,
-        ${value.venue}, ${value.city}, 'draft'
+        ${value.venue}, ${value.city}, ${value.maps_url || null}, 'draft'
       )
     ),
     new_admin AS (
