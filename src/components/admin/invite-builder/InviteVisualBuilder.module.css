@@ -2904,3 +2904,22 @@
     border-radius:10px;
   }
 }
+
+
+/* Quick actions are positioned by the canvas, never by the selected element. */
+@media(max-width:640px){
+  .canvasQuickActionsOverlay{
+    position:absolute!important;
+    top:auto;
+    z-index:1500;
+    margin:0;
+    pointer-events:auto;
+  }
+
+  .canvasQuickActionsOverlay .canvasQuickMenu{
+    left:50%;
+    right:auto;
+    transform:translateX(-50%);
+    max-width:min(196px,calc(100vw - 28px));
+  }
+}
