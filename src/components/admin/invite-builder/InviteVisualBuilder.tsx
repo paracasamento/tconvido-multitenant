@@ -40,6 +40,7 @@ import type { ThemeLibraryAsset, ThemeLibraryItem } from "@/lib/theme-library";
 import {
   INVITE_COMPONENT_PRESETS,
   INVITE_COMPONENT_PRESET_CATEGORIES,
+  presetsForEvent,
   type InviteComponentPreset,
   type InviteComponentPresetCategory,
   type InviteComponentPresetElement,
@@ -159,6 +160,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
   // button in the editor while the public page receives the default visual style.
   const normalizedInitial=useMemo(()=>normalizeInviteVisualConfig(deep(initial)),[initial]);
   const availableEditorPages=useMemo(()=>EDITOR_PAGES.filter(page=>page.id!=="rsvp"||eventContext?.capabilities.includes("rsvp")!==false),[eventContext]);
+  const availableComponentPresets=useMemo(()=>eventContext?presetsForEvent(eventContext.type,eventContext.capabilities):INVITE_COMPONENT_PRESETS,[eventContext]);
 
   const [config,setConfig]=useState(()=>deep(normalizedInitial));
   const [screenId,setScreenId]=useState<InviteScreenId>("cover");
@@ -2449,7 +2451,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
               ))}
             </div>
             <div className={styles.componentPresetGrid}>
-              {INVITE_COMPONENT_PRESETS.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
+              {availableComponentPresets.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
                 <button key={preset.id} type="button" onClick={()=>addComponentPreset(preset)}>
                   <span className={styles.componentPresetPreview}>{preset.previewLabel}</span>
                   <strong>{preset.name}</strong>
@@ -3715,7 +3717,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
         </div>
 
         <div className={styles.mobileComponentGrid}>
-          {INVITE_COMPONENT_PRESETS.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
+          {availableComponentPresets.filter(preset=>preset.category===componentPresetCategory).map(preset=>(
             <button key={preset.id} type="button" onClick={()=>addComponentPreset(preset)}>
               <span className={styles.mobileComponentPreview}>{preset.previewLabel}</span>
               <div>
