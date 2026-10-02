@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ClipboardList, ImagePlus, LayoutDashboard, LogOut, Palette, Plus } from "lucide-react";
+import { CalendarDays, ClipboardList, ImagePlus, LayoutDashboard, LogOut, LayoutTemplate } from "lucide-react";
 
 const navItems = [
-  { href: "/gestao/fichas", label: "Fichas", icon: ClipboardList, match: (path: string) => path.startsWith("/gestao/fichas"), primary: false },
-  { href: "/gestao", label: "Eventos", icon: CalendarDays, match: (path: string) => path === "/gestao", primary: false },
-  { href: "/gestao/biblioteca", label: "Biblioteca", icon: ImagePlus, match: (path: string) => path.startsWith("/gestao/biblioteca"), primary: false },
-  { href: "/gestao/eventos/novo", label: "Novo", icon: Plus, match: (path: string) => path.startsWith("/gestao/eventos/novo"), primary: true },
-  { href: "/gestao/editor", label: "Editor", icon: Palette, match: (path: string) => path.startsWith("/gestao/editor"), primary: false },
+  { href: "/gestao", label: "Início", icon: LayoutDashboard, match: (path: string) => path === "/gestao" },
+  { href: "/gestao/fichas", label: "Fichas", icon: ClipboardList, match: (path: string) => path.startsWith("/gestao/fichas") },
+  { href: "/gestao/eventos", label: "Eventos", icon: CalendarDays, match: (path: string) => path.startsWith("/gestao/eventos") },
+  { href: "/gestao/modelos", label: "Modelos", icon: LayoutTemplate, match: (path: string) => path.startsWith("/gestao/modelos") },
+  { href: "/gestao/biblioteca", label: "Biblioteca", icon: ImagePlus, match: (path: string) => path.startsWith("/gestao/biblioteca") },
 ] as const;
 
 export function GestaoChrome({ children }: { children: React.ReactNode }) {
@@ -27,15 +27,12 @@ export function GestaoChrome({ children }: { children: React.ReactNode }) {
         </Link>
 
         <div className="gestao-topbar-actions">
+          <Link href="/gestao" className="gestao-topbar-link"><LayoutDashboard size={15} /> Início</Link>
           <Link href="/gestao/fichas" className="gestao-topbar-link"><ClipboardList size={15} /> Fichas</Link>
-          <Link href="/gestao" className="gestao-topbar-link"><CalendarDays size={15} /> Eventos</Link>
-          <Link href="/gestao/painel" className="gestao-topbar-link"><LayoutDashboard size={15} /> Painel</Link>
+          <Link href="/gestao/eventos" className="gestao-topbar-link"><CalendarDays size={15} /> Eventos</Link>
+          <Link href="/gestao/modelos" className="gestao-topbar-link"><LayoutTemplate size={15} /> Modelos</Link>
           <Link href="/gestao/biblioteca" className="gestao-topbar-link"><ImagePlus size={15} /> Biblioteca</Link>
-          <Link href="/gestao/editor" className="gestao-topbar-link"><Palette size={15} /> Editor</Link>
-          <Link href="/gestao/eventos/novo" className="gestao-topbar-link is-primary"><Plus size={15} /> Novo evento</Link>
-          <form action="/api/owner/logout" method="post">
-            <button type="submit" className="gestao-logout"><LogOut size={15} /> Sair</button>
-          </form>
+          <form action="/api/owner/logout" method="post"><button type="submit" className="gestao-logout"><LogOut size={15} /> Sair</button></form>
         </div>
       </header>
 
@@ -49,7 +46,7 @@ export function GestaoChrome({ children }: { children: React.ReactNode }) {
             <Link
               key={item.href}
               href={item.href}
-              className={"gestao-bottom-nav__item" + (active ? " is-active" : "") + (item.primary ? " is-primary" : "")}
+              className={"gestao-bottom-nav__item" + (active ? " is-active" : "")}
               aria-current={active ? "page" : undefined}
             >
               <span className="gestao-bottom-nav__icon"><Icon size={22} strokeWidth={active ? 2.4 : 1.9} /></span>
