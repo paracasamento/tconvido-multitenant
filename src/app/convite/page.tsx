@@ -7,7 +7,7 @@ import { CountdownView } from "@/components/invite/functional/CountdownView";
 import { GiftGridView } from "@/components/invite/functional/GiftGridView";
 import { GiftNoteView } from "@/components/invite/functional/GiftNoteView";
 import { db } from "@/lib/db";
-import { displayDate } from "@/lib/event";
+import { buildEventTemplateVars } from "@/lib/event";
 import { requireInvite } from "@/lib/invite-session";
 import { getPublicInvitePageData } from "@/lib/public-invite-data";
 import {
@@ -16,28 +16,6 @@ import {
 import { giftImageUrl } from "@/lib/storage";
 
 export const dynamic = "force-dynamic";
-
-function compactTime(time: string) {
-  return time.replace(/:00$/, "");
-}
-
-function dateParts(date: string) {
-  const [year, month, day] = date.split("-").map(Number);
-  const value = new Date(Date.UTC(year, month - 1, day));
-
-  return {
-    day: String(day).padStart(2, "0"),
-    month: new Intl.DateTimeFormat("pt-BR", {
-      month: "long",
-      timeZone: "UTC",
-    }).format(value),
-    weekday: new Intl.DateTimeFormat("pt-BR", {
-      weekday: "long",
-      timeZone: "UTC",
-    }).format(value),
-    year: String(year),
-  };
-}
 
 export default async function InvitationPage() {
   const invite = await requireInvite("/convite");
@@ -82,10 +60,6 @@ export default async function InvitationPage() {
     element => element.slot === "countdown"
   );
 
-  const parts = dateParts(event.event_date);
-  const fallbackMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    [event.venue, event.city].filter(Boolean).join(", ")
-  )}`;
   const target = `${event.event_date}T${event.event_time}:00-03:00`;
   const countdownInitialNow = Date.now();
 
@@ -189,21 +163,7 @@ export default async function InvitationPage() {
     }
   }
 
-  const inviteVars = {
-    couple_names: event.couple_names,
-    title: event.title,
-    intro: event.public_intro,
-    date: displayDate(event.event_date),
-    time: compactTime(event.event_time),
-    venue: event.venue,
-    city: event.city,
-    city_suffix: event.city ? `, ${event.city}` : "",
-    maps_url: event.maps_url || fallbackMapsUrl,
-    weekday: parts.weekday,
-    day: parts.day,
-    month: parts.month,
-    year: parts.year,
-  };
+  const inviteVars = buildEventTemplateVars(event);
 
   const inviteSlots = {
     countdown: (
