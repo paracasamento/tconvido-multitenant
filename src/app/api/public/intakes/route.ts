@@ -28,6 +28,15 @@ export async function POST(request: Request) {
     schedule_wanted: value.schedule_wanted,
     important_info: value.important_info,
     required_message: value.required_message,
+    wedding_hosting: value.wedding_hosting,
+    bride_parents: value.bride_parents,
+    groom_parents: value.groom_parents,
+    wedding_venues: value.wedding_venues,
+    reception_venue: value.reception_venue,
+    reception_address: value.reception_address,
+    reception_city: value.reception_city,
+    special_text_choice: value.special_text_choice,
+    special_text: value.special_text,
   };
   const visualDirection = {
     decoration_status: value.decoration_status,
@@ -35,10 +44,11 @@ export async function POST(request: Request) {
     style_tags: value.style_tags,
     color_notes: value.color_notes,
     style_notes: value.style_notes,
+    selected_colors: value.selected_colors,
   };
 
   const sql = db();
-  await sql`
+  try { await sql`
     INSERT INTO invitation_intakes (
       id, public_token_hash, source, event_type, status, contact_name, whatsapp, email,
       event_date, event_date_defined, event_time, answers, visual_direction, pending_items, submitted_at
@@ -49,7 +59,10 @@ export async function POST(request: Request) {
       ${JSON.stringify(answers)}::jsonb, ${JSON.stringify(visualDirection)}::jsonb,
       ${JSON.stringify(pending)}::jsonb, now()
     )
-  `;
+  `; } catch (error) {
+    console.error("public intake insert failed", error);
+    return NextResponse.json({ message: "Não conseguimos salvar sua ficha agora. Tente novamente em instantes." }, { status: 500 });
+  }
 
   return NextResponse.json({ ok: true, intake_id: id, access_token: publicToken });
 }
