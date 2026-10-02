@@ -9,7 +9,8 @@ export default async function SetupPartyPage() {
   const sql = db();
   const [rowsResult, setup] = await Promise.all([
     sql`
-      SELECT couple_names, title, message, to_char(event_date, 'YYYY-MM-DD') AS event_date,
+      SELECT event_type, couple_names, event_name, celebrant_name, baby_name, hosts_names,
+        title, message, to_char(event_date, 'YYYY-MM-DD') AS event_date,
         to_char(event_time, 'HH24:MI') AS event_time, venue, city, maps_url
       FROM events WHERE id = ${session.event_id} LIMIT 1
     `,
