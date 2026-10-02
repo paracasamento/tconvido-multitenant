@@ -17,6 +17,7 @@ export function RsvpScenarioCanvas({
   config,
   initialSubmission,
   identityName,
+  maxAdults = 1,
   allowChildren = false,
   maxChildren = 0,
   vars = {},
@@ -24,6 +25,7 @@ export function RsvpScenarioCanvas({
   config: InviteVisualConfig;
   initialSubmission: CurrentRsvpSubmission | null;
   identityName: string;
+  maxAdults?: number;
   allowChildren?: boolean;
   maxChildren?: number;
   vars?: Record<string, string | undefined>;
@@ -60,6 +62,7 @@ export function RsvpScenarioCanvas({
             parts={flowSlot?.partStyles}
             initialSubmission={initialSubmission}
             identityName={identityName}
+            maxAdults={maxAdults}
             allowChildren={allowChildren}
             maxChildren={maxChildren}
             controlledState={state}
