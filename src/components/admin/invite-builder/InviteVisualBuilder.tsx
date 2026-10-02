@@ -10,7 +10,7 @@ import {
 
   ExternalLink, Grid3X3, ImagePlus, Layers3, Link2, Lock, MoveDown, MoveUp, Plus, Redo2, RotateCcw, Save,
 
-  SendToBack, SlidersHorizontal, Trash2, Type, Undo2, Unlock, ZoomIn, ZoomOut
+  Palette, SendToBack, SlidersHorizontal, Trash2, Type, Undo2, Unlock, ZoomIn, ZoomOut
 
 } from "lucide-react";
 
@@ -36,6 +36,7 @@ import { GiftNoteView } from "@/components/invite/functional/GiftNoteView";
 import { CountdownView } from "@/components/invite/functional/CountdownView";
 import { INVITE_ICON_OPTIONS } from "@/components/invite/InvitePartIcon";
 import type { InviteEditorPreviewData } from "@/lib/invite-editor-preview";
+import { getThemeLibraryItem, THEME_LIBRARY, type ThemeLibraryAsset } from "@/lib/theme-library";
 import styles from "./InviteVisualBuilder.module.css";
 
 
@@ -109,16 +110,6 @@ const RSVP_SCENARIO_DEFAULT_PART: Record<RsvpPreviewState, string> = {
   error: "error-title",
 };
 
-const ASSETS = [
-
-  ["Floral esquerdo", "/florals/floral-top-left.webp"],
-
-  ["Floral direito", "/florals/floral-top-right.webp"], ["Divisor floral", "/florals/floral-divider.webp"],
-
-  ["Arranjo cozinha", "/florals/kitchen-arrangement.webp"]
-
-] as const;
-
 const FONTS = ["Cormorant Garamond","Inter","Georgia","Garamond","Baskerville","Palatino Linotype","Times New Roman","Arial","Verdana","Trebuchet MS","Courier New","Didot","Helvetica","Tahoma"];
 
 const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
@@ -178,7 +169,8 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   const [saving,setSaving]=useState(false);
   const [inspectorMode,setInspectorMode]=useState<"essential"|"pro"|"screen">("essential");
   const [status,setStatus]=useState("");
-  const [mobilePanel,setMobilePanel]=useState<null|"pages"|"add"|"layers"|"edit">(null);
+  const [mobilePanel,setMobilePanel]=useState<null|"themes"|"pages"|"add"|"layers"|"edit">(null);
+  const [selectedThemeId,setSelectedThemeId]=useState(THEME_LIBRARY[0].id);
   const [zoom,setZoom]=useState(1);
   const [grid,setGrid]=useState(true);
   const [snap,setSnap]=useState(true);
@@ -208,6 +200,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   const [smartGuideLines,setSmartGuideLines]=useState<{x:number[];y:number[]}>({x:[],y:[]});
 
   const [history,setHistory]=useState<InviteVisualConfig[]>([]); const [future,setFuture]=useState<InviteVisualConfig[]>([]); const [styleClipboard,setStyleClipboard]=useState<any>(null);
+  const activeTheme=getThemeLibraryItem(selectedThemeId);
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<any>(null);
@@ -954,7 +947,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
     return all.filter(part=>allowed.has(part.id));
   }
 
-  function addElement(type:InviteElement["type"],src?:string,name?:string){
+  function addElement(type:InviteElement["type"],src?:string,name?:string,preset?:Partial<InviteElement>){
     const id=`${type}-${uid()}`;
     const base:any={
       id,
@@ -1028,9 +1021,27 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
       });
     }
 
+    if(preset) Object.assign(base,preset);
+
     updateScreen({elements:[...screen.elements,base]},true);
     setSelectedId(id);
     setSelectedPart(null);
+  }
+
+  function addThemeAsset(asset:ThemeLibraryAsset){
+    addElement("image",asset.src,`${activeTheme.name} · ${asset.name}`,asset.placement);
+  }
+
+  function applyThemeBackground(src:string){
+    updateBackgroundStyle({
+      backgroundImage:src,
+      backgroundSize:"cover",
+      backgroundRepeat:"no-repeat",
+      backgroundPositionX:50,
+      backgroundPositionY:50,
+      backgroundOpacity:1,
+    });
+    setStatus(`Fundo “${activeTheme.name}” aplicado nesta seção.`);
   }
 
   function extractScreenStyle(source: InviteScreen): InviteSavedLayout["screenStyle"] {
@@ -2133,8 +2144,38 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
                 </article>)}
               </div>}
           </section>
-          <div className={styles.assetTitle}>Identidade visual</div>
-          <div className={styles.assets}>{ASSETS.map(([name,src])=><button key={src} onClick={()=>addElement("image",src,name)}><img src={src} alt=""/><span>{name}</span></button>)}</div>
+          <div className={styles.assetTitle}>Temas</div>
+          <div className={styles.themeMiniPicker}>
+            {THEME_LIBRARY.map(theme=>(
+              <button
+                key={theme.id}
+                type="button"
+                className={selectedThemeId===theme.id?styles.themeMiniActive:""}
+                onClick={()=>setSelectedThemeId(theme.id)}
+              >
+                <img src={theme.preview} alt=""/>
+                <span>{theme.name}</span>
+              </button>
+            ))}
+          </div>
+          <div className={styles.assetTitle}>Fundos · {activeTheme.name}</div>
+          <div className={styles.themeBackgrounds}>
+            {activeTheme.backgrounds.map(bg=>(
+              <button key={bg.id} type="button" onClick={()=>applyThemeBackground(bg.src)}>
+                <img src={bg.src} alt=""/>
+                <span>{bg.name}</span>
+              </button>
+            ))}
+          </div>
+          <div className={styles.assetTitle}>Decorações padronizadas</div>
+          <div className={styles.assets}>
+            {activeTheme.assets.map(asset=>(
+              <button key={asset.id} type="button" onClick={()=>addThemeAsset(asset)}>
+                <img src={asset.src} alt=""/>
+                <span>{asset.name}</span>
+              </button>
+            ))}
+          </div>
         </details>
 
         <div className={styles.layersHeader}>
@@ -3247,6 +3288,60 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
       />
     ) : null}
 
+    {mobilePanel==="themes" ? (
+      <section className={styles.mobileThemeSheet} aria-label="Biblioteca de temas">
+        <div className={styles.mobileSheetHeader}>
+          <span className={styles.mobileSheetHandle}/>
+          <strong>Temas</strong>
+          <button type="button" onClick={()=>setMobilePanel(null)}>Fechar</button>
+        </div>
+
+        <div className={styles.mobileThemeGrid}>
+          {THEME_LIBRARY.map(theme=>(
+            <button
+              key={theme.id}
+              type="button"
+              className={selectedThemeId===theme.id?styles.mobileThemeCardActive:""}
+              onClick={()=>setSelectedThemeId(theme.id)}
+            >
+              <img src={theme.preview} alt=""/>
+              <div>
+                <strong>{theme.name}</strong>
+                <small>{theme.category}</small>
+              </div>
+              <span className={styles.mobileThemePalette}>
+                {theme.palette.map(color=><i key={color} style={{backgroundColor:color}}/> )}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        <div className={styles.mobileThemeSection}>
+          <div><strong>Fundos</strong><small>Aplicados somente à seção que você está editando.</small></div>
+          <div className={styles.mobileThemeBackgrounds}>
+            {activeTheme.backgrounds.map(bg=>(
+              <button key={bg.id} type="button" onClick={()=>{applyThemeBackground(bg.src);setMobilePanel(null)}}>
+                <img src={bg.src} alt=""/>
+                <span>{bg.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className={styles.mobileThemeSection}>
+          <div><strong>Decorações</strong><small>Já entram com tamanho e posição sugeridos.</small></div>
+          <div className={styles.mobileThemeAssets}>
+            {activeTheme.assets.map(asset=>(
+              <button key={asset.id} type="button" onClick={()=>{addThemeAsset(asset);setMobilePanel("edit")}}>
+                <img src={asset.src} alt=""/>
+                <span>{asset.name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    ) : null}
+
     {mobilePanel==="add" ? (
       <section className={styles.mobileAddSheet} aria-label="Adicionar ao convite">
         <div className={styles.mobileSheetHeader}>
@@ -3261,12 +3356,12 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
           <button type="button" onClick={()=>{addElement("box");setMobilePanel("edit")}}><Box size={23}/><strong>Container</strong><small>Área visual</small></button>
         </div>
         <div className={styles.mobileAddDecorations}>
-          <div><strong>Decorações rápidas</strong><small>Toque para inserir na seção atual.</small></div>
+          <div><strong>{activeTheme.name}</strong><small>Decorações do tema selecionado.</small></div>
           <div>
-            {ASSETS.map(([name,src])=>(
-              <button key={src} type="button" onClick={()=>{addElement("image",src,name);setMobilePanel("edit")}}>
-                <img src={src} alt=""/>
-                <span>{name}</span>
+            {activeTheme.assets.map(asset=>(
+              <button key={asset.id} type="button" onClick={()=>{addThemeAsset(asset);setMobilePanel("edit")}}>
+                <img src={asset.src} alt=""/>
+                <span>{asset.name}</span>
               </button>
             ))}
           </div>
@@ -3275,6 +3370,9 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
     ) : null}
 
     <nav className={styles.mobileDock} aria-label="Ferramentas do editor">
+      <button type="button" className={mobilePanel==="themes"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="themes"?null:"themes")}>
+        <Palette size={22}/><span>Temas</span>
+      </button>
       <button type="button" className={mobilePanel==="pages"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="pages"?null:"pages")}>
         <Grid3X3 size={22}/><span>Páginas</span>
       </button>
