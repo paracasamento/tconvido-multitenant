@@ -178,6 +178,7 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
   const [saving,setSaving]=useState(false);
   const [inspectorMode,setInspectorMode]=useState<"essential"|"pro"|"screen">("essential");
   const [status,setStatus]=useState("");
+  const [mobilePanel,setMobilePanel]=useState<null|"pages"|"add"|"layers"|"edit">(null);
   const [zoom,setZoom]=useState(1);
   const [grid,setGrid]=useState(true);
   const [snap,setSnap]=useState(true);
@@ -233,7 +234,18 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
     setPreviewWidth(360);
     setZoom(window.innerWidth <= 380 ? 0.86 : 0.92);
     setShowRulers(false);
+    setGrid(false);
+    setSelectedId(null);
+    setSelectedPart(null);
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || window.innerWidth > 640) return;
+    if (selectedId) {
+      setInspectorMode("essential");
+      setMobilePanel("edit");
+    }
+  }, [selectedId, selectedPart]);
 
   useEffect(() => {
     // Keep editor/public parity when the server sends a fresher saved design.
@@ -1978,13 +1990,13 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
     );
   }
 
-  return <div className={styles.builder}>
+  return <div className={styles.builder} data-mobile-panel={mobilePanel || ""}>
 
     <header className={styles.topbar}><div className={styles.brand}><strong>Editor do convite</strong><span>Mobile-first · preview real do convidado</span></div><div className={styles.toolbar}>
-      <a href="/gestao" className={styles.backLink}><ArrowLeft size={16}/> Gestão</a>
+      <a href="/gestao" className={`${styles.backLink} ${styles.mobileKeep}`}><ArrowLeft size={16}/> Gestão</a>
 
-      <button onClick={undo} disabled={!history.length} title="Desfazer"><Undo2 size={16}/></button>
-      <button onClick={redo} disabled={!future.length} title="Refazer"><Redo2 size={16}/></button>
+      <button className={styles.mobileKeep} onClick={undo} disabled={!history.length} title="Desfazer"><Undo2 size={16}/></button>
+      <button className={styles.mobileKeep} onClick={redo} disabled={!future.length} title="Refazer"><Redo2 size={16}/></button>
       <span className={styles.sep}/>
       <label className={styles.viewportSelect}>Mobile <select value={previewWidth} onChange={e=>setPreviewWidth(Number(e.target.value))}><option value={360}>360</option><option value={390}>390</option><option value={393}>393</option><option value={414}>414</option><option value={430}>430</option></select></label>
       <span className={styles.sep}/>
@@ -1995,15 +2007,20 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
       <span className={styles.zoom}>{Math.round(zoom*100)}%</span>
       <button onClick={()=>setZoom(z=>clamp(z+.1,.45,1.6))}><ZoomIn size={16}/></button>
       <span className={styles.sep}/>
-      <button type="button" className={styles.previewLink} onClick={openPreview} disabled={saving}><ExternalLink size={15}/> Preview</button>
+      <button type="button" className={`${styles.previewLink} ${styles.mobileKeep}`} onClick={openPreview} disabled={saving}><ExternalLink size={15}/> Preview</button>
       <button onClick={resetScreen}><RotateCcw size={16}/> Restaurar seção</button>
-      <button className={styles.save} onClick={save} disabled={saving}><Save size={16}/>{saving?"Salvando...":"Salvar"}</button>
+      <button className={`${styles.save} ${styles.mobileKeep}`} onClick={save} disabled={saving}><Save size={16}/>{saving?"Salvando...":"Salvar"}</button>
 
     </div></header>{status&&<div className={styles.status}>{status}</div>}
 
     <div className={styles.workspace}>
 
-      <aside className={styles.leftbar}>
+      <aside className={`${styles.leftbar} ${mobilePanel==="pages"?styles.mobilePagesOpen:""} ${mobilePanel==="layers"?styles.mobileLayersOpen:""}`}>
+        <div className={styles.mobileSheetHeader}>
+          <span className={styles.mobileSheetHandle}/>
+          <strong>{mobilePanel==="layers" ? "Camadas" : "Páginas"}</strong>
+          <button type="button" onClick={()=>setMobilePanel(null)}>Fechar</button>
+        </div>
         <div className={styles.leftHeading}>Páginas</div>
         <div className={styles.screenTabs}>
           {EDITOR_PAGES.map(page=><button key={page.id} className={editorPage===page.id?styles.active:""} onClick={()=>switchEditorPage(page.id)}>{page.label}</button>)}
@@ -2339,7 +2356,12 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
         </div>
       </main>
 
-      <aside className={styles.inspector}>
+      <aside className={`${styles.inspector} ${mobilePanel==="edit"?styles.mobileInspectorOpen:""}`}>
+        <div className={styles.mobileSheetHeader}>
+          <span className={styles.mobileSheetHandle}/>
+          <strong>{inspectorMode==="screen" ? "Fundo da seção" : selected ? "Editar elemento" : "Editar"}</strong>
+          <button type="button" onClick={()=>setMobilePanel(null)}>Fechar</button>
+        </div>
         <div className={styles.inspectorHeader}>
           <div className={styles.sectionTitle}>
             <SlidersHorizontal size={15}/>
@@ -3215,6 +3237,66 @@ export function InviteVisualBuilder({initial,defaults,previewData}:{initial:Invi
       </aside>
 
     </div>
+
+    {mobilePanel ? (
+      <button
+        type="button"
+        className={styles.mobileSheetBackdrop}
+        aria-label="Fechar painel"
+        onClick={()=>setMobilePanel(null)}
+      />
+    ) : null}
+
+    {mobilePanel==="add" ? (
+      <section className={styles.mobileAddSheet} aria-label="Adicionar ao convite">
+        <div className={styles.mobileSheetHeader}>
+          <span className={styles.mobileSheetHandle}/>
+          <strong>Adicionar</strong>
+          <button type="button" onClick={()=>setMobilePanel(null)}>Fechar</button>
+        </div>
+        <div className={styles.mobileAddGrid}>
+          <button type="button" onClick={()=>{addElement("text");setMobilePanel("edit")}}><Type size={23}/><strong>Texto</strong><small>Título ou frase</small></button>
+          <button type="button" onClick={()=>{addElement("image");setMobilePanel("edit")}}><ImagePlus size={23}/><strong>Imagem</strong><small>Foto ou arte</small></button>
+          <button type="button" onClick={()=>{addElement("link");setMobilePanel("edit")}}><Link2 size={23}/><strong>Botão</strong><small>Link ou ação</small></button>
+          <button type="button" onClick={()=>{addElement("box");setMobilePanel("edit")}}><Box size={23}/><strong>Container</strong><small>Área visual</small></button>
+        </div>
+        <div className={styles.mobileAddDecorations}>
+          <div><strong>Decorações rápidas</strong><small>Toque para inserir na seção atual.</small></div>
+          <div>
+            {ASSETS.map(([name,src])=>(
+              <button key={src} type="button" onClick={()=>{addElement("image",src,name);setMobilePanel("edit")}}>
+                <img src={src} alt=""/>
+                <span>{name}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    ) : null}
+
+    <nav className={styles.mobileDock} aria-label="Ferramentas do editor">
+      <button type="button" className={mobilePanel==="pages"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="pages"?null:"pages")}>
+        <Grid3X3 size={22}/><span>Páginas</span>
+      </button>
+      <button type="button" className={mobilePanel==="add"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="add"?null:"add")}>
+        <Plus size={24}/><span>Elementos</span>
+      </button>
+      <button type="button" onClick={()=>{addElement("text");setMobilePanel("edit")}}>
+        <Type size={23}/><span>Texto</span>
+      </button>
+      <button type="button" onClick={()=>{addElement("image");setMobilePanel("edit")}}>
+        <ImagePlus size={23}/><span>Imagem</span>
+      </button>
+      <button type="button" className={mobilePanel==="layers"?styles.mobileDockActive:""} onClick={()=>setMobilePanel(mobilePanel==="layers"?null:"layers")}>
+        <Layers3 size={22}/><span>Camadas</span>
+      </button>
+      <button type="button" disabled={!selected} className={mobilePanel==="edit"&&inspectorMode!=="screen"?styles.mobileDockActive:""} onClick={()=>{setInspectorMode("essential");setMobilePanel("edit")}}>
+        <SlidersHorizontal size={22}/><span>Editar</span>
+      </button>
+      <button type="button" className={mobilePanel==="edit"&&inspectorMode==="screen"?styles.mobileDockActive:""} onClick={()=>{setSelectedId(null);setSelectedPart(null);setInspectorMode("screen");setMobilePanel("edit")}}>
+        <Box size={22}/><span>Fundo</span>
+      </button>
+    </nav>
 
   </div>
 
