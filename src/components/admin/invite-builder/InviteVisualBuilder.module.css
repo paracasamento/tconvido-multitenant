@@ -2438,3 +2438,302 @@
     font-weight:700;
   }
 }
+
+
+/* Contextual mobile toolbar -------------------------------------------- */
+@media(max-width:640px){
+  .mobileQuickTool{
+    position:fixed;
+    left:10px;
+    right:10px;
+    bottom:calc(75px + env(safe-area-inset-bottom));
+    z-index:2250;
+    max-height:38dvh;
+    padding:10px 12px 12px;
+    border:1px solid #e5e7ec;
+    border-radius:18px;
+    background:rgba(255,255,255,.98);
+    box-shadow:0 -10px 32px rgba(18,24,40,.14);
+    overflow:auto;
+    overscroll-behavior:contain;
+    backdrop-filter:blur(16px);
+  }
+
+  .mobileQuickToolHeader{
+    min-height:34px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding-bottom:8px;
+    margin-bottom:8px;
+    border-bottom:1px solid #eef0f4;
+  }
+
+  .mobileQuickToolHeader strong{
+    font-size:12px;
+    color:#262b35;
+  }
+
+  .mobileQuickToolHeader button{
+    border:0;
+    background:transparent;
+    color:#697181;
+    font:700 10px/1 Inter,Arial,sans-serif;
+  }
+
+  .mobileQuickField{
+    display:grid;
+    gap:6px;
+  }
+
+  .mobileQuickField > span,
+  .mobileColorTool label > span,
+  .mobileAdjustGrid label > span,
+  .mobileBorderTool label > span{
+    color:#6f7685;
+    font-size:9px;
+    font-weight:700;
+  }
+
+  .mobileQuickField input,
+  .mobileQuickField textarea,
+  .mobileLinkTool input,
+  .mobileBorderTool input[type=number]{
+    width:100%;
+    min-height:42px;
+    padding:9px 11px;
+    border:1px solid #dfe3ea;
+    border-radius:10px;
+    background:#fff;
+    color:#262b35;
+    font:500 16px/1.3 Inter,Arial,sans-serif;
+    outline:none;
+  }
+
+  .mobileQuickField textarea{
+    resize:vertical;
+    min-height:82px;
+  }
+
+  .mobileFontStrip{
+    display:flex;
+    gap:7px;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:none;
+  }
+
+  .mobileFontStrip::-webkit-scrollbar{display:none}
+
+  .mobileFontStrip button{
+    min-width:max-content;
+    min-height:42px;
+    padding:0 14px;
+    border:1px solid #e2e5eb;
+    border-radius:11px;
+    background:#fff;
+    color:#333946;
+    font-size:14px;
+  }
+
+  .mobileQuickActive{
+    border-color:#7149ef!important;
+    background:#f2edff!important;
+    color:#6238dd!important;
+  }
+
+  .mobileSizeTool{
+    display:grid;
+    grid-template-columns:42px 72px 42px minmax(0,1fr);
+    gap:8px;
+    align-items:center;
+  }
+
+  .mobileSizeTool button,
+  .mobileSizeTool input[type=number]{
+    min-height:42px;
+    border:1px solid #e0e3e9;
+    border-radius:10px;
+    background:#fff;
+    text-align:center;
+    font-size:16px;
+  }
+
+  .mobileQuickRange{
+    width:100%;
+    accent-color:#6f45e8;
+  }
+
+  .mobileColorTool{
+    display:grid;
+    grid-template-columns:auto auto 1fr;
+    gap:10px;
+    align-items:end;
+  }
+
+  .mobileColorTool label{
+    display:grid;
+    gap:5px;
+  }
+
+  .mobileColorTool input[type=color],
+  .mobileBorderTool input[type=color]{
+    width:46px;
+    height:42px;
+    padding:3px;
+    border:1px solid #dfe3ea;
+    border-radius:10px;
+    background:#fff;
+  }
+
+  .mobilePaletteStrip{
+    display:flex;
+    gap:7px;
+    align-items:center;
+    overflow-x:auto;
+  }
+
+  .mobilePaletteStrip button{
+    width:32px;
+    height:32px;
+    flex:0 0 auto;
+    border:2px solid #fff;
+    border-radius:50%;
+    box-shadow:0 0 0 1px rgba(20,24,34,.12);
+  }
+
+  .mobileSliderTool{
+    display:grid;
+    gap:8px;
+  }
+
+  .mobileSliderTool > div{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    font-size:10px;
+    color:#6f7685;
+  }
+
+  .mobileSliderTool strong{
+    color:#303643;
+  }
+
+  .mobileSliderTool input{
+    width:100%;
+    accent-color:#7048eb;
+  }
+
+  .mobileReplaceGrid{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    scrollbar-width:none;
+    padding-bottom:2px;
+  }
+
+  .mobileReplaceGrid::-webkit-scrollbar{display:none}
+
+  .mobileReplaceGrid button{
+    width:94px;
+    min-width:94px;
+    padding:6px;
+    border:1px solid #e4e7ec;
+    border-radius:12px;
+    background:#fff;
+    display:grid;
+    gap:5px;
+  }
+
+  .mobileReplaceGrid img{
+    width:100%;
+    height:62px;
+    object-fit:contain;
+    border-radius:8px;
+    background:
+      linear-gradient(45deg,#f2f3f5 25%,transparent 25%),
+      linear-gradient(-45deg,#f2f3f5 25%,transparent 25%),
+      linear-gradient(45deg,transparent 75%,#f2f3f5 75%),
+      linear-gradient(-45deg,transparent 75%,#f2f3f5 75%);
+    background-size:12px 12px;
+    background-position:0 0,0 6px,6px -6px,-6px 0;
+  }
+
+  .mobileReplaceGrid span{
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    color:#4b5160;
+    font-size:8px;
+    font-weight:700;
+  }
+
+  .mobileAdjustGrid{
+    display:grid;
+    gap:10px;
+  }
+
+  .mobileAdjustGrid label{
+    display:grid;
+    gap:5px;
+  }
+
+  .mobileAdjustGrid label > span{
+    display:flex;
+    justify-content:space-between;
+    gap:8px;
+  }
+
+  .mobileAdjustGrid input{
+    width:100%;
+    accent-color:#7048eb;
+  }
+
+  .mobileLinkTool{
+    display:grid;
+    gap:9px;
+  }
+
+  .mobileBorderTool{
+    display:grid;
+    grid-template-columns:64px 1fr 1fr;
+    gap:8px;
+    align-items:end;
+  }
+
+  .mobileBorderTool label{
+    display:grid;
+    gap:5px;
+  }
+
+  .mobileDock{
+    padding-left:6px;
+    padding-right:6px;
+  }
+
+  .mobileDock button{
+    min-width:68px;
+  }
+
+  .mobileDock button span{
+    max-width:72px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+}
+
+@media(max-width:380px){
+  .mobileQuickTool{
+    left:6px;
+    right:6px;
+  }
+
+  .mobileSizeTool{
+    grid-template-columns:40px 66px 40px minmax(90px,1fr);
+  }
+
+  .mobileDock button{
+    min-width:64px;
+  }
+}
