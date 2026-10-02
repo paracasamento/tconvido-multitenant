@@ -247,7 +247,7 @@ export function RsvpFlowView({
             <Check size={26} />
           </div>
           <h2 {...bind("success-title")}>{t("success-title", "Presença confirmada")}</h2>
-          {hasChildren || (preview && previewState === "confirmed") ? (
+          {allowChildren && (hasChildren || (preview && previewState === "confirmed")) ? (
             <p {...bind("success-copy-children")}>
               {t("success-copy-children", `Você + ${preview ? 2 : childrenCount} filho(s).`)}
             </p>
