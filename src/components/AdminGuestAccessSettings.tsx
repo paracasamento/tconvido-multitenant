@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Copy, KeyRound, PencilLine, RefreshCw } from "lucide-react";
 import { readJsonResponse } from "@/lib/client-response";
 
@@ -12,6 +13,7 @@ type AccessState = {
 };
 
 export function AdminGuestAccessSettings({ initialMode: _initialMode }: { initialMode: "event" | "individual" }) {
+  const router = useRouter();
   const [state, setState] = useState<AccessState>({ mode: "event", configured: false });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -71,6 +73,7 @@ export function AdminGuestAccessSettings({ initialMode: _initialMode }: { initia
       setState({ mode: "event", configured: true, code: data.code, recoverable: true });
       setPasswordDraft(data.code);
       setEditingPassword(false);
+      router.refresh();
     } catch {
       setMessage("Não foi possível salvar a senha do evento.");
     } finally {
