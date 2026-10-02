@@ -209,6 +209,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
 
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<any>(null);
+  const activePointersRef = useRef<Map<number,{x:number;y:number;targetId:string}>>(new Map());
   const suppressPartClickRef = useRef(false);
   const configRef = useRef(config);
   const autosaveIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -1429,6 +1430,13 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
   },[]);
 
 
+  function captureGestureHistory(d:any){
+    if(d.historyCaptured)return;
+    d.historyCaptured=true;
+    setHistory(h=>[...h.slice(-79),deep(d.before)]);
+    setFuture([]);
+  }
+
   function beginPointer(
     e: React.PointerEvent,
     el: InviteElement,
@@ -1443,24 +1451,83 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
 
     suppressPartClickRef.current = false;
 
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {}
+
+    activePointersRef.current.set(e.pointerId,{
+      x:e.clientX,
+      y:e.clientY,
+      targetId:el.id
+    });
+
+    setSelectedId(el.id);
+    setSelectedPart(null);
+
+    const touchPointers=[...activePointersRef.current.entries()]
+      .filter(([,pointer])=>pointer.targetId===el.id);
+
+    if(e.pointerType==="touch" && touchPointers.length>=2){
+      const [a,b]=touchPointers.slice(-2);
+      const current=screen.elements.find(item=>item.id===el.id) || el;
+      const distance=Math.hypot(b[1].x-a[1].x,b[1].y-a[1].y);
+
+      if(distance>4){
+        dragRef.current={
+          mode:"pinch",
+          id:el.id,
+          pointerIds:[a[0],b[0]],
+          startDistance:distance,
+          x:current.x,
+          y:current.y,
+          w:current.width,
+          h:current.height,
+          fontSize:current.fontSize,
+          rect,
+          moved:false,
+          historyCaptured:false,
+          before:dragRef.current?.before || deep(configRef.current)
+        };
+        setSmartGuideLines({x:[],y:[]});
+        return;
+      }
+    }
 
     dragRef.current = {
       mode,
       id: el.id,
+      pointerId:e.pointerId,
       sx: e.clientX,
       sy: e.clientY,
       x: el.x,
       y: el.y,
       w: el.width,
       h: el.height,
+      fontSize:el.fontSize,
       rect,
       moved: false,
       historyCaptured: false,
       before: deep(configRef.current)
     };
+  }
 
-    setSelectedId(el.id);
+  function beginCanvasPointer(e:React.PointerEvent){
+    if(
+      e.pointerType==="touch" &&
+      selected &&
+      !selected.locked &&
+      activePointersRef.current.size===1
+    ){
+      beginPointer(e,selected,"move");
+      return;
+    }
+
+    activePointersRef.current.set(e.pointerId,{
+      x:e.clientX,
+      y:e.clientY,
+      targetId:""
+    });
+    setSelectedId(null);
     setSelectedPart(null);
   }
 
@@ -1468,8 +1535,80 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
     snap ? Math.round(n * 1000) / 1000 : Math.round(n * 1000) / 1000;
 
   function movePointer(e: React.PointerEvent) {
+    const pointer=activePointersRef.current.get(e.pointerId);
+    if(pointer){
+      activePointersRef.current.set(e.pointerId,{
+        ...pointer,
+        x:e.clientX,
+        y:e.clientY
+      });
+    }
+
     const d = dragRef.current;
     if (!d) return;
+
+    if(d.mode==="pinch"){
+      const [firstId,secondId]=d.pointerIds as [number,number];
+      const a=activePointersRef.current.get(firstId);
+      const b=activePointersRef.current.get(secondId);
+      if(!a||!b)return;
+
+      e.preventDefault();
+
+      const distance=Math.hypot(b.x-a.x,b.y-a.y);
+      if(!Number.isFinite(distance)||d.startDistance<=0)return;
+
+      const rawScale=distance/d.startDistance;
+      const minScale=Math.max(
+        4/Math.max(1,pctToPxX(d.w)),
+        4/Math.max(1,pctToPxY(d.h)),
+        d.fontSize ? 8/d.fontSize : 0.05
+      );
+      const maxScale=Math.min(
+        (CANVAS_W*1.7)/Math.max(1,pctToPxX(d.w)),
+        (CANVAS_H*2)/Math.max(1,pctToPxY(d.h)),
+        d.fontSize ? 120/d.fontSize : 8
+      );
+      const scale=clamp(rawScale,minScale,maxScale);
+
+      if(!d.moved && Math.abs(distance-d.startDistance)>4){
+        d.moved=true;
+        suppressPartClickRef.current=true;
+        captureGestureHistory(d);
+      }
+      if(!d.moved)return;
+
+      const width=d.w*scale;
+      const height=d.h*scale;
+      const centerX=d.x+d.w/2;
+      const centerY=d.y+d.h/2;
+      const nextX=centerX-width/2;
+      const nextY=centerY-height/2;
+
+      const patch:Partial<InviteElement>={
+        x:snapped(nextX),
+        y:snapped(nextY),
+        width:snapped(width),
+        height:snapped(height)
+      };
+
+      if(typeof d.fontSize==="number" && (screen.elements.find(item=>item.id===d.id)?.type==="text" || screen.elements.find(item=>item.id===d.id)?.type==="link")){
+        patch.fontSize=Math.round(clamp(d.fontSize*scale,8,120)*10)/10;
+      }
+
+      updateElement(d.id,patch);
+      setDragMetrics({
+        x:pctToPxX(nextX),
+        y:pctToPxY(nextY),
+        w:pctToPxX(width),
+        h:pctToPxY(height),
+        dx:pctToPxX(width-d.w),
+        dy:pctToPxY(height-d.h)
+      });
+      return;
+    }
+
+    if(d.pointerId!==undefined && e.pointerId!==d.pointerId)return;
 
     const pixelX = e.clientX - d.sx;
     const pixelY = e.clientY - d.sy;
@@ -1477,12 +1616,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
     if (!d.moved && (Math.abs(pixelX) > 3 || Math.abs(pixelY) > 3)) {
       d.moved = true;
       suppressPartClickRef.current = true;
-
-      if (!d.historyCaptured) {
-        d.historyCaptured = true;
-        setHistory(h => [...h.slice(-79), deep(d.before)]);
-        setFuture([]);
-      }
+      captureGestureHistory(d);
     }
 
     if (!d.moved) return;
@@ -1526,16 +1660,30 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
     });
   }
 
-  const endPointer = () => {
-    const wasDragging = !!dragRef.current?.moved;
-    dragRef.current = null;
+  const endPointer = (e?:React.PointerEvent) => {
+    if(e) activePointersRef.current.delete(e.pointerId);
+
+    const d=dragRef.current;
+    if(!d)return;
+
+    if(
+      d.mode==="pinch" &&
+      e &&
+      Array.isArray(d.pointerIds) &&
+      !d.pointerIds.includes(e.pointerId)
+    ){
+      return;
+    }
+
+    const wasDragging=!!d.moved;
+    dragRef.current=null;
     setSmartGuideLines({x:[],y:[]});
     setDragMetrics(null);
 
-    if (wasDragging) {
-      window.setTimeout(() => {
-        suppressPartClickRef.current = false;
-      }, 0);
+    if(wasDragging){
+      window.setTimeout(()=>{
+        suppressPartClickRef.current=false;
+      },0);
     }
   };
 
@@ -2257,7 +2405,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
 
       </aside>
 
-      <main className={styles.stage} onPointerMove={movePointer} onPointerUp={endPointer} onPointerCancel={endPointer}>
+      <main className={styles.stage} onPointerMove={movePointer} onPointerUp={event=>endPointer(event)} onPointerCancel={event=>endPointer(event)}>
         {editorPage==="invite-flow"&&inviteFlowState==="after"&&screenId==="gifts"&&(
           <section className={styles.compositeSection}>
             <button type="button" className={styles.compositeSectionLabel} onClick={()=>switchInviteSection("invite")}>
@@ -2302,7 +2450,7 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary}:
               style={{...canvasGridStyle,width:CANVAS_W,aspectRatio:`390 / ${displayScreen.minHeight}`}}
               onPointerMove={e=>{const point=canvasPointerPx(e);if(point)setCursorPx(point)}}
               onPointerLeave={()=>setCursorPx(null)}
-              onPointerDown={()=>{setSelectedId(null);setSelectedPart(null)}}
+              onPointerDown={beginCanvasPointer}
             >
               <div className={styles.liveRenderer}>
                 <InviteCanvas
