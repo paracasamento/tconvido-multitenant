@@ -6,7 +6,12 @@ import { readJsonResponse } from "@/lib/client-response";
 
 type Props = {
   event: {
+    event_type: string;
     couple_names: string;
+    event_name?: string | null;
+    celebrant_name?: string | null;
+    baby_name?: string | null;
+    hosts_names?: string | null;
     title: string;
     message: string | null;
     event_date: string;
@@ -21,6 +26,25 @@ type Props = {
 
 export function AdminEventForm({ event, afterSaveHref, submitLabel = "Salvar alterações" }: Props) {
   const router = useRouter();
+  const identityLabel =
+    event.event_type === "wedding"
+      ? "Nomes do casal"
+      : event.event_type === "kids_birthday"
+        ? "Nome da criança"
+        : event.event_type === "quinceanera"
+          ? "Nome da debutante"
+          : event.event_type === "baby_shower"
+            ? "Nome do bebê"
+            : event.event_type === "housewarming"
+              ? "Nome dos anfitriões"
+              : "Nome principal";
+  const identityValue =
+    event.event_name ||
+    event.celebrant_name ||
+    event.baby_name ||
+    event.hosts_names ||
+    event.couple_names ||
+    "";
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -49,7 +73,7 @@ export function AdminEventForm({ event, afterSaveHref, submitLabel = "Salvar alt
 
   return (
     <form className="form-card admin-form-wide admin-event-form-v6" onSubmit={submit}>
-      <label><span>Nomes do casal</span><input name="couple_names" defaultValue={event.couple_names} placeholder="Ex.: Ana & João" required /></label>
+      <label><span>{identityLabel}</span><input name="identity_name" defaultValue={identityValue} placeholder="Nome principal do evento" required /></label>
       <label><span>Nome do evento</span><input name="title" defaultValue={event.title} required /></label>
       <label><span>Mensagem</span><textarea name="message" defaultValue={event.message || ""} rows={3} /></label>
       <div className="form-grid">
