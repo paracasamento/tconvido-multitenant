@@ -201,6 +201,10 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
   const [grid,setGrid]=useState(true);
   const [snap,setSnap]=useState(true);
   const [previewWidth,setPreviewWidth]=useState(430);
+  const [globalFont,setGlobalFont]=useState("Cormorant Garamond");
+  const [globalPrimary,setGlobalPrimary]=useState("#12308e");
+  const [globalAccent,setGlobalAccent]=useState("#a27a25");
+  const [globalBackground,setGlobalBackground]=useState("#fbfaf5");
 
   // Professional measurement / grid tools
   const [gridPx,setGridPx]=useState(8);
@@ -1200,6 +1204,129 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
       backgroundOpacity:1,
     });
     setStatus(`Fundo “${activeTheme.name}” aplicado nesta seção.`);
+  }
+
+  function readableTextColor(hex:string){
+    const clean=hex.replace("#","");
+    if(clean.length!==6)return "#ffffff";
+    const r=parseInt(clean.slice(0,2),16);
+    const g=parseInt(clean.slice(2,4),16);
+    const b=parseInt(clean.slice(4,6),16);
+    const luminance=(0.2126*r+0.7152*g+0.0722*b)/255;
+    return luminance>.62?"#181818":"#ffffff";
+  }
+
+  function applyGlobalVisualSystem(){
+    const contrast=readableTextColor(globalPrimary);
+    const labelPattern=/label|weekday|month|year|open|eyebrow/i;
+    const primaryButtonPattern=/confirm-button|retry-button|submit-button|yes-button/i;
+    const primaryButtonTextPattern=/confirm-text|retry-text|submit-text|yes-text/i;
+
+    const stylePart=(id:string,part:InvitePartStyle):InvitePartStyle=>{
+      const next={...part};
+      if(next.fontFamily!==undefined||next.text!==undefined)next.fontFamily=globalFont;
+      if(next.color!==undefined)next.color=labelPattern.test(id)?globalAccent:globalPrimary;
+      if(next.borderColor!==undefined)next.borderColor=globalAccent;
+      if(primaryButtonPattern.test(id)){
+        next.backgroundColor=globalPrimary;
+        next.borderColor=globalPrimary;
+        next.color=contrast;
+      }
+      if(primaryButtonTextPattern.test(id))next.color=contrast;
+      return next;
+    };
+
+    const styleElement=(element:InviteElement):InviteElement=>{
+      const next:any=deep(element);
+
+      if(next.type==="text"){
+        next.fontFamily=globalFont;
+        next.color=labelPattern.test(next.id)?globalAccent:globalPrimary;
+      }
+
+      if(next.type==="link"){
+        next.fontFamily=globalFont;
+        const primary=/rsvp/i.test(next.id);
+        next.backgroundColor=primary?globalPrimary:"transparent";
+        next.color=primary?contrast:globalPrimary;
+        next.borderColor=primary?globalPrimary:globalAccent;
+      }
+
+      if(next.type==="box"&&next.borderColor!==undefined){
+        next.borderColor=globalAccent;
+      }
+
+      if(next.partStyles){
+        next.partStyles=Object.fromEntries(
+          Object.entries(next.partStyles).map(([id,part])=>[
+            id,
+            stylePart(id,part as InvitePartStyle)
+          ])
+        );
+      }
+
+      if(next.scenarioPartStyles){
+        next.scenarioPartStyles=Object.fromEntries(
+          Object.entries(next.scenarioPartStyles).map(([scenario,parts])=>[
+            scenario,
+            Object.fromEntries(
+              Object.entries(parts as Record<string,InvitePartStyle>).map(([id,part])=>[
+                id,
+                stylePart(id,part)
+              ])
+            )
+          ])
+        );
+      }
+
+      return next as InviteElement;
+    };
+
+    const styleScreen=(source:InviteScreen):InviteScreen=>({
+      ...source,
+      backgroundColor:globalBackground,
+      elements:source.elements.map(styleElement)
+    });
+
+    const current=deep(configRef.current);
+    const screens=Object.fromEntries(
+      Object.entries(current.screens).map(([id,value])=>[
+        id,
+        styleScreen(value as InviteScreen)
+      ])
+    ) as InviteVisualConfig["screens"];
+
+    const rsvpScenarios=current.rsvpScenarios
+      ? Object.fromEntries(
+          Object.entries(current.rsvpScenarios).map(([id,scenario])=>[
+            id,
+            {
+              ...scenario,
+              screenStyle:{
+                ...(scenario.screenStyle||{}),
+                backgroundColor:globalBackground
+              },
+              elements:scenario.elements.map(styleElement)
+            }
+          ])
+        ) as NonNullable<InviteVisualConfig["rsvpScenarios"]>
+      : current.rsvpScenarios;
+
+    const afterInviteScreen=current.inviteFlow?.afterInviteScreen
+      ? styleScreen(current.inviteFlow.afterInviteScreen)
+      : current.inviteFlow?.afterInviteScreen;
+
+    commit({
+      ...current,
+      screens,
+      rsvpScenarios,
+      inviteFlow:{
+        ...current.inviteFlow,
+        afterInviteScreen
+      }
+    },true);
+
+    setStatus("Paleta e tipografia aplicadas a todas as telas do convite.");
   }
 
   function extractScreenStyle(source: InviteScreen): InviteSavedLayout["screenStyle"] {
@@ -2989,6 +3116,38 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
                 </p>
               </div>
             )}
+
+            <details open className={styles.screenSettings}>
+              <summary>Identidade visual global <ChevronDown size={14}/></summary>
+              <div className={styles.panel}>
+                <label>
+                  Fonte principal
+                  <select value={globalFont} onChange={e=>setGlobalFont(e.target.value)}>
+                    {FONTS.map(font=><option key={font} value={font}>{font}</option>)}
+                  </select>
+                </label>
+                <div className={styles.grid3}>
+                  <label>
+                    Cor principal
+                    <input type="color" value={globalPrimary} onChange={e=>setGlobalPrimary(e.target.value)}/>
+                  </label>
+                  <label>
+                    Cor de destaque
+                    <input type="color" value={globalAccent} onChange={e=>setGlobalAccent(e.target.value)}/>
+                  </label>
+                  <label>
+                    Fundo
+                    <input type="color" value={globalBackground} onChange={e=>setGlobalBackground(e.target.value)}/>
+                  </label>
+                </div>
+                <button type="button" className={styles.utilityButton} onClick={applyGlobalVisualSystem}>
+                  Aplicar em todas as telas
+                </button>
+                <p className={styles.hint}>
+                  Atualiza tipografia e cores do convite inteiro, inclusive RSVP, lista de presentes e tela pós-confirmação, sem alterar textos, posições ou imagens.
+                </p>
+              </div>
+            </details>
 
             <details open className={styles.screenSettings}>
               <summary>{sharedFlowBackgroundActive ? "Fundo contínuo do fluxo" : "Fundo da seção"} <ChevronDown size={14}/></summary>
