@@ -28,6 +28,14 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
   const event:any=rows[0]; if(!event)notFound();
   const changeRequests:any[]=await sql`SELECT id,message,status,source,created_at FROM event_change_requests WHERE event_id=${id} ORDER BY created_at DESC LIMIT 20`;
   const approvals:any[]=await sql`SELECT status,note,created_at FROM event_approvals WHERE event_id=${id} ORDER BY created_at DESC LIMIT 10`;
+  const history:any[]=await sql`
+    SELECT al.action,al.metadata,al.created_at,a.name AS admin_name
+    FROM audit_logs al
+    LEFT JOIN admins a ON a.id=al.admin_id
+    WHERE al.event_id=${id}
+    ORDER BY al.created_at DESC
+    LIMIT 20
+  `;
   const type=EVENT_TYPE_DEFINITIONS[event.event_type as EventType];
   const identity=event.event_name||event.couple_names||event.celebrant_name||event.baby_name||event.hosts_names||event.title;
   const caps=Array.isArray(event.enabled_capabilities)?event.enabled_capabilities:[];
@@ -76,6 +84,29 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
 
       <section className="settings-card"><h2>Pendências</h2>{pending.length?<div className="intake-feature-list">{pending.map(item=><span key={item}><CircleAlert size={14}/> {item}</span>)}</div>:<p>Nenhuma pendência estrutural básica.</p>}</section>
     </div>
+
+    <section className="settings-card">
+      <h2>Histórico do evento</h2>
+      {history.length ? (
+        <div className="intake-feature-list">
+          {history.map((item:any,index:number)=>{
+            const labels:Record<string,string>={
+              production_updated:"Produção atualizada",
+              client_access_created:"Acesso do cliente criado",
+              invitation_approved:"Convite aprovado",
+              invitation_changes_requested:"Alterações solicitadas",
+              change_request_resolved:"Pedido de alteração resolvido",
+              change_request_dismissed:"Pedido de alteração descartado",
+              invite_visual_design_updated:"Design do convite atualizado",
+              guests_bulk_created:"Convidados adicionados",
+              guest_rsvp_updated:"Convidado atualizado",
+              guest_removed:"Convidado removido"
+            };
+            return <span key={item.action+"-"+index}><strong>{labels[item.action]||item.action}</strong> · {item.admin_name||"Sistema"} · {new Date(item.created_at).toLocaleString("pt-BR")}</span>;
+          })}
+        </div>
+      ) : <p className="muted">Nenhuma ação registrada ainda.</p>}
+    </section>
 
     <section className="settings-card"><h2>Pedidos de alteração</h2><ChangeRequestManager eventId={event.id} items={changeRequests.map((item:any)=>({...item,created_at:new Date(item.created_at).toISOString()}))}/>{approvals[0]&&<p className="muted">Última decisão do cliente: {approvals[0].status==="approved"?"Aprovado":"Alterações solicitadas"} · {new Date(approvals[0].created_at).toLocaleString("pt-BR")}</p>}</section><section className="settings-card"><h2>Controle de produção</h2><ProductionControl eventId={event.id} initialStatus={event.production_status||"draft"} initialDeadline={event.delivery_deadline?new Date(event.delivery_deadline).toISOString().slice(0,10):""} initialNotes={event.internal_notes||""}/></section><section className="settings-card"><h2>Ferramentas do evento</h2><div className="card-actions">
       <form action={`/api/owner/events/${event.id}/select?next=%2Fgestao%2Feditor`} method="post"><button className="gestao-primary-action" type="submit"><Palette size={16}/> Editar convite</button></form>
