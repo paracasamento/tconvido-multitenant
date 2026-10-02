@@ -16,6 +16,8 @@ export default async function GestaoHomePage() {
       e.title,
       e.couple_names,
       e.status,
+      e.production_status,
+      e.delivery_deadline,
       to_char(e.event_date, 'DD/MM/YYYY') AS event_date,
       owner_admin.name AS owner_name,
       owner_admin.email AS owner_email
@@ -37,8 +39,8 @@ export default async function GestaoHomePage() {
       <section className="gestao-hero gestao-hero--events">
         <div>
           <p className="gestao-kicker">Olá, {session.admin_name}</p>
-          <h1>Seus eventos</h1>
-          <p>Crie, configure e abra cada convite a partir de um único painel.</p>
+          <h1>Produção</h1>
+          <p>Acompanhe os convites em andamento, prazos e acesse cada central de produção.</p>
         </div>
         <Link href="/gestao/eventos/novo" className="gestao-primary-action">
           <Plus size={17} />
@@ -51,15 +53,13 @@ export default async function GestaoHomePage() {
           <article className="gestao-event-card" key={event.id}>
             <div className="gestao-event-card__main">
               <div className="gestao-event-card__title">
-                <span className={`gestao-event-status is-${event.status}`}>
-                  {event.status === "active" ? "Ativo" : event.status === "closed" ? "Pausado" : "Rascunho"}
-                </span>
+                <span className={`gestao-event-status is-${event.production_status||"draft"}`}>{event.production_status==="briefing"?"Briefing":event.production_status==="design"?"Em criação":event.production_status==="review"?"Em revisão":event.production_status==="approved"?"Aprovado":event.production_status==="delivered"?"Entregue":"Rascunho"}</span>
                 <h2>{event.couple_names}</h2>
                 <p>{event.title}</p>
               </div>
               <div className="gestao-event-card__meta">
                 <span><CalendarDays size={14} /> {event.event_date}</span>
-                <span><UserRound size={14} /> {event.owner_name || "Sem dono definido"}</span>
+                <span><UserRound size={14} /> {event.owner_name || "Sem dono definido"}</span>{event.delivery_deadline ? <span>Entrega: {new Date(event.delivery_deadline).toLocaleDateString("pt-BR")}</span> : <span>Entrega sem prazo definido</span>}
                 {event.owner_email ? <span className="gestao-event-card__email">{event.owner_email}</span> : null}
                 <small>/e/{event.slug}</small>
               </div>
