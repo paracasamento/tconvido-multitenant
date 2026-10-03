@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { eventHasCapability } from "@/lib/event-capabilities";
 import { getGuestSession } from "@/lib/sessions";
 import { sameOrigin } from "@/lib/security";
 
@@ -13,9 +14,13 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ message: "Sessão expirada." }, { status: 401 });
   }
 
+  if (!(await eventHasCapability(session.event_id, "gifts"))) {
+    return NextResponse.json({ message: "Lista de presentes não está habilitada para este evento." }, { status: 403 });
+  }
+
   const giftId = new URL(request.url).searchParams.get("gift_id");
-  if (!giftId) {
-    return NextResponse.json({ message: "Informe o presente que deseja liberar." }, { status: 400 });
+  if (!giftId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(giftId)) {
+    return NextResponse.json({ message: "Presente inválido." }, { status: 400 });
   }
 
   const sql = db();
