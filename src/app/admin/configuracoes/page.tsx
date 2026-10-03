@@ -22,12 +22,12 @@ export default async function AdminAccountPage() {
 
       <section className="account-card">
         <h2>Alterar senha</h2>
-        <p>Use uma senha exclusiva para a área dos noivos.</p>
+        <p>Use uma senha exclusiva para a administração deste evento.</p>
         <AdminPasswordForm />
       </section>
 
       <form action="/api/admin/logout" method="post" className="account-logout">
-        <button className="button button--danger-ghost">Sair da área dos noivos</button>
+        <button className="button button--danger-ghost">Sair da área do evento</button>
       </form>
     </main>
   );
