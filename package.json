@@ -12,7 +12,8 @@
     "admin:audit": "node scripts/audit-admin-roles.mjs",
     "check:deploy": "node --env-file-if-exists=.env.local scripts/check-deploy.mjs",
     "check:db": "node --env-file-if-exists=.env.local scripts/check-production-db.mjs",
-    "check:multievent": "node --experimental-strip-types scripts/check-multievent.mjs"
+    "check:multievent": "node --experimental-strip-types scripts/check-multievent.mjs",
+    "check:security-invariants": "node scripts/check-security-invariants.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
