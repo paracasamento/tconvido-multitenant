@@ -9,6 +9,24 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string;
  if(!["resolved","dismissed"].includes(status))return NextResponse.json({message:"Status inválido."},{status:400});
  const sql=db();const rows=await sql`UPDATE event_change_requests SET status=${status},resolved_at=now() WHERE id=${requestId} AND event_id=${id} AND status='open' RETURNING id`;
  if(!rows.length)return NextResponse.json({message:"Pedido não encontrado ou já tratado."},{status:404});
- await sql`INSERT INTO audit_logs(event_id,admin_id,action,entity_type,entity_id,metadata) VALUES(${id},${session.admin_id},'change_request_' || ${status},'event_change_request',${requestId},jsonb_build_object('status',${status}::text))`;
- return NextResponse.json({ok:true});
+
+ const openRows=await sql`
+   SELECT count(*)::int AS total
+   FROM event_change_requests
+   WHERE event_id=${id}
+     AND status='open'
+ `;
+ const remainingOpen=Number(openRows[0]?.total||0);
+
+ if(remainingOpen===0){
+   await sql`
+     UPDATE events
+     SET production_status='review',updated_at=now()
+     WHERE id=${id}
+       AND production_status='design'
+   `;
+ }
+
+ await sql`INSERT INTO audit_logs(event_id,admin_id,action,entity_type,entity_id,metadata) VALUES(${id},${session.admin_id},'change_request_' || ${status},'event_change_request',${requestId},jsonb_build_object('status',${status}::text,'remaining_open',${remainingOpen}::int))`;
+ return NextResponse.json({ok:true,remaining_open:remainingOpen});
 }
