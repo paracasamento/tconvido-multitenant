@@ -16,7 +16,7 @@ export default async function AdminAccountPage() {
       <section className="account-card">
         <div className="account-profile">
           <span>{session.admin_name.slice(0, 1).toUpperCase()}</span>
-          <div><strong>{session.admin_name}</strong><small>Administrador do convite</small></div>
+          <div><strong>{session.admin_name}</strong><small>Responsável pelo evento</small></div>
         </div>
       </section>
 
