@@ -33,5 +33,8 @@ jobs:
       - name: Validate multievent matrix
         run: npm run check:multievent
 
+      - name: Validate security invariants
+        run: npm run check:security-invariants
+
       - name: Build
         run: npm run build
