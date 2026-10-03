@@ -30,5 +30,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Validate multievent matrix
+        run: npm run check:multievent
+
       - name: Build
         run: npm run build
