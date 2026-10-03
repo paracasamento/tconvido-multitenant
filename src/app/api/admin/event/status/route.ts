@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { adminLog } from "@/lib/admin-log";
+import { getAdminSetupState } from "@/lib/admin-setup";
+import { validateEventReadiness } from "@/lib/event-readiness";
 import { getAdminSession } from "@/lib/sessions";
 import { sameOrigin } from "@/lib/security";
 
@@ -15,7 +17,47 @@ export async function PUT(request: Request) {
   if (!parsed.success) return NextResponse.json({ message: "Status inválido." }, { status: 400 });
 
   const sql = db();
-  await sql`UPDATE events SET status = ${parsed.data.status} WHERE id = ${session.event_id}`;
+
+  if (parsed.data.status === "active") {
+    const setup = await getAdminSetupState(session.event_id);
+    const eventRows = await sql`
+      SELECT
+        event_type,
+        event_name,
+        celebrant_name,
+        baby_name,
+        hosts_names,
+        couple_names,
+        title,
+        event_date,
+        event_time,
+        venue,
+        city,
+        delivery_deadline,
+        rsvp_deadline,
+        gift_deadline,
+        enabled_capabilities
+      FROM events
+      WHERE id = ${session.event_id}
+      LIMIT 1
+    `;
+    const event = eventRows[0] as any;
+    const requiredIssues = event
+      ? validateEventReadiness(event).filter(issue => issue.severity === "required")
+      : [{ key: "event", label: "Evento não encontrado.", severity: "required" as const }];
+
+    if (!setup.coreReady || requiredIssues.length) {
+      return NextResponse.json(
+        {
+          message: "Conclua as informações obrigatórias antes de publicar o convite.",
+          missing: requiredIssues.map(issue => issue.label),
+        },
+        { status: 409 }
+      );
+    }
+  }
+
+  await sql`UPDATE events SET status = ${parsed.data.status}, updated_at = now() WHERE id = ${session.event_id}`;
 
   await adminLog({
     eventId: session.event_id,
