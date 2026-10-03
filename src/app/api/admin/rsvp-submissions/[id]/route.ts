@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
+import { adminLog } from "@/lib/admin-log";
+import { eventHasCapability } from "@/lib/event-capabilities";
 import { requireAdmin } from "@/lib/sessions";
 import { sameOrigin } from "@/lib/security";
 
@@ -17,6 +19,10 @@ export async function PATCH(
   }
 
   const session = await requireAdmin();
+  if (!(await eventHasCapability(session.event_id, "rsvp"))) {
+    return NextResponse.json({ message: "RSVP não está habilitado para este evento." }, { status: 403 });
+  }
+
   const { id } = await context.params;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
@@ -49,11 +55,13 @@ export async function PATCH(
 
   const submission = submissionRows[0] as any;
   const currentGuestId = submission.guest_id ? String(submission.guest_id) : null;
+  let confirmedAdults = 1;
+  let confirmedChildren = Number(submission.children_count || 0);
   const targetGuestId = parsed.data.guest_id;
 
   if (currentGuestId && currentGuestId !== targetGuestId) {
     const identityRows = await sql`
-      SELECT id, source, needs_review, submitted_name
+      SELECT id, source, needs_review, submitted_name, confirmed_adults, confirmed_children
       FROM guests
       WHERE id = ${currentGuestId}
         AND event_id = ${session.event_id}
@@ -61,6 +69,8 @@ export async function PATCH(
       LIMIT 1
     `;
     const oldIdentity = identityRows[0] as any;
+    confirmedAdults = Math.max(1, Number(oldIdentity?.confirmed_adults || 1));
+    confirmedChildren = Math.max(0, Number(oldIdentity?.confirmed_children ?? submission.children_count ?? 0));
 
     const reservationRows = await sql`
       SELECT
@@ -148,13 +158,27 @@ export async function PATCH(
       needs_review = false,
       reviewed_at = now(),
       reviewed_by = ${session.admin_id},
-      confirmed_adults = 1,
-      confirmed_children = ${Number(submission.children_count || 0)},
+      confirmed_adults = ${confirmedAdults},
+      confirmed_children = ${confirmedChildren},
       updated_at = now()
     WHERE id = ${parsed.data.guest_id}
       AND event_id = ${session.event_id}
       AND deleted_at IS NULL
   `;
+
+  await adminLog({
+    eventId: session.event_id,
+    adminId: session.admin_id,
+    action: "rsvp_submission_reviewed",
+    entityType: "guest",
+    entityId: parsed.data.guest_id,
+    metadata: {
+      submission_id: id,
+      previous_guest_id: currentGuestId,
+      confirmed_adults: confirmedAdults,
+      confirmed_children: confirmedChildren,
+    },
+  });
 
   return NextResponse.json({ ok: true });
 }
