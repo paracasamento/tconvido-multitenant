@@ -60,9 +60,9 @@ const EDITOR_PAGES: Array<{ id: EditorPageId; label: string }> = [
 ];
 
 const RSVP_PREVIEW_STATES: { id: RsvpPreviewState; label: string; short: string }[] = [
-  { id:"children-question", label:"1. Pergunta sobre filhos", short:"Filhos?" },
-  { id:"form-no-children", label:"2. Formulário sem filhos", short:"Sem filhos" },
-  { id:"form-children", label:"3. Formulário com filhos", short:"Com filhos" },
+  { id:"children-question", label:"1. Pergunta sobre crianças", short:"Crianças?" },
+  { id:"form-no-children", label:"2. Formulário sem crianças", short:"Sem crianças" },
+  { id:"form-children", label:"3. Formulário com crianças", short:"Com crianças" },
   { id:"confirmed", label:"4. Presença confirmada", short:"Confirmado" },
   { id:"error", label:"5. Erro técnico", short:"Erro" },
 ];
@@ -76,6 +76,10 @@ const RSVP_PART_SCENARIO: Partial<Record<string, RsvpPreviewState>> = {
   "form-title": "form-no-children",
   "name-label": "form-no-children",
   "name-input": "form-no-children",
+  "adults-label": "form-no-children",
+  "adults-stepper": "form-no-children",
+  "adults-stepper-button": "form-no-children",
+  "adults-stepper-value": "form-no-children",
   "children-label": "form-children",
   "stepper": "form-children",
   "stepper-button": "form-children",
@@ -83,7 +87,7 @@ const RSVP_PART_SCENARIO: Partial<Record<string, RsvpPreviewState>> = {
   "success-icon": "confirmed",
   "success-title": "confirmed",
   "success-copy": "confirmed",
-  "success-copy-children": "confirmed",
+  "success-copy-group": "confirmed",
   "error-card": "error",
   "error-title": "error",
   "error-copy": "error",
@@ -96,14 +100,16 @@ const RSVP_SCENARIO_PART_IDS: Record<RsvpPreviewState, string[]> = {
     "flow", "step-label", "question-title", "yes-button", "yes-text", "no-button", "no-text"
   ],
   "form-no-children": [
-    "flow", "step-label", "form-title", "name-label", "name-input", "confirm-button", "confirm-text"
+    "flow", "step-label", "form-title", "name-label", "name-input", "adults-label",
+    "adults-stepper", "adults-stepper-button", "adults-stepper-value", "confirm-button", "confirm-text"
   ],
   "form-children": [
-    "flow", "step-label", "form-title", "name-label", "name-input", "children-label", "stepper",
+    "flow", "step-label", "form-title", "name-label", "name-input", "adults-label",
+    "adults-stepper", "adults-stepper-button", "adults-stepper-value", "children-label", "stepper",
     "stepper-button", "stepper-value", "confirm-button", "confirm-text"
   ],
   confirmed: [
-    "flow", "success-icon", "success-title", "success-copy", "success-copy-children"
+    "flow", "success-icon", "success-title", "success-copy", "success-copy-group"
   ],
   error: [
     "flow", "error-card", "error-title", "error-copy", "retry-button", "retry-text"
@@ -171,7 +177,14 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
   const [unitMode,setUnitMode]=useState<"px"|"pct">("px");
 
   const [selectedId,setSelectedId]=useState<string|null>(normalizedInitial.screens.cover.elements[0]?.id||null); const [selectedPart,setSelectedPart]=useState<string|null>(null);
-  const [rsvpPreviewState,setRsvpPreviewState]=useState<RsvpPreviewState>("children-question");
+  const rsvpAllowsChildren=previewData.guestAllowedChildren > 0;
+  const availableRsvpPreviewStates=useMemo(
+    ()=>RSVP_PREVIEW_STATES.filter(item=>rsvpAllowsChildren||!["children-question","form-children"].includes(item.id)),
+    [rsvpAllowsChildren]
+  );
+  const [rsvpPreviewState,setRsvpPreviewState]=useState<RsvpPreviewState>(
+    rsvpAllowsChildren ? "children-question" : "form-no-children"
+  );
   const [layoutPanelOpen,setLayoutPanelOpen]=useState(false);
   const [layoutName,setLayoutName]=useState("");
   const [layoutBusy,setLayoutBusy]=useState(false);
@@ -188,6 +201,10 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
   const [grid,setGrid]=useState(true);
   const [snap,setSnap]=useState(true);
   const [previewWidth,setPreviewWidth]=useState(430);
+  const [globalFont,setGlobalFont]=useState("Cormorant Garamond");
+  const [globalPrimary,setGlobalPrimary]=useState("#12308e");
+  const [globalAccent,setGlobalAccent]=useState("#a27a25");
+  const [globalBackground,setGlobalBackground]=useState("#fbfaf5");
 
   // Professional measurement / grid tools
   const [gridPx,setGridPx]=useState(8);
@@ -1189,6 +1206,129 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
     setStatus(`Fundo “${activeTheme.name}” aplicado nesta seção.`);
   }
 
+  function readableTextColor(hex:string){
+    const clean=hex.replace("#","");
+    if(clean.length!==6)return "#ffffff";
+    const r=parseInt(clean.slice(0,2),16);
+    const g=parseInt(clean.slice(2,4),16);
+    const b=parseInt(clean.slice(4,6),16);
+    const luminance=(0.2126*r+0.7152*g+0.0722*b)/255;
+    return luminance>.62?"#181818":"#ffffff";
+  }
+
+  function applyGlobalVisualSystem(){
+    const contrast=readableTextColor(globalPrimary);
+    const labelPattern=/label|weekday|month|year|open|eyebrow/i;
+    const primaryButtonPattern=/confirm-button|retry-button|submit-button|yes-button/i;
+    const primaryButtonTextPattern=/confirm-text|retry-text|submit-text|yes-text/i;
+
+    const stylePart=(id:string,part:InvitePartStyle):InvitePartStyle=>{
+      const next={...part};
+      if(next.fontFamily!==undefined||next.text!==undefined)next.fontFamily=globalFont;
+      if(next.color!==undefined)next.color=labelPattern.test(id)?globalAccent:globalPrimary;
+      if(next.borderColor!==undefined)next.borderColor=globalAccent;
+      if(primaryButtonPattern.test(id)){
+        next.backgroundColor=globalPrimary;
+        next.borderColor=globalPrimary;
+        next.color=contrast;
+      }
+      if(primaryButtonTextPattern.test(id))next.color=contrast;
+      return next;
+    };
+
+    const styleElement=(element:InviteElement):InviteElement=>{
+      const next:any=deep(element);
+
+      if(next.type==="text"){
+        next.fontFamily=globalFont;
+        next.color=labelPattern.test(next.id)?globalAccent:globalPrimary;
+      }
+
+      if(next.type==="link"){
+        next.fontFamily=globalFont;
+        const primary=/rsvp/i.test(next.id);
+        next.backgroundColor=primary?globalPrimary:"transparent";
+        next.color=primary?contrast:globalPrimary;
+        next.borderColor=primary?globalPrimary:globalAccent;
+      }
+
+      if(next.type==="box"&&next.borderColor!==undefined){
+        next.borderColor=globalAccent;
+      }
+
+      if(next.partStyles){
+        next.partStyles=Object.fromEntries(
+          Object.entries(next.partStyles).map(([id,part])=>[
+            id,
+            stylePart(id,part as InvitePartStyle)
+          ])
+        );
+      }
+
+      if(next.scenarioPartStyles){
+        next.scenarioPartStyles=Object.fromEntries(
+          Object.entries(next.scenarioPartStyles).map(([scenario,parts])=>[
+            scenario,
+            Object.fromEntries(
+              Object.entries(parts as Record<string,InvitePartStyle>).map(([id,part])=>[
+                id,
+                stylePart(id,part)
+              ])
+            )
+          ])
+        );
+      }
+
+      return next as InviteElement;
+    };
+
+    const styleScreen=(source:InviteScreen):InviteScreen=>({
+      ...source,
+      backgroundColor:globalBackground,
+      elements:source.elements.map(styleElement)
+    });
+
+    const current=deep(configRef.current);
+    const screens=Object.fromEntries(
+      Object.entries(current.screens).map(([id,value])=>[
+        id,
+        styleScreen(value as InviteScreen)
+      ])
+    ) as InviteVisualConfig["screens"];
+
+    const rsvpScenarios=current.rsvpScenarios
+      ? Object.fromEntries(
+          Object.entries(current.rsvpScenarios).map(([id,scenario])=>[
+            id,
+            {
+              ...scenario,
+              screenStyle:{
+                ...(scenario.screenStyle||{}),
+                backgroundColor:globalBackground
+              },
+              elements:scenario.elements.map(styleElement)
+            }
+          ])
+        ) as NonNullable<InviteVisualConfig["rsvpScenarios"]>
+      : current.rsvpScenarios;
+
+    const afterInviteScreen=current.inviteFlow?.afterInviteScreen
+      ? styleScreen(current.inviteFlow.afterInviteScreen)
+      : current.inviteFlow?.afterInviteScreen;
+
+    commit({
+      ...current,
+      screens,
+      rsvpScenarios,
+      inviteFlow:{
+        ...current.inviteFlow,
+        afterInviteScreen
+      }
+    },true);
+
+    setStatus("Paleta e tipografia aplicadas a todas as telas do convite.");
+  }
+
   function extractScreenStyle(source: InviteScreen): InviteSavedLayout["screenStyle"] {
     return {
       backgroundColor: source.backgroundColor,
@@ -1313,24 +1453,77 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
     setStatus(`Decoração “${layout.name}” aplicada somente nesta tela.`);
   }
 
-  function duplicate(){if(!selected)return;const id=`${selected.type}-${uid()}`,copy={...deep(selected),id,name:`${selected.name} cópia`,x:selected.x+3,y:selected.y+3,zIndex:selected.zIndex+1};updateScreen({elements:[...screen.elements,copy]},true);setSelectedId(id);setSelectedPart(null)}
+  function duplicate(){
+    if(!selected)return;
+
+    if(selected.compositionId){
+      const members=screen.elements.filter(element=>element.compositionId===selected.compositionId);
+      const nextCompositionId=`composition-${uid()}`;
+      const highestZ=screen.elements.reduce((max,element)=>Math.max(max,element.zIndex||0),0)+1;
+      let selectedCopyId:string|null=null;
+      const copies=members.map((element,index)=>{
+        const id=`${element.type}-${uid()}`;
+        if(element.id===selected.id) selectedCopyId=id;
+        return {
+          ...deep(element),
+          id,
+          name:`${element.name} cópia`,
+          compositionId:nextCompositionId,
+          x:element.x+3,
+          y:element.y+3,
+          zIndex:highestZ+index,
+        } as InviteElement;
+      });
+      updateScreen({elements:[...screen.elements,...copies]},true);
+      setSelectedId(selectedCopyId||copies[0]?.id||null);
+      setSelectedPart(null);
+      setStatus("Composição duplicada como um grupo.");
+      return;
+    }
+
+    const id=`${selected.type}-${uid()}`;
+    const copy={...deep(selected),id,name:`${selected.name} cópia`,x:selected.x+3,y:selected.y+3,zIndex:selected.zIndex+1};
+    updateScreen({elements:[...screen.elements,copy]},true);
+    setSelectedId(id);
+    setSelectedPart(null);
+  }
+
+  function ungroupComposition(){
+    if(!selected?.compositionId)return;
+    const compositionId=selected.compositionId;
+    updateScreen({
+      elements:screen.elements.map(element=>
+        element.compositionId===compositionId
+          ? {...element,compositionId:undefined}
+          : element
+      )
+    },true);
+    setStatus("Composição desagrupada. Os elementos agora podem ser movidos separadamente.");
+  }
 
   function remove(){
     if(!selected)return;
 
+    const idsToRemove=new Set(
+      selected.compositionId
+        ? screen.elements.filter(element=>element.compositionId===selected.compositionId).map(element=>element.id)
+        : [selected.id]
+    );
     const defaultScreen = defaults.screens[screenId];
-    const isDefaultElement = defaultScreen.elements.some(element => element.id === selected.id);
     const deletedElementIds = new Set(((screen as any).deletedElementIds || []) as string[]);
 
-    if(isDefaultElement) deletedElementIds.add(selected.id);
+    for(const element of defaultScreen.elements){
+      if(idsToRemove.has(element.id)) deletedElementIds.add(element.id);
+    }
 
     updateScreen({
-      elements: screen.elements.filter(element => element.id !== selected.id),
+      elements: screen.elements.filter(element => !idsToRemove.has(element.id)),
       deletedElementIds: [...deletedElementIds]
     }, true);
 
     setSelectedId(null);
     setSelectedPart(null);
+    if(idsToRemove.size>1)setStatus("Composição excluída.");
   }
 
   function resetScreen(){
@@ -1621,7 +1814,13 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
       rect,
       moved: false,
       historyCaptured: false,
-      before: deep(configRef.current)
+      before: deep(configRef.current),
+      groupMembers:
+        mode==="move" && el.compositionId
+          ? screen.elements
+              .filter(element=>element.compositionId===el.compositionId && !element.locked)
+              .map(element=>({id:element.id,x:element.x,y:element.y}))
+          : null
     };
   }
 
@@ -1745,10 +1944,34 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
       const sx=snapAxis(rawXPx,wPx,"x",d.id);
       const sy=snapAxis(rawYPx,hPx,"y",d.id);
 
-      updateElement(d.id,{
-        x:snapped(pxToPctX(sx.px)),
-        y:snapped(pxToPctY(sy.px))
-      });
+      const nextX=snapped(pxToPctX(sx.px));
+      const nextY=snapped(pxToPctY(sy.px));
+
+      if(Array.isArray(d.groupMembers) && d.groupMembers.length>1){
+        const deltaX=nextX-d.x;
+        const deltaY=nextY-d.y;
+        const memberPositions=new Map<string,{x:number;y:number}>(
+          d.groupMembers.map((member:any)=>[
+            String(member.id),
+            {x:Number(member.x)+deltaX,y:Number(member.y)+deltaY}
+          ] as [string,{x:number;y:number}])
+        );
+        const cur=screenId==="rsvp"
+          ? resolveRsvpScenarioScreen(configRef.current,rsvpPreviewState as RsvpScenarioId)
+          : screenId==="invite"
+            ? resolveInviteFlowScreen(configRef.current,inviteFlowState)
+            : configRef.current.screens[screenId];
+        updateScreen({
+          elements:cur.elements.map(element=>{
+            const position=memberPositions.get(element.id);
+            return position
+              ? {...element,x:snapped(position.x),y:snapped(position.y)}
+              : element;
+          })
+        });
+      }else{
+        updateElement(d.id,{x:nextX,y:nextY});
+      }
       setSmartGuideLines({x:sx.lines,y:sy.lines});
       setDragMetrics({
         x:sx.px,y:sy.px,w:wPx,h:hPx,
@@ -2160,6 +2383,8 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
         <RsvpFlowView
           key={element.id}
           parts={element.partStyles}
+          maxAdults={previewData.guestAllowedAdults}
+          allowChildren={rsvpAllowsChildren}
           preview
           previewState={rsvpPreviewState}
           selectedPart={selectedId===element.id ? selectedPart : null}
@@ -2386,9 +2611,9 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
         )}
 
         {screenId==="rsvp"&&<section className={styles.rsvpScenarios}>
-          <div className={styles.rsvpScenariosHeader}><strong>Cenários da confirmação</strong><span>5 estados</span></div>
+          <div className={styles.rsvpScenariosHeader}><strong>Cenários da confirmação</strong><span>{availableRsvpPreviewStates.length} estados</span></div>
           <p>Cada etapa é uma tela independente. Texto, posição, imagens, botões e exclusões ficam somente nela.</p>
-          <div className={styles.rsvpScenarioGrid}>{RSVP_PREVIEW_STATES.map(item=><button key={item.id} type="button" className={rsvpPreviewState===item.id?styles.rsvpScenarioActive:""} onClick={()=>openRsvpScenario(item.id)}>{item.label}</button>)}</div>
+          <div className={styles.rsvpScenarioGrid}>{availableRsvpPreviewStates.map(item=><button key={item.id} type="button" className={rsvpPreviewState===item.id?styles.rsvpScenarioActive:""} onClick={()=>openRsvpScenario(item.id)}>{item.label}</button>)}</div>
           <button type="button" className={styles.rsvpScenarioReset} onClick={resetCurrentRsvpScenario}>
             Restaurar somente este cenário
           </button>
@@ -2695,6 +2920,11 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
                         {selected.locked ? <Unlock size={16}/> : <Lock size={16}/>}
                         <span>{selected.locked ? "Desbloquear" : "Bloquear"}</span>
                       </button>
+                      {selected.compositionId ? (
+                        <button type="button" onClick={()=>{ungroupComposition();setMobileCanvasMenu(false)}}>
+                          <Layers3 size={16}/><span>Desagrupar composição</span>
+                        </button>
+                      ) : null}
                       <button type="button" onClick={()=>{setMobileCanvasMenu(false);openMobileInspector()}}>
                         <SlidersHorizontal size={16}/><span>Mais ajustes</span>
                       </button>
@@ -2886,6 +3116,38 @@ export function InviteVisualBuilder({initial,defaults,previewData,themeLibrary,e
                 </p>
               </div>
             )}
+
+            <details open className={styles.screenSettings}>
+              <summary>Identidade visual global <ChevronDown size={14}/></summary>
+              <div className={styles.panel}>
+                <label>
+                  Fonte principal
+                  <select value={globalFont} onChange={e=>setGlobalFont(e.target.value)}>
+                    {FONTS.map(font=><option key={font} value={font}>{font}</option>)}
+                  </select>
+                </label>
+                <div className={styles.grid3}>
+                  <label>
+                    Cor principal
+                    <input type="color" value={globalPrimary} onChange={e=>setGlobalPrimary(e.target.value)}/>
+                  </label>
+                  <label>
+                    Cor de destaque
+                    <input type="color" value={globalAccent} onChange={e=>setGlobalAccent(e.target.value)}/>
+                  </label>
+                  <label>
+                    Fundo
+                    <input type="color" value={globalBackground} onChange={e=>setGlobalBackground(e.target.value)}/>
+                  </label>
+                </div>
+                <button type="button" className={styles.utilityButton} onClick={applyGlobalVisualSystem}>
+                  Aplicar em todas as telas
+                </button>
+                <p className={styles.hint}>
+                  Atualiza tipografia e cores do convite inteiro, inclusive RSVP, lista de presentes e tela pós-confirmação, sem alterar textos, posições ou imagens.
+                </p>
+              </div>
+            </details>
 
             <details open className={styles.screenSettings}>
               <summary>{sharedFlowBackgroundActive ? "Fundo contínuo do fluxo" : "Fundo da seção"} <ChevronDown size={14}/></summary>

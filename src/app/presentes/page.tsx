@@ -7,9 +7,12 @@ import { requireGuest } from "@/lib/sessions";
 import { giftImageUrl } from "@/lib/storage";
 import { getPublicInvitePageData } from "@/lib/public-invite-data";
 import { inviteScreenBackgroundStyle } from "@/lib/invite-background-style";
+import { eventHasCapability } from "@/lib/event-capabilities";
 
 export default async function GiftsPage() {
   const session = await requireGuest("/presentes");
+
+  if (!(await eventHasCapability(session.event_id, "gifts"))) redirect("/convite");
 
   if (session.rsvp_status !== "confirmed") {
     redirect("/presenca");

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { INTAKE_REFERENCE_BUCKET, supabaseStorageAdmin } from "@/lib/supabase-storage";
 import { sameOriginStrict } from "@/lib/security";
+import { isRateLimited, recordFailure } from "@/lib/rate-limit";
 
 const TYPES=new Set(["image/jpeg","image/png","image/webp"]);
 const MAX_SIZE=12*1024*1024;
@@ -13,6 +14,8 @@ function ext(type:string){return type==="image/png"?"png":type==="image/webp"?"w
 
 export async function POST(request:Request,{params}:{params:Promise<{id:string}>}) {
   if(!sameOriginStrict(request)) return NextResponse.json({message:"Origem inválida."},{status:403});
+  if(await isRateLimited(request,null,"public_intake_media_upload",20,60)) return NextResponse.json({message:"Muitos envios em pouco tempo. Aguarde alguns minutos."},{status:429});
+  await recordFailure(request,null,"public_intake_media_upload");
   const {id}=await params;
   const form=await request.formData();
   const token=String(form.get("access_token")||"");

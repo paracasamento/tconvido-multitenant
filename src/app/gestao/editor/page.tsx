@@ -5,16 +5,18 @@ import { getInviteEditorPreviewData } from "@/lib/invite-editor-preview";
 import { requireOwner } from "@/lib/sessions";
 import { getThemeLibrary } from "@/lib/theme-library-server";
 import { db } from "@/lib/db";
+import { getEventCapabilities } from "@/lib/event-capabilities";
 
 export default async function GestaoInviteEditorPage() {
   const session = await requireOwner("/gestao/editor");
-  const eventRows=await db()`SELECT event_type,event_name,couple_names,enabled_capabilities FROM events WHERE id=${session.event_id} LIMIT 1`;
-  const event:any=eventRows[0];
-  const [config, previewData, themeLibrary] = await Promise.all([
+  const [eventRows, capabilities, config, previewData, themeLibrary] = await Promise.all([
+    db()`SELECT event_type,event_name,couple_names FROM events WHERE id=${session.event_id} LIMIT 1`,
+    getEventCapabilities(session.event_id),
     getInviteVisualConfig(session.event_id),
     getInviteEditorPreviewData(session.event_id),
     getThemeLibrary(),
   ]);
+  const event:any=eventRows[0];
 
   return (
     <InviteVisualBuilder
@@ -22,7 +24,7 @@ export default async function GestaoInviteEditorPage() {
       defaults={defaultInviteVisualConfig}
       previewData={previewData}
       themeLibrary={themeLibrary}
-      eventContext={{type:event?.event_type||"wedding",name:event?.event_name||event?.couple_names||"Evento",capabilities:Array.isArray(event?.enabled_capabilities)?event.enabled_capabilities:[]}}
+      eventContext={{type:event?.event_type||"wedding",name:event?.event_name||event?.couple_names||"Evento",capabilities}}
     />
   );
 }

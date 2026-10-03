@@ -20,6 +20,8 @@ export type GuestSession = {
   guest_name: string;
   event_id: string;
   rsvp_status: "pending" | "confirmed" | "declined";
+  allowed_adults: number;
+  allowed_children: number;
 };
 
 export type AdminSession = {
@@ -170,7 +172,9 @@ export async function getGuestSession(): Promise<GuestSession | null> {
       gs.guest_id,
       g.name AS guest_name,
       g.event_id,
-      g.rsvp_status
+      g.rsvp_status,
+      g.allowed_adults,
+      g.allowed_children
     FROM guest_sessions gs
     JOIN guests g ON g.id = gs.guest_id
     WHERE

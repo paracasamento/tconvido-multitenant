@@ -18,6 +18,8 @@ export function GuestCreateHub({ accessMode: _accessMode }: { accessMode: Access
   const [singleName, setSingleName] = useState("");
   const [singleAdults, setSingleAdults] = useState(1);
   const [singleChildren, setSingleChildren] = useState(0);
+  const [bulkAdults, setBulkAdults] = useState(1);
+  const [bulkChildren, setBulkChildren] = useState(0);
   const [multipleText, setMultipleText] = useState("");
   const [sheetNames, setSheetNames] = useState<string[]>([]);
   const [sheetName, setSheetName] = useState("");
@@ -44,7 +46,7 @@ export function GuestCreateHub({ accessMode: _accessMode }: { accessMode: Access
       const response = await fetch("/api/admin/guests", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ names: selectedNames, allowed_adults: mode === "single" ? singleAdults : 1, allowed_children: mode === "single" ? singleChildren : 0 })
+        body: JSON.stringify({ names: selectedNames, allowed_adults: mode === "single" ? singleAdults : bulkAdults, allowed_children: mode === "single" ? singleChildren : bulkChildren })
       });
       const data = await readJsonResponse<{ message?: string; created?: CreatedGuest[]; skipped?: string[] }>(response);
       if (!response.ok) {
@@ -107,8 +109,8 @@ export function GuestCreateHub({ accessMode: _accessMode }: { accessMode: Access
       <GuestEntryTabs mode={mode} onChange={setMode} />
       <form onSubmit={submit} className="guest-entry-form">
         {mode === "single" && <GuestSingleForm value={singleName} busy={busy} allowedAdults={singleAdults} allowedChildren={singleChildren} onChange={setSingleName} onAdultsChange={setSingleAdults} onChildrenChange={setSingleChildren} />}
-        {mode === "multiple" && <GuestBulkForm value={multipleText} count={multipleNames.length} busy={busy} onChange={setMultipleText} />}
-        {mode === "sheet" && <GuestSheetForm fileRef={fileRef} fileName={sheetName} names={sheetNames} busy={busy} onFile={handleSheet} />}
+        {mode === "multiple" && <GuestBulkForm value={multipleText} count={multipleNames.length} busy={busy} allowedAdults={bulkAdults} allowedChildren={bulkChildren} onChange={setMultipleText} onAdultsChange={setBulkAdults} onChildrenChange={setBulkChildren} />}
+        {mode === "sheet" && <GuestSheetForm fileRef={fileRef} fileName={sheetName} names={sheetNames} busy={busy} allowedAdults={bulkAdults} allowedChildren={bulkChildren} onAdultsChange={setBulkAdults} onChildrenChange={setBulkChildren} onFile={handleSheet} />}
       </form>
 
       {error && <p className="form-error" role="alert">{error}</p>}

@@ -537,14 +537,14 @@ export const INVITE_COMPONENT_PRESETS: InviteComponentPreset[] = [
     name: "Título editorial",
     category: "heading",
     description: "Título do evento com nomes em apoio.",
-    previewLabel: "CASAMENTO · NOMES",
+    previewLabel: "EVENTO · IDENTIDADE",
     elements: [
       text("Título", "{{title}}", 12, 41, 76, 9, 34, {
         fontWeight: 500,
         textTransform: "uppercase",
         letterSpacing: 1.4,
       }),
-      text("Nomes", "{{couple_names}}", 16, 51, 68, 5, 18, {
+      text("Identidade", "{{event_identity}}", 16, 51, 68, 5, 18, {
         fontStyle: "italic",
       }),
     ],

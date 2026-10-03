@@ -3,9 +3,14 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { intakeSchema, buildIntakePendingItems } from "@/lib/intake";
 import { sameOriginStrict } from "@/lib/security";
+import { isRateLimited, recordFailure } from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   if (!sameOriginStrict(request)) return NextResponse.json({ message: "Origem inválida." }, { status: 403 });
+  if (await isRateLimited(request, null, "public_intake_submit", 10, 60)) {
+    return NextResponse.json({ message: "Muitas tentativas. Aguarde um pouco antes de enviar novamente." }, { status: 429 });
+  }
+  await recordFailure(request, null, "public_intake_submit");
   const parsed = intakeSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ message: parsed.error.issues[0]?.message || "Confira os dados da ficha." }, { status: 400 });

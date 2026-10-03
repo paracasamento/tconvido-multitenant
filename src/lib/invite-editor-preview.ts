@@ -7,6 +7,8 @@ export type InviteEditorPreviewData = {
   vars: Record<string, string>;
   gifts: GiftUi[];
   giftColorPreferences: Array<{ name: string; hex: string }>;
+  guestAllowedAdults: number;
+  guestAllowedChildren: number;
 };
 
 export async function getInviteEditorPreviewData(eventId: string): Promise<InviteEditorPreviewData> {
@@ -18,6 +20,10 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
         id,
         title,
         couple_names,
+        event_name,
+        celebrant_name,
+        baby_name,
+        hosts_names,
         public_intro,
         to_char(event_date, 'YYYY-MM-DD') AS event_date,
         to_char(event_time, 'HH24:MI') AS event_time,
@@ -30,7 +36,7 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
       LIMIT 1
     `,
     sql`
-      SELECT name
+      SELECT name, allowed_adults, allowed_children
       FROM guests
       WHERE event_id = ${eventId}
         AND deleted_at IS NULL
@@ -84,6 +90,8 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
       },
       gifts: [],
       giftColorPreferences: [],
+      guestAllowedAdults: 1,
+      guestAllowedChildren: 0,
     };
   }
 
@@ -113,6 +121,10 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
       {
         title: String(event.title || ""),
         couple_names: String(event.couple_names || ""),
+        event_name: event.event_name == null ? null : String(event.event_name),
+        celebrant_name: event.celebrant_name == null ? null : String(event.celebrant_name),
+        baby_name: event.baby_name == null ? null : String(event.baby_name),
+        hosts_names: event.hosts_names == null ? null : String(event.hosts_names),
         public_intro: String(event.public_intro || ""),
         event_date: eventDate,
         event_time: eventTime,
@@ -126,5 +138,7 @@ export async function getInviteEditorPreviewData(eventId: string): Promise<Invit
     ),
     gifts,
     giftColorPreferences,
+    guestAllowedAdults: Math.max(1, Number(guestRows[0]?.allowed_adults || 1)),
+    guestAllowedChildren: Math.max(0, Number(guestRows[0]?.allowed_children || 0)),
   };
 }

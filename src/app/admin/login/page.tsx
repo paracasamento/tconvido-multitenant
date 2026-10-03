@@ -23,10 +23,10 @@ export default async function AdminLoginPage({
       <FloralFrame subtle />
       <section className="narrow-panel">
         <Monogram size={96} priority />
-        <p className="eyebrow">Área dos noivos</p>
-        <h1>Bem-vindos</h1>
-        <p>Entre para gerenciar convidados, presentes e informações do evento.</p>
-        <AdminLoginForm redirectTo={next} allowUsername />
+        <p className="eyebrow">Área do evento</p>
+        <h1>Bem-vindo</h1>
+        <p>Entre para acompanhar convidados e administrar as informações disponíveis para o seu evento.</p>
+        <AdminLoginForm redirectTo={next} />
       </section>
     </main>
   );

@@ -24,6 +24,8 @@ type PreparedGuest = {
   code: string | null;
   code_hash: string | null;
   link_token_hash: string | null;
+  allowed_adults: number;
+  allowed_children: number;
 };
 
 export async function POST(request: Request) {
@@ -93,7 +95,9 @@ export async function POST(request: Request) {
       normalized_name: normalized,
       code,
       code_hash: code ? protectGuestCode(code) : null,
-      link_token_hash: code ? hashToken(randomToken(18)) : null
+      link_token_hash: code ? hashToken(randomToken(18)) : null,
+      allowed_adults: parsed.data.allowed_adults,
+      allowed_children: parsed.data.allowed_children
     });
   }
 
@@ -110,11 +114,11 @@ export async function POST(request: Request) {
     WITH input AS (
       SELECT *
       FROM jsonb_to_recordset(${JSON.stringify(payload)}::jsonb)
-        AS x(name text, normalized_name text, code_hash text, link_token_hash text)
+        AS x(name text, normalized_name text, code_hash text, link_token_hash text, allowed_adults integer, allowed_children integer)
     ),
     new_guests AS (
-      INSERT INTO guests (event_id, name, normalized_name, source)
-      SELECT ${session.event_id}, i.name, i.normalized_name, 'admin'
+      INSERT INTO guests (event_id, name, normalized_name, source, allowed_adults, allowed_children)
+      SELECT ${session.event_id}, i.name, i.normalized_name, 'admin', i.allowed_adults, i.allowed_children
       FROM input i
       ON CONFLICT DO NOTHING
       RETURNING id, name, normalized_name

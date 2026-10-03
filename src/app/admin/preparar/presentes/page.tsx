@@ -8,9 +8,11 @@ import { getAdminSetupState } from "@/lib/admin-setup";
 import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/sessions";
 import { signGiftImages } from "@/lib/storage";
+import { eventHasCapability } from "@/lib/event-capabilities";
 
 export default async function SetupGiftsPage() {
   const session = await requireAdmin();
+  if (!(await eventHasCapability(session.event_id, "gifts"))) redirect("/admin/preparar/revisao");
   const sql = db();
 
   const [giftsResult, setup, eventRows] = await Promise.all([
@@ -43,6 +45,7 @@ export default async function SetupGiftsPage() {
   ]);
 
   const gifts = giftsResult as any[];
+  const giftStep = setup.steps.find(step => step.id === "gifts");
   const colorPreferences = Array.isArray(eventRows[0]?.gift_color_preferences)
     ? eventRows[0].gift_color_preferences
     : [];
@@ -52,7 +55,7 @@ export default async function SetupGiftsPage() {
 
   return (
     <SetupStepShell
-      step={4}
+      step={giftStep?.number || 4}
       title="Presentes"
       description="Monte a lista que ficará disponível no convite."
       steps={setup.steps}

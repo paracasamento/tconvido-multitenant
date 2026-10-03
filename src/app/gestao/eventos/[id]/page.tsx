@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, ExternalLink, LayoutDashboard, Palette, UserRound, CircleAlert } from "lucide-react";
+import { CalendarDays, ExternalLink, LayoutDashboard, LayoutTemplate, Palette, UserRound, CircleAlert } from "lucide-react";
 import { db } from "@/lib/db";
 import { requirePlatformAdmin } from "@/lib/sessions";
 import { EVENT_TYPE_DEFINITIONS, type EventType } from "@/lib/event-types";
 import { ProductionControl } from "@/components/gestao/ProductionControl";
 import { validateEventReadiness } from "@/lib/event-readiness";
 import { ChangeRequestManager } from "@/components/gestao/ChangeRequestManager";
+import { ClientAccessControl } from "@/components/gestao/ClientAccessControl";
+import { ClientAccessReset } from "@/components/gestao/ClientAccessReset";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,14 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
   const event:any=rows[0]; if(!event)notFound();
   const changeRequests:any[]=await sql`SELECT id,message,status,source,created_at FROM event_change_requests WHERE event_id=${id} ORDER BY created_at DESC LIMIT 20`;
   const approvals:any[]=await sql`SELECT status,note,created_at FROM event_approvals WHERE event_id=${id} ORDER BY created_at DESC LIMIT 10`;
+  const history:any[]=await sql`
+    SELECT al.action,al.metadata,al.created_at,a.name AS admin_name
+    FROM audit_logs al
+    LEFT JOIN admins a ON a.id=al.admin_id
+    WHERE al.event_id=${id}
+    ORDER BY al.created_at DESC
+    LIMIT 20
+  `;
   const type=EVENT_TYPE_DEFINITIONS[event.event_type as EventType];
   const identity=event.event_name||event.couple_names||event.celebrant_name||event.baby_name||event.hosts_names||event.title;
   const caps=Array.isArray(event.enabled_capabilities)?event.enabled_capabilities:[];
@@ -54,11 +64,23 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
         <div><dt>Prazo de entrega</dt><dd>{event.delivery_deadline?new Date(event.delivery_deadline).toLocaleDateString("pt-BR"):"Não definido"}</dd></div>
       </dl></section>
 
-      <section className="settings-card"><h2>Cliente</h2><dl className="intake-detail-list">
-        <div><dt>Responsável</dt><dd>{event.owner_name||"Conta ainda não criada"}</dd></div>
-        <div><dt>E-mail</dt><dd>{event.owner_email||"—"}</dd></div>
-        <div><dt>URL pública</dt><dd>/e/{event.slug}</dd></div>
-      </dl></section>
+      <section className="settings-card"><h2>Cliente</h2>
+        {event.owner_name ? (
+          <>
+            <dl className="intake-detail-list">
+              <div><dt>Responsável</dt><dd>{event.owner_name}</dd></div>
+              <div><dt>E-mail</dt><dd>{event.owner_email||"—"}</dd></div>
+              <div><dt>URL pública</dt><dd>/e/{event.slug}</dd></div>
+            </dl>
+            <ClientAccessReset eventId={event.id} />
+          </>
+        ) : (
+          <>
+            <p className="muted">Crie o acesso somente quando este evento estiver pronto para ser entregue ao cliente.</p>
+            <ClientAccessControl eventId={event.id} />
+          </>
+        )}
+      </section>
 
       <section className="settings-card"><h2>Recursos do convite</h2><div className="intake-feature-list">
         {["rsvp","gifts","dress_code","schedule"].map(cap=><span key={cap} className={caps.includes(cap)?"is-on":""}>{caps.includes(cap)?"✓":"—"} {cap==="rsvp"?"RSVP":cap==="gifts"?"Presentes":cap==="dress_code"?"Traje":"Programação"}</span>)}
@@ -67,8 +89,31 @@ export default async function EventWorkspacePage({params}:{params:Promise<{id:st
       <section className="settings-card"><h2>Pendências</h2>{pending.length?<div className="intake-feature-list">{pending.map(item=><span key={item}><CircleAlert size={14}/> {item}</span>)}</div>:<p>Nenhuma pendência estrutural básica.</p>}</section>
     </div>
 
+    <section className="settings-card">
+      <h2>Histórico do evento</h2>
+      {history.length ? (
+        <div className="intake-feature-list">
+          {history.map((item:any,index:number)=>{
+            const labels:Record<string,string>={
+              production_updated:"Produção atualizada",
+              client_access_created:"Acesso do cliente criado",
+              invitation_approved:"Convite aprovado",
+              invitation_changes_requested:"Alterações solicitadas",
+              change_request_resolved:"Pedido de alteração resolvido",
+              change_request_dismissed:"Pedido de alteração descartado",
+              invite_visual_design_updated:"Design do convite atualizado",
+              guests_bulk_created:"Convidados adicionados",
+              guest_rsvp_updated:"Convidado atualizado",
+              guest_removed:"Convidado removido"
+            };
+            return <span key={item.action+"-"+index}><strong>{labels[item.action]||item.action}</strong> · {item.admin_name||"Sistema"} · {new Date(item.created_at).toLocaleString("pt-BR")}</span>;
+          })}
+        </div>
+      ) : <p className="muted">Nenhuma ação registrada ainda.</p>}
+    </section>
+
     <section className="settings-card"><h2>Pedidos de alteração</h2><ChangeRequestManager eventId={event.id} items={changeRequests.map((item:any)=>({...item,created_at:new Date(item.created_at).toISOString()}))}/>{approvals[0]&&<p className="muted">Última decisão do cliente: {approvals[0].status==="approved"?"Aprovado":"Alterações solicitadas"} · {new Date(approvals[0].created_at).toLocaleString("pt-BR")}</p>}</section><section className="settings-card"><h2>Controle de produção</h2><ProductionControl eventId={event.id} initialStatus={event.production_status||"draft"} initialDeadline={event.delivery_deadline?new Date(event.delivery_deadline).toISOString().slice(0,10):""} initialNotes={event.internal_notes||""}/></section><section className="settings-card"><h2>Ferramentas do evento</h2><div className="card-actions">
-      <form action={`/api/owner/events/${event.id}/select?next=%2Fgestao%2Feditor`} method="post"><button className="gestao-primary-action" type="submit"><Palette size={16}/> Editar convite</button></form>
+      <Link href={`/gestao/modelos?event=${event.id}`} className="button button--soft"><LayoutTemplate size={16}/> Escolher modelo</Link><form action={`/api/owner/events/${event.id}/select?next=%2Fgestao%2Feditor`} method="post"><button className="gestao-primary-action" type="submit"><Palette size={16}/> Editar convite</button></form>
       <form action={`/api/owner/events/${event.id}/select?next=%2Fadmin`} method="post"><button className="gestao-primary-action" type="submit"><LayoutDashboard size={16}/> Abrir painel do cliente</button></form>
     </div></section>
   </main>;

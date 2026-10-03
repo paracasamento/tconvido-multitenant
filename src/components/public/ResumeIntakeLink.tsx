@@ -1,3 +1,3 @@
 "use client";
 import { useEffect,useState } from "react";
-export function ResumeIntakeLink(){const [href,setHref]=useState("");useEffect(()=>{try{const raw=localStorage.getItem("tconvido:last-intake");if(!raw)return;const x=JSON.parse(raw);if(x?.id&&x?.token)setHref(`/ficha/${x.id}?token=${encodeURIComponent(x.token)}`);}catch{}},[]);if(!href)return null;return <a className="intake-resume-link" href={href}>Continuar minha ficha</a>}
+export function ResumeIntakeLink(){const [href,setHref]=useState("");useEffect(()=>{try{const raw=localStorage.getItem("tconvido:last-intake");if(!raw)return;const x=JSON.parse(raw);if(x?.id&&x?.token)setHref(`/ficha/${x.id}#token=${encodeURIComponent(x.token)}`);}catch{}},[]);if(!href)return null;return <a className="intake-resume-link" href={href}>Continuar minha ficha</a>}

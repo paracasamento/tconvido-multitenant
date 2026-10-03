@@ -52,11 +52,13 @@ export default async function AdminGuestsPage() {
     `,
     sql`
       SELECT
-        count(*)::int AS confirmations,
-        COALESCE(sum(children_count),0)::int AS children,
+        count(*) FILTER (WHERE rsvp_status = 'confirmed')::int AS confirmations,
+        COALESCE(sum(confirmed_adults) FILTER (WHERE rsvp_status = 'confirmed'),0)::int AS adults,
+        COALESCE(sum(confirmed_children) FILTER (WHERE rsvp_status = 'confirmed'),0)::int AS children,
         count(*) FILTER (WHERE needs_review)::int AS review_count
-      FROM rsvp_submissions
+      FROM guests
       WHERE event_id = ${session.event_id}
+        AND deleted_at IS NULL
     `,
     sql`
       SELECT
@@ -81,7 +83,7 @@ export default async function AdminGuestsPage() {
   const guests = guestsResult as any[];
   const submissions = submissionRowsResult as any[];
   const accessAttempts = accessAttemptRowsResult as any[];
-  const stats = (statsRowsResult[0] as any) || { confirmations: 0, children: 0, review_count: 0 };
+  const stats = (statsRowsResult[0] as any) || { confirmations: 0, adults: 0, children: 0, review_count: 0 };
   const eventRows = eventRowsResult as Array<{ guest_access_mode?: "event" | "individual" | null }>;
   const accessMode = eventRows[0]?.guest_access_mode || "individual";
 
@@ -99,8 +101,12 @@ export default async function AdminGuestsPage() {
           <span>Confirmações</span>
         </div>
         <div>
+          <strong>{stats.adults}</strong>
+          <span>Adultos confirmados</span>
+        </div>
+        <div>
           <strong>{stats.children}</strong>
-          <span>Crianças</span>
+          <span>Crianças confirmadas</span>
         </div>
         <div>
           <strong>{stats.review_count}</strong>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { eventHasCapability } from "@/lib/event-capabilities";
 import { getInviteSession } from "@/lib/invite-session";
 import { sameOrigin } from "@/lib/security";
 import { getGuestSession } from "@/lib/sessions";
@@ -22,6 +23,10 @@ export async function POST(request: Request) {
       { message: "Entre novamente com seu nome e a senha do convite." },
       { status: 401 }
     );
+  }
+
+  if (!(await eventHasCapability(invite.event_id, "rsvp"))) {
+    return NextResponse.json({ message: "Confirmação de presença não está habilitada para este evento." }, { status: 403 });
   }
 
   const sql = db();

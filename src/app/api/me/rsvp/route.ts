@@ -14,8 +14,9 @@ import {
 
 const schema = z.object({
   submitted_name: z.string().trim().min(2).max(120),
-  has_children: z.boolean(),
-  children_count: z.number().int().min(0).max(20),
+  adults_count: z.number().int().min(1).max(20).optional().default(1),
+  has_children: z.boolean().optional().default(false),
+  children_count: z.number().int().min(0).max(20).optional().default(0),
 }).superRefine((value, ctx) => {
   if (!value.has_children && value.children_count !== 0) {
     ctx.addIssue({
@@ -83,7 +84,7 @@ export async function PUT(request: Request) {
     }
 
     const guestRows = await sql`
-      SELECT id, name
+      SELECT id, name, allowed_adults, allowed_children
       FROM guests
       WHERE id = ${guestSession.guest_id}
         AND event_id = ${invite.event_id}
@@ -100,7 +101,32 @@ export async function PUT(request: Request) {
     const guest = guestRows[0] as any;
     const guestId = String(guest.id);
     const submittedName = String(guest.name).replace(/\s+/g, " ").trim();
-    const childrenCount = parsed.data.has_children ? parsed.data.children_count : 0;
+    const allowedAdults = Math.max(1, Number(guest.allowed_adults || 1));
+    const allowedChildren = Math.max(0, Number(guest.allowed_children || 0));
+
+    if (parsed.data.adults_count > allowedAdults) {
+      return NextResponse.json(
+        { message: `Este convite permite até ${allowedAdults} adulto(s).` },
+        { status: 400 }
+      );
+    }
+
+    if (parsed.data.has_children && allowedChildren === 0) {
+      return NextResponse.json(
+        { message: "Este convite não possui acompanhantes infantis disponíveis." },
+        { status: 400 }
+      );
+    }
+
+    if (parsed.data.children_count > allowedChildren) {
+      return NextResponse.json(
+        { message: `Este convite permite até ${allowedChildren} criança(s).` },
+        { status: 400 }
+      );
+    }
+
+    const hasChildren = parsed.data.has_children && allowedChildren > 0;
+    const childrenCount = hasChildren ? parsed.data.children_count : 0;
 
     // The authenticated guest_id is authoritative. The name typed in the form
     // cannot redirect a confirmation to another guest or create a new identity.
@@ -122,7 +148,7 @@ export async function PUT(request: Request) {
         ${guestId},
         ${submittedName},
         ${normalizeName(submittedName)},
-        ${parsed.data.has_children},
+        ${hasChildren},
         ${childrenCount},
         'exact',
         100,
@@ -163,7 +189,7 @@ export async function PUT(request: Request) {
         needs_review = false,
         reviewed_at = NULL,
         reviewed_by = NULL,
-        confirmed_adults = 1,
+        confirmed_adults = ${parsed.data.adults_count},
         confirmed_children = ${childrenCount},
         updated_at = now()
       WHERE id = ${guestId}
@@ -180,7 +206,8 @@ export async function PUT(request: Request) {
       submission: {
         id: submissionId,
         submitted_name: submittedName,
-        has_children: parsed.data.has_children,
+        adults_count: parsed.data.adults_count,
+        has_children: hasChildren,
         children_count: childrenCount,
       },
     });

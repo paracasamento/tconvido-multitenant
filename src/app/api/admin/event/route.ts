@@ -6,7 +6,7 @@ import { getAdminSession } from "@/lib/sessions";
 import { sameOrigin } from "@/lib/security";
 
 const schema = z.object({
-  couple_names: z.string().trim().min(2).max(120),
+  identity_name: z.string().trim().min(2).max(120),
   title: z.string().trim().min(2).max(120),
   message: z.string().max(1500).optional().default(""),
   event_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -26,10 +26,33 @@ export async function PUT(request: Request) {
 
   const v = parsed.data;
   const sql = db();
+  const eventRows = await sql`
+    SELECT event_type
+    FROM events
+    WHERE id = ${session.event_id}
+    LIMIT 1
+  `;
+
+  if (!eventRows.length) {
+    return NextResponse.json({ message: "Evento não encontrado." }, { status: 404 });
+  }
+
+  const eventType = String(eventRows[0].event_type || "wedding");
+  const celebrantName =
+    eventType === "kids_birthday" || eventType === "quinceanera"
+      ? v.identity_name
+      : null;
+  const babyName = eventType === "baby_shower" ? v.identity_name : null;
+  const hostsNames = eventType === "housewarming" ? v.identity_name : null;
+
   await sql`
     UPDATE events
     SET
-      couple_names = ${v.couple_names},
+      couple_names = ${v.identity_name},
+      event_name = ${v.identity_name},
+      celebrant_name = ${celebrantName},
+      baby_name = ${babyName},
+      hosts_names = ${hostsNames},
       title = ${v.title},
       message = ${v.message || null},
       event_date = ${v.event_date}::date,
@@ -45,7 +68,8 @@ export async function PUT(request: Request) {
     adminId: session.admin_id,
     action: "event_updated",
     entityType: "event",
-    entityId: session.event_id
+    entityId: session.event_id,
+    metadata: { event_type: eventType }
   });
 
   return NextResponse.json({ ok: true });

@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { AdminBottomNav } from "@/components/admin/AdminBottomNav";
 import { AdminTopBar } from "@/components/admin/AdminTopBar";
 
-export function AdminAppChrome({ children }: { children: React.ReactNode }) {
+export function AdminAppChrome({ children, showGifts = true }: { children: React.ReactNode; showGifts?: boolean }) {
   const pathname = usePathname();
   const fullScreen = pathname === "/admin/login" || pathname === "/admin/preview" || pathname === "/admin/editor";
 
@@ -14,7 +14,7 @@ export function AdminAppChrome({ children }: { children: React.ReactNode }) {
     <div className="admin-app-shell">
       <AdminTopBar />
       <div className="admin-app-main">{children}</div>
-      <AdminBottomNav />
+      <AdminBottomNav showGifts={showGifts} />
     </div>
   );
 }

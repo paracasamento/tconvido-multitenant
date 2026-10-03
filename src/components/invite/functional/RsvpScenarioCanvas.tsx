@@ -17,15 +17,21 @@ export function RsvpScenarioCanvas({
   config,
   initialSubmission,
   identityName,
+  maxAdults = 1,
+  allowChildren = false,
+  maxChildren = 0,
   vars = {},
 }: {
   config: InviteVisualConfig;
   initialSubmission: CurrentRsvpSubmission | null;
   identityName: string;
+  maxAdults?: number;
+  allowChildren?: boolean;
+  maxChildren?: number;
   vars?: Record<string, string | undefined>;
 }) {
   const [state, setState] = useState<RsvpPreviewState>(
-    initialSubmission ? "confirmed" : "children-question"
+    initialSubmission ? "confirmed" : allowChildren ? "children-question" : "form-no-children"
   );
 
   const screen = useMemo(
@@ -56,6 +62,9 @@ export function RsvpScenarioCanvas({
             parts={flowSlot?.partStyles}
             initialSubmission={initialSubmission}
             identityName={identityName}
+            maxAdults={maxAdults}
+            allowChildren={allowChildren}
+            maxChildren={maxChildren}
             controlledState={state}
             onStateChange={setState}
           />

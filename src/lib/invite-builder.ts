@@ -302,7 +302,11 @@ export const SLOT_PARTS: Record<NonNullable<InviteElement["slot"]>, { id: string
     { id: "form-title", name: "Título formulário" },
     { id: "name-label", name: "Label nome" },
     { id: "name-input", name: "Campo nome" },
-    { id: "children-label", name: "Label quantidade de filhos" },
+    { id: "adults-label", name: "Label quantidade de adultos" },
+    { id: "adults-stepper", name: "Contador de adultos" },
+    { id: "adults-stepper-button", name: "Botões do contador de adultos" },
+    { id: "adults-stepper-value", name: "Número de adultos" },
+    { id: "children-label", name: "Label quantidade de crianças" },
     { id: "stepper", name: "Contador de filhos" },
     { id: "stepper-button", name: "Botões do contador" },
     { id: "stepper-value", name: "Número do contador" },
@@ -311,7 +315,7 @@ export const SLOT_PARTS: Record<NonNullable<InviteElement["slot"]>, { id: string
     { id: "success-icon", name: "Ícone de sucesso" },
     { id: "success-title", name: "Título de sucesso" },
     { id: "success-copy", name: "Texto de sucesso" },
-    { id: "success-copy-children", name: "Texto sucesso com filhos" },
+    { id: "success-copy-group", name: "Texto de sucesso do grupo" },
     { id: "error-card", name: "Card do erro técnico" },
     { id: "error-title", name: "Título de erro técnico" },
     { id: "error-copy", name: "Texto de erro técnico" },
@@ -587,7 +591,7 @@ const rsvpFlowSlot = (id: string, name: string, x: number, y: number, width: num
       fontWeight: 500,
       lineHeight: 1.08,
       textAlign: "center",
-      text: "Possui filhos que irão junto?",
+      text: "Alguma criança irá com você?",
     },
     "yes-button": {
       minHeight: 52,
@@ -657,6 +661,43 @@ const rsvpFlowSlot = (id: string, name: string, x: number, y: number, width: num
       fontFamily: "Inter",
       fontSize: 15,
     },
+    "adults-label": {
+      color: "#12308e",
+      fontFamily: "Inter",
+      fontSize: 10,
+      fontWeight: 800,
+      letterSpacing: .7,
+      textTransform: "uppercase",
+      text: "Quantidade de adultos",
+    },
+    "adults-stepper": {
+      width: "100%",
+      paddingTop: 8,
+      paddingRight: 8,
+      paddingBottom: 8,
+      paddingLeft: 8,
+      backgroundColor: "rgba(255,253,248,.82)",
+      borderColor: "rgba(198,154,58,.62)",
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: 18,
+    },
+    "adults-stepper-button": {
+      minHeight: 42,
+      backgroundColor: "rgba(18,48,142,.07)",
+      color: "#12308e",
+      borderColor: "rgba(18,48,142,.10)",
+      borderWidth: 1,
+      borderStyle: "solid",
+      borderRadius: 13,
+    },
+    "adults-stepper-value": {
+      color: "#12308e",
+      fontFamily: "Cormorant Garamond",
+      fontSize: 30,
+      fontWeight: 600,
+      textAlign: "center",
+    },
     "children-label": {
       color: "#12308e",
       fontFamily: "Inter",
@@ -664,7 +705,7 @@ const rsvpFlowSlot = (id: string, name: string, x: number, y: number, width: num
       fontWeight: 800,
       letterSpacing: .7,
       textTransform: "uppercase",
-      text: "Quantidade de filhos",
+      text: "Quantidade de crianças",
     },
     stepper: {
       width: "100%",
@@ -737,13 +778,13 @@ const rsvpFlowSlot = (id: string, name: string, x: number, y: number, width: num
       textAlign: "center",
       text: "Obrigado por confirmar. Esperamos você!",
     },
-    "success-copy-children": {
+    "success-copy-group": {
       color: "#40528d",
       fontFamily: "Cormorant Garamond",
       fontSize: 18,
       fontWeight: 500,
       textAlign: "center",
-      text: "Você + 2 filho(s).",
+      text: "Confirmação registrada para o grupo.",
     },
     "error-card": {
       width: "100%",
@@ -1259,16 +1300,16 @@ export const defaultInviteVisualConfig: InviteVisualConfig = {
   },
   screens: {
     cover: { id:"cover", name:"Capa", backgroundColor:"#fbfaf5", minHeight:844, paperOpacity:.5, elements:[
-      img("cover-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-8,-5,47,37,1), img("cover-floral-right","Floral superior direito","/florals/floral-top-right.webp",61,-5,47,37,1), img("cover-divider","Divisor floral","/florals/floral-divider.webp",17,31,66,12,2), text("cover-names","Nomes","{{couple_names}}",10,43,80,7,24), text("cover-title","Título","{{title}}",7,50,86,10,43), img("cover-kitchen","Arranjo de cozinha","/florals/kitchen-arrangement.webp",8,60,84,30,2), text("cover-open","Instrução","DESLIZE PARA ABRIR\n⌃",15,91,70,7,13,5)
+      img("cover-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-8,-5,47,37,1), img("cover-floral-right","Floral superior direito","/florals/floral-top-right.webp",61,-5,47,37,1), img("cover-divider","Divisor floral","/florals/floral-divider.webp",17,31,66,12,2), text("cover-names","Identidade","{{event_identity}}",10,43,80,7,24), text("cover-title","Título","{{title}}",7,50,86,10,43), img("cover-kitchen","Arranjo de cozinha","/florals/kitchen-arrangement.webp",8,60,84,30,2), text("cover-open","Instrução","DESLIZE PARA ABRIR\n⌃",15,91,70,7,13,5)
     ]},
     access: { id:"access", name:"Login", backgroundColor:"#fbfaf5", minHeight:844, paperOpacity:.5, elements:[
-      img("access-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-5,43,34,1), img("access-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-5,43,34,1), img("access-divider","Divisor floral","/florals/floral-divider.webp",24,21,52,9,2), text("access-heading","Título","Seu convite\nestá reservado",8,31,84,16,40), text("access-copy","Instrução","Informe seu nome e o código enviado pelos noivos para abrir seu convite.",12,49,76,8,17), accessSlot("access-form","Formulário de acesso",9,58,82,31,5), img("access-kitchen","Arranjo inferior","/florals/kitchen-arrangement.webp",53,82,53,23,2)
+      img("access-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-5,43,34,1), img("access-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-5,43,34,1), img("access-divider","Divisor floral","/florals/floral-divider.webp",24,21,52,9,2), text("access-heading","Título","Seu convite\nestá reservado",8,31,84,16,40), text("access-copy","Instrução","Informe seu nome e a senha do convite para abrir seu acesso.",12,49,76,8,17), accessSlot("access-form","Formulário de acesso",9,58,82,31,5), img("access-kitchen","Arranjo inferior","/florals/kitchen-arrangement.webp",53,82,53,23,2)
     ]},
     invite: { id:"invite", name:"Convite", backgroundColor:"#fbfaf5", minHeight:1080, paperOpacity:.46, layoutRevision:2, elements:[
       img("invite-floral-left","Floral superior esquerdo","/florals/floral-top-left.webp",-10,-4,43,28,1),
       img("invite-floral-right","Floral superior direito","/florals/floral-top-right.webp",67,-4,43,28,1),
 
-      text("invite-names","Nomes","{{couple_names}}",16,4,68,4.5,18,4),
+      text("invite-names","Identidade","{{event_identity}}",16,4,68,4.5,18,4),
       img("invite-divider","Divisor floral","/florals/floral-divider.webp",25,21,50,6,2),
 
       text("invite-title","Título","{{title}}",8,28,84,7,43,4),
